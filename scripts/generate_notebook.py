@@ -68,31 +68,24 @@ def notebook() -> dict[str, Any]:
                 "cell_type": "markdown",
                 "id": "welcome",
                 "metadata": {},
-                "source": """# MorphIQ SDK for Python — Start Here
+                "source": """# MorphIQ analysis workspaces
 
-## Choose an analysis
+- [Option pricing](/voila/render/pricing/options.ipynb): value European or American
+  calls and puts, load an underlying close from Yahoo, compare assumptions and chart sensitivity.
+- [Regime analysis](/voila/render/regime/identification.ipynb): inspect price history,
+  the latest regime assessment, head scores and model provenance.
 
-- [Option pricing](pricing/options.ipynb): value European or American calls and puts,
-  load an underlying close from Yahoo, compare assumptions, and chart spot sensitivity.
-- [Regime analysis](regime/identification.ipynb): load a ticker's price history and
-  inspect its latest regime assessment, scores and model provenance.
+Open a workspace to initialize its controls automatically. API requests run only
+when you click an action button. Yahoo downloads and setup make no MorphIQ requests.
 
-Open a workspace and select **Run → Run All Cells** once to display its controls.
-Then use its buttons. Running the setup makes no API requests; each action button
-states how many requests it sends. All market data stays in memory.
+Set `MORPHIQ_API_KEY` before starting Docker or Jupyter.
+[Get API access](https://developers.morphiqlabs.com).
+The SDK connects to `https://api.morphiqlabs.com`.
 
-## API access
+[Open JupyterLab](/lab) to inspect or edit notebook source. In JupyterLab's editor,
+select Run All Cells once; dashboard links above initialize automatically.
+The Python scripts in `examples/` demonstrate SDK usage separately.
 
-Get your API key from [the developer portal](https://developers.morphiqlabs.com).
-Set `MORPHIQ_API_KEY` before starting Docker or Jupyter, or enter it at the masked
-prompt in a workspace. The SDK connects to `https://api.morphiqlabs.com`.
-
-Docker includes the SDK, widgets, plotting and Yahoo dependencies. Outside Docker,
-install this repository with `pip install -e '.[notebooks]'`, then open JupyterLab.
-
-Workspaces retain results in the current kernel. Clear outputs before sharing and
-shut down the kernel when finished. Notebook edits persist across Docker restarts.
-The executable Python scripts in `examples/` demonstrate SDK usage separately.
 """,
             }
         ],

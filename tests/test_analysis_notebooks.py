@@ -171,3 +171,27 @@ for frame in [pd.DataFrame(), pd.DataFrame({'Close': [100.] * 511}),
 """
     run_workspace("regime/identification.ipynb", code, endpoint, tmp_path)
     assert received == []
+
+
+@pytest.mark.parametrize("filename", ["pricing/options.ipynb", "regime/identification.ipynb"])
+def test_dashboard_initializes_without_key_or_input_prompt(fixture_api, tmp_path, filename):
+    endpoint, received = fixture_api
+    environment = {
+        name: value
+        for name, value in os.environ.items()
+        if name not in ("MORPHIQ_API_KEY", "MORPHIQ_API_BASE_URL")
+    }
+    environment["MORPHIQ_API_BASE_URL"] = endpoint
+    notebook = nbformat.read(ROOT / "notebooks" / filename, as_version=4)
+    action_check = (
+        "assert price_button.disabled and sweep_button.disabled\n"
+        "price_button.click()\nsweep_button.click()"
+        if filename.startswith("pricing")
+        else "assert analyze_button.disabled\nanalyze_button.click()"
+    )
+    notebook.cells.append(nbformat.v4.new_code_cell("assert not api_available\n" + action_check))
+    executed = NotebookClient(
+        notebook, timeout=60, resources={"metadata": {"path": str(tmp_path)}}
+    ).execute(env=environment)
+    assert "API key required" in json.dumps(executed)
+    assert received == []

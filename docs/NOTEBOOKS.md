@@ -9,14 +9,14 @@ export MORPHIQ_API_KEY="YOUR_API_KEY"
 docker compose up --build
 ```
 
-Open the local token-authenticated URL printed by Jupyter to reach Start Here.
+Open the local token-authenticated URL printed by Jupyter to reach the dashboard launcher.
 Choose [option pricing](../notebooks/pricing/options.ipynb) or
-[regime analysis](../notebooks/regime/identification.ipynb), then select
-**Run → Run All Cells** to initialize the controls. The start page and both
+[regime analysis](../notebooks/regime/identification.ipynb). Dashboard controls initialize
+automatically through Voilà. The start page and both
 workspaces are included in the image.
 Compose passes the key into the container at runtime; it is not baked into the
-image. The notebook connects to `https://api.morphiqlabs.com` automatically. Leave
-the key unset to enter it at the masked notebook prompt instead. The Jupyter
+image. The notebook connects to `https://api.morphiqlabs.com` automatically. If
+the key is unset, the dashboard shows setup instructions and disables API actions. The Jupyter
 access token in the local URL is separate from your MorphIQ API key.
 
 The container runs as UID 1000, publishes only to localhost, and retains Jupyter's
@@ -70,9 +70,8 @@ intentional reset after saving your work.
 
 For startup problems check Docker and host-port availability. For API failures
 check the endpoint/network path and typed error. After changing an exported key,
-rerun `docker compose up -d` to recreate the container with the new setting. Keys
-entered at the notebook prompt can be changed by restarting the kernel. Changing keys needs no rebuild;
-changing dependencies or SDK versions does. The image includes Jupyter, ipywidgets, matplotlib and yfinance for the
+rerun `docker compose up -d` to recreate the container with the new setting. Changing keys needs no rebuild;
+changing dependencies or SDK versions does. The image includes Jupyter, Voilà, ipywidgets, matplotlib and yfinance for the
 pricing and regime workspaces.
 
 ## Source and verification
@@ -98,3 +97,14 @@ The image uses a digest-pinned multi-platform Python base and hashed dependency
 locks. Registry publishing, release tags, image scanning/provenance and published
 image acceptance remain [#14](https://github.com/MorphIQ-Labs/morphiq-sdk-python/issues/14).
 The multi-user hosted website remains [#11](https://github.com/MorphIQ-Labs/morphiq-sdk-python/issues/11).
+
+## Dashboard and editor URLs
+
+The default page is `/voila/render/start-here.ipynb`. Pricing is at
+`/voila/render/pricing/options.ipynb`; regime is at
+`/voila/render/regime/identification.ipynb`. Opening a dashboard initializes its
+controls but sends no MorphIQ requests. Each page has its own kernel and session
+results. Refreshing a dashboard starts a new session.
+
+Use **Edit notebook** to open the source in JupyterLab. That editor follows the
+normal notebook workflow: select **Run All Cells** to initialize controls.

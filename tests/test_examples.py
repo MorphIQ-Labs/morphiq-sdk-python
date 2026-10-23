@@ -149,7 +149,11 @@ def test_generated_notebook_executes_without_source_tree(
             assert not cell.outputs and cell.execution_count is None
         elif cell.cell_type == "markdown":
             for link in re.findall(r"\]\(([^)]+\.ipynb)\)", cell.source):
-                assert (notebook_root / filename).parent.joinpath(link).is_file()
+                if link.startswith(("/voila/render/", "/lab/tree/")):
+                    relative = link.removeprefix("/voila/render/").removeprefix("/lab/tree/")
+                    assert (notebook_root / relative).is_file()
+                else:
+                    assert (notebook_root / filename).parent.joinpath(link).is_file()
     exercise = workspace_exercise(filename, regime_cases[0]["request"]["prices"])
     if exercise:
         notebook.cells.append(nbformat.v4.new_code_cell(exercise))

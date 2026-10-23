@@ -1,7 +1,7 @@
 # Analysis workspaces
 
-Open [Start Here](start-here.ipynb), choose a workspace, and run all cells once.
-Use the controls to load data and run an analysis; no code edits are required.
+Open the Docker dashboard launcher and choose a workspace. Its controls initialize
+automatically through Voilà. Use the controls to load data and run an analysis; no code edits are required.
 
 | Workspace | Tools | API requests per action |
 | --- | --- | --- |
@@ -10,7 +10,9 @@ Use the controls to load data and run an analysis; no code edits are required.
 
 Setup, control changes and Yahoo downloads make no MorphIQ requests. Data stays
 in memory. Run `docker compose up --build`, or install `.[notebooks]` and open
-JupyterLab. Set `MORPHIQ_API_KEY` before startup, or use the masked prompt.
+JupyterLab and visit `/voila/render/start-here.ipynb`. Set `MORPHIQ_API_KEY` before
+startup; otherwise API actions remain disabled. The JupyterLab editor is available
+through each dashboard’s **Edit notebook** link and requires Run All Cells.
 See [the notebook guide](../docs/NOTEBOOKS.md) for environment and persistence.
 
 These notebooks are analysis tools. The Python scripts in `examples/` separately

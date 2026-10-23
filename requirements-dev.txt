@@ -839,6 +839,7 @@ jupyter-client==8.10.0 \
     #   ipykernel
     #   jupyter-server
     #   nbclient
+    #   voila
 jupyter-core==5.9.1 \
     --hash=sha256:4d09aaff303b9566c3ce657f580bd089ff5c91f5f89cf7d8846c3cdf465b5508 \
     --hash=sha256:ebf87fdc6073d142e114c72c9e29a9d7ca03fad818c5d300ce2adc1fb0743407
@@ -851,6 +852,7 @@ jupyter-core==5.9.1 \
     #   nbclient
     #   nbconvert
     #   nbformat
+    #   voila
 jupyter-events==0.12.1 \
     --hash=sha256:c366585253f537a627da52fa7ca7410c5b5301fe893f511e7b077c2d93ec8bcf \
     --hash=sha256:faff25f77218335752f35f23c5fe6e4a392a7bd99a5939ccb9b8fbf594636cf3
@@ -867,6 +869,7 @@ jupyter-server==2.21.1 \
     #   jupyterlab
     #   jupyterlab-server
     #   notebook-shim
+    #   voila
 jupyter-server-terminals==0.5.4 \
     --hash=sha256:55be353fc74a80bc7f3b20e6be50a55a61cd525626f578dcb66a5708e2007d14 \
     --hash=sha256:bbda128ed41d0be9020349f9f1f2a4ab9952a73ed5f5ac9f1419794761fb87f5
@@ -882,7 +885,9 @@ jupyterlab-pygments==0.3.0 \
 jupyterlab-server==2.28.1 \
     --hash=sha256:0c3c2418d51021ce280916e63dfe4cba8386b4e2787be5c25433c98f560ddb31 \
     --hash=sha256:4bd36c7c11d872e15cefa4951e12380a47e6901687165332dd50a007cb367ad9
-    # via jupyterlab
+    # via
+    #   jupyterlab
+    #   voila
 jupyterlab-widgets==3.0.17 \
     --hash=sha256:40ac1e9955acf116c4d995d9bfa082d86ad9ec6d91c4f134827cf5e0a5eb75e0 \
     --hash=sha256:6e61fe21ca8a66039180a5cc52a433e07279d2fee79c8be963e00d55193f17a8
@@ -1639,10 +1644,13 @@ nbclient==0.11.0 \
     # via
     #   -r requirements-dev.in
     #   nbconvert
+    #   voila
 nbconvert==7.17.2 \
     --hash=sha256:344a218e8595117ce37396ed025d994f146d076226ebac59255a2fa085ab24d8 \
     --hash=sha256:6a143c11c00bf831604da4b1be4347d36ea52367057eb920135d69bc2862fed2
-    # via jupyter-server
+    # via
+    #   jupyter-server
+    #   voila
 nbformat==5.11.1 \
     --hash=sha256:32d4521c68c6e7d5b29c76defaeed9f42ea733142b9b19f88277ce10390b9c4d \
     --hash=sha256:cc6698fa75f4fab8755ead786317815f13a6fee3b53311c0abb1a8b51d52f7ec
@@ -2714,6 +2722,7 @@ traitlets==5.16.1 \
     #   nbclient
     #   nbconvert
     #   nbformat
+    #   voila
 trove-classifiers==2026.9.21.13 \
     --hash=sha256:0a9ebc8d4e2f3e8a22848c5258033035bec17a3012ac3fea16dbaa764489eb71 \
     --hash=sha256:8b1ff4f9c191b1040b71c37f1e445ab99732911e3cd91de52838453a854d7a17
@@ -2772,6 +2781,10 @@ uv==0.13.5 \
     --hash=sha256:f867c5ec24c563afaae730a13e46cdf74a1a0b64c134286ff99762a96e2abf40 \
     --hash=sha256:fa8d26e08e34c29c0c4e820cf3181757086d547240b4f4d31ff1d8bd810ca946
     # via -r requirements-dev.in
+voila==0.5.13 \
+    --hash=sha256:75dc515f0f814182088317923c2f15d22a5355766bb5eb04ae2370ce2e2f3652 \
+    --hash=sha256:e7a01973b085888df9a0bf50207fc252f700675011a4d053ab1f94be219b55a7
+    # via -r requirements-notebook.in
 wcwidth==0.9.3 \
     --hash=sha256:16d09df90b3a8f799ea14c726a41d9b906c3104f95f46d158e1ebe45cf4d547b \
     --hash=sha256:2f875a4c9e62df2ecfa70d99b24c551f2245609858e179c3a40e74631b2d08a4 \
@@ -2972,7 +2985,9 @@ websockets==17.3 \
     --hash=sha256:fc23e72bd7f8a8e540fed2244524d0a9aeb6ae3325f3d56f04a7a3debe5b04c2 \
     --hash=sha256:fdd00937f15f5f93c8e53d8060a8c4c010431ab595a9b5b50ddd569a04603944 \
     --hash=sha256:fe7a168d805c8a7bf1c2de55b7ab2bc958586bfd88d0e87235a92cac66b590a7
-    # via yfinance
+    # via
+    #   voila
+    #   yfinance
 widgetsnbextension==4.0.16 \
     --hash=sha256:a31a8774885b96fe825462f5d6496166f0c7cae111195b6465c801d230eb5a4e \
     --hash=sha256:adeea0ae78f0856ee4945f413299801b82a0a01416303301f39a704282a37b73
