@@ -1,9 +1,14 @@
 # Notebook companions and hosted exploration
 
-Cookbook notebook companions are planned with [#7](https://github.com/MorphIQ-Labs/morphiq-sdk-python/issues/7).
-Choose a reproducible script-to-notebook workflow during implementation. Verify
-execution against controlled API fixtures and keep outputs free of credentials
-and private data.
+`00-start-here.ipynb` covers European/American pricing with sync and async clients.
+Run `docker compose up --build`, or install the notebook extra and open it with
+JupyterLab. See [the notebook guide](../docs/NOTEBOOKS.md) for credentials, four-call
+Run All behavior, persistence and networking.
+
+Regenerate it with `python scripts/generate_notebook.py`; `--check` verifies
+agreement with the executable examples. Committed cells contain no executed
+outputs or credentials. CI executes them against a loopback native-response replay.
+The remaining cookbook is tracked in [#7](https://github.com/MorphIQ-Labs/morphiq-sdk-python/issues/7).
 
 [Hosted notebook exploration (#11)](https://github.com/MorphIQ-Labs/morphiq-sdk-python/issues/11)
 compares managed notebook services, browser Python and isolated server kernels.

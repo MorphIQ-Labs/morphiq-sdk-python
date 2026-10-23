@@ -1,0 +1,14 @@
+*
+!Dockerfile
+!pyproject.toml
+!README.md
+!requirements-build.txt
+!requirements-notebook.txt
+!src/
+!src/**
+!notebooks/
+!notebooks/00-start-here.ipynb
+!docker/
+!docker/start_notebook.py
+**/__pycache__
+**/*.pyc

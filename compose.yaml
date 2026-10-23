@@ -1,0 +1,18 @@
+services:
+  notebook:
+    build: .
+    ports:
+      - "127.0.0.1:${MORPHIQ_NOTEBOOK_PORT:-8888}:8888"
+    environment:
+      MORPHIQ_NOTEBOOK_PORT: "${MORPHIQ_NOTEBOOK_PORT:-8888}"
+      MORPHIQ_API_BASE_URL: "${MORPHIQ_API_BASE_URL:-}"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - notebook-work:/home/notebook/work
+    init: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+
+volumes:
+  notebook-work:

@@ -32,7 +32,7 @@ def main() -> None:
         venv.EnvBuilder(with_pip=True).create(installation)
         python = installation / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
         subprocess.run(
-            [str(python), "-m", "pip", "install", "--no-deps", str(wheels[0])],
+            [str(python), "-m", "pip", "install", str(wheels[0])],
             cwd=temporary,
             check=True,
         )

@@ -1,0 +1,5073 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "MorphIQ API",
+    "description": "Native HTTP API for MorphIQ Labs pricing, risk and regime analysis",
+    "version": "3.0.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "operationId": "getHealth",
+        "responses": {
+          "200": {
+            "description": "Compatibility readiness check",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service is draining or no valid policy is available",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Minimum retry delay in seconds"
+              },
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/live": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "operationId": "getLiveness",
+        "responses": {
+          "200": {
+            "description": "Process is alive",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/openapi.json": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "operationId": "getOpenApiDocument",
+        "responses": {
+          "200": {
+            "description": "OpenAPI 3.1 service contract",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ready": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "operationId": "getReadiness",
+        "responses": {
+          "200": {
+            "description": "Service accepts protected work under a valid policy",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service is draining or no valid policy is available",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Minimum retry delay in seconds"
+              },
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/analytics": {
+      "post": {
+        "tags": [
+          "pricing"
+        ],
+        "operationId": "fusedAnalytics",
+        "requestBody": {
+          "description": "FusedAnalyticsRequest encoded as JSON or morphiq.ferro_risk.v1.FusedAnalyticsRequest",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FusedAnalyticsRequest"
+              }
+            },
+            "application/protobuf": {
+              "schema": {
+                "$ref": "#/components/schemas/ProtobufBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Numerical result",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FusedAnalyticsResponse"
+                }
+              },
+              "application/protobuf": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProtobufBody"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed request",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Credential missing or not verifiable",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "The account's funding is spent until a top-up or the next budget period",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The account is not permitted, or its plan does not include this operation",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "Response media type is not acceptable",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "408": {
+            "description": "Request body deadline exceeded",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The reservation expired before execution began",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request too large",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported media type",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid pricing request, or work that cannot be priced under the account's limits",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Request rate or concurrent request allowance exhausted",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Minimum retry delay in seconds"
+              },
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Pricing failure",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Capacity exhausted, funding, policy or admission temporarily unavailable, or service draining",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Minimum retry delay in seconds"
+              },
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Compute deadline exceeded",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/analytics:batch": {
+      "post": {
+        "tags": [
+          "pricing"
+        ],
+        "operationId": "fusedAnalyticsBatch",
+        "requestBody": {
+          "description": "BatchFusedAnalyticsRequest encoded as JSON or morphiq.ferro_risk.v1.BatchFusedAnalyticsRequest",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchFusedAnalyticsRequest"
+              }
+            },
+            "application/protobuf": {
+              "schema": {
+                "$ref": "#/components/schemas/ProtobufBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Ordered batch results",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchFusedAnalyticsResponse"
+                }
+              },
+              "application/protobuf": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProtobufBody"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed request",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Credential missing or not verifiable",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "The account's funding is spent until a top-up or the next budget period",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The account is not permitted, or its plan does not include this operation",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "Response media type is not acceptable",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "408": {
+            "description": "Request body deadline exceeded",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The reservation expired before execution began",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request too large",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported media type",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid batch request, or work that cannot be priced under the account's limits",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Request rate or concurrent request allowance exhausted",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Minimum retry delay in seconds"
+              },
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Pricing failure",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Ingress or weighted compute capacity exhausted, or funding, policy or admission temporarily unavailable",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Minimum retry delay in seconds"
+              },
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Compute deadline exceeded",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/greeks": {
+      "post": {
+        "tags": [
+          "pricing"
+        ],
+        "operationId": "greeksAllTen",
+        "requestBody": {
+          "description": "GreeksAllTenRequest encoded as JSON or morphiq.ferro_risk.v1.GreeksAllTenRequest",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GreeksAllTenRequest"
+              }
+            },
+            "application/protobuf": {
+              "schema": {
+                "$ref": "#/components/schemas/ProtobufBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Numerical result",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GreeksAllTenResponse"
+                }
+              },
+              "application/protobuf": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProtobufBody"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed request",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Credential missing or not verifiable",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "The account's funding is spent until a top-up or the next budget period",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The account is not permitted, or its plan does not include this operation",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "Response media type is not acceptable",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "408": {
+            "description": "Request body deadline exceeded",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The reservation expired before execution began",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request too large",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported media type",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid pricing request, or work that cannot be priced under the account's limits",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Request rate or concurrent request allowance exhausted",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Minimum retry delay in seconds"
+              },
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Pricing failure",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Capacity exhausted, funding, policy or admission temporarily unavailable, or service draining",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Minimum retry delay in seconds"
+              },
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Compute deadline exceeded",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/greeks:batch": {
+      "post": {
+        "tags": [
+          "pricing"
+        ],
+        "operationId": "greeksAllTenBatch",
+        "requestBody": {
+          "description": "BatchGreeksAllTenRequest encoded as JSON or morphiq.ferro_risk.v1.BatchGreeksAllTenRequest",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchGreeksAllTenRequest"
+              }
+            },
+            "application/protobuf": {
+              "schema": {
+                "$ref": "#/components/schemas/ProtobufBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Ordered batch results",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchGreeksAllTenResponse"
+                }
+              },
+              "application/protobuf": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProtobufBody"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed request",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Credential missing or not verifiable",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "The account's funding is spent until a top-up or the next budget period",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The account is not permitted, or its plan does not include this operation",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "Response media type is not acceptable",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "408": {
+            "description": "Request body deadline exceeded",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The reservation expired before execution began",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request too large",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported media type",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid batch request, or work that cannot be priced under the account's limits",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Request rate or concurrent request allowance exhausted",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Minimum retry delay in seconds"
+              },
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Pricing failure",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Ingress or weighted compute capacity exhausted, or funding, policy or admission temporarily unavailable",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Minimum retry delay in seconds"
+              },
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Compute deadline exceeded",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/implied-volatility": {
+      "post": {
+        "tags": [
+          "pricing"
+        ],
+        "operationId": "impliedVolatility",
+        "requestBody": {
+          "description": "ImpliedVolatilityRequest encoded as JSON or morphiq.ferro_risk.v1.ImpliedVolatilityRequest",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImpliedVolatilityRequest"
+              }
+            },
+            "application/protobuf": {
+              "schema": {
+                "$ref": "#/components/schemas/ProtobufBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Numerical result",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImpliedVolatilityResponse"
+                }
+              },
+              "application/protobuf": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProtobufBody"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed request",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Credential missing or not verifiable",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "The account's funding is spent until a top-up or the next budget period",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The account is not permitted, or its plan does not include this operation",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "Response media type is not acceptable",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "408": {
+            "description": "Request body deadline exceeded",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The reservation expired before execution began",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request too large",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported media type",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid pricing request, or work that cannot be priced under the account's limits",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Request rate or concurrent request allowance exhausted",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Minimum retry delay in seconds"
+              },
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Pricing failure",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Capacity exhausted, funding, policy or admission temporarily unavailable, or service draining",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Minimum retry delay in seconds"
+              },
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Compute deadline exceeded",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/implied-volatility:batch": {
+      "post": {
+        "tags": [
+          "pricing"
+        ],
+        "operationId": "impliedVolatilityBatch",
+        "requestBody": {
+          "description": "BatchImpliedVolatilityRequest encoded as JSON or morphiq.ferro_risk.v1.BatchImpliedVolatilityRequest",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchImpliedVolatilityRequest"
+              }
+            },
+            "application/protobuf": {
+              "schema": {
+                "$ref": "#/components/schemas/ProtobufBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Ordered batch results",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchImpliedVolatilityResponse"
+                }
+              },
+              "application/protobuf": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProtobufBody"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed request",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Credential missing or not verifiable",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "The account's funding is spent until a top-up or the next budget period",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The account is not permitted, or its plan does not include this operation",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "Response media type is not acceptable",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "408": {
+            "description": "Request body deadline exceeded",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The reservation expired before execution began",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request too large",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported media type",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid batch request, or work that cannot be priced under the account's limits",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Request rate or concurrent request allowance exhausted",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Minimum retry delay in seconds"
+              },
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Pricing failure",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Ingress or weighted compute capacity exhausted, or funding, policy or admission temporarily unavailable",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Minimum retry delay in seconds"
+              },
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Compute deadline exceeded",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/price": {
+      "post": {
+        "tags": [
+          "pricing"
+        ],
+        "operationId": "priceOption",
+        "requestBody": {
+          "description": "PriceRequest encoded as JSON or morphiq.ferro_risk.v1.PriceRequest",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PriceRequest"
+              }
+            },
+            "application/protobuf": {
+              "schema": {
+                "$ref": "#/components/schemas/ProtobufBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Price calculated",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceResponse"
+                }
+              },
+              "application/protobuf": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProtobufBody"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed request",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Credential missing or not verifiable",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "The account's funding is spent until a top-up or the next budget period",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The account is not permitted, or its plan does not include this operation",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "Response media type is not acceptable",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "408": {
+            "description": "Request body deadline exceeded",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The reservation expired before execution began",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request too large",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported media type",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid pricing request, or work that cannot be priced under the account's limits",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Request rate or concurrent request allowance exhausted",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Minimum retry delay in seconds"
+              },
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Pricing failure",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Capacity exhausted, funding, policy or admission temporarily unavailable, or service draining",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Minimum retry delay in seconds"
+              },
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Compute deadline exceeded",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/price:batch": {
+      "post": {
+        "tags": [
+          "pricing"
+        ],
+        "operationId": "priceOptionBatch",
+        "requestBody": {
+          "description": "BatchPriceRequest encoded as JSON or morphiq.ferro_risk.v1.BatchPriceRequest",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchPriceRequest"
+              }
+            },
+            "application/protobuf": {
+              "schema": {
+                "$ref": "#/components/schemas/ProtobufBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Ordered batch results",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchPriceResponse"
+                }
+              },
+              "application/protobuf": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProtobufBody"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed request",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Credential missing or not verifiable",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "The account's funding is spent until a top-up or the next budget period",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The account is not permitted, or its plan does not include this operation",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "Response media type is not acceptable",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "408": {
+            "description": "Request body deadline exceeded",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The reservation expired before execution began",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request too large",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported media type",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid batch request, or work that cannot be priced under the account's limits",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Request rate or concurrent request allowance exhausted",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Minimum retry delay in seconds"
+              },
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Pricing failure",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Ingress or weighted compute capacity exhausted, or funding, policy or admission temporarily unavailable",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Minimum retry delay in seconds"
+              },
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Compute deadline exceeded",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/regime": {
+      "post": {
+        "tags": [
+          "regime"
+        ],
+        "operationId": "identifyRegime",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegimeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "V1 regime estimates; scores are uncalibrated",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegimeResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid JSON or price array",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid credential",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceErrorEnvelope"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Insufficient FCU",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or not entitled",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceErrorEnvelope"
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "Only JSON responses are available",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceErrorEnvelope"
+                }
+              }
+            }
+          },
+          "408": {
+            "description": "Request body deadline",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Reservation expired before execution",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceErrorEnvelope"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request exceeds byte allowance",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceErrorEnvelope"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Only JSON requests are available",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate or account concurrency limit",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Minimum retry delay in seconds"
+              },
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Inference or encoding failure",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Capacity, policy, funding or model unavailable",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Minimum retry delay in seconds"
+              },
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceErrorEnvelope"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Compute deadline",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceErrorEnvelope"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BatchFusedAnalyticsItemResult": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BatchFusedAnalyticsOutcome"
+          },
+          {
+            "type": "object",
+            "required": [
+              "index"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "format": "int32",
+                "minimum": 0
+              }
+            }
+          }
+        ],
+        "description": "Ordered result with an explicit per-item failure alternative."
+      },
+      "BatchFusedAnalyticsOutcome": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "result",
+              "status"
+            ],
+            "properties": {
+              "result": {
+                "$ref": "#/components/schemas/FusedAnalyticsResult"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "success"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "error",
+              "status"
+            ],
+            "properties": {
+              "error": {
+                "$ref": "#/components/schemas/ErrorBody"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "error"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "BatchFusedAnalyticsRequest": {
+        "type": "object",
+        "description": "Ordered request envelope; runtime applies the pinned plan limit.",
+        "required": [
+          "requests"
+        ],
+        "properties": {
+          "requests": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FusedAnalyticsRequest"
+            },
+            "maxItems": 1024,
+            "minItems": 1
+          }
+        },
+        "additionalProperties": false
+      },
+      "BatchFusedAnalyticsResponse": {
+        "type": "object",
+        "description": "One metadata block for the entire admitted batch.",
+        "required": [
+          "metadata",
+          "results"
+        ],
+        "properties": {
+          "metadata": {
+            "$ref": "#/components/schemas/ResponseMetadata"
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BatchFusedAnalyticsItemResult"
+            }
+          }
+        }
+      },
+      "BatchGreeksAllTenItemResult": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BatchGreeksAllTenOutcome"
+          },
+          {
+            "type": "object",
+            "required": [
+              "index"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "format": "int32",
+                "minimum": 0
+              }
+            }
+          }
+        ],
+        "description": "Ordered result with an explicit per-item failure alternative."
+      },
+      "BatchGreeksAllTenOutcome": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "result",
+              "status"
+            ],
+            "properties": {
+              "result": {
+                "$ref": "#/components/schemas/GreeksAllTenResult"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "success"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "error",
+              "status"
+            ],
+            "properties": {
+              "error": {
+                "$ref": "#/components/schemas/ErrorBody"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "error"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "BatchGreeksAllTenRequest": {
+        "type": "object",
+        "description": "Ordered request envelope; runtime applies the pinned plan limit.",
+        "required": [
+          "requests"
+        ],
+        "properties": {
+          "requests": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GreeksAllTenRequest"
+            },
+            "maxItems": 1024,
+            "minItems": 1
+          }
+        },
+        "additionalProperties": false
+      },
+      "BatchGreeksAllTenResponse": {
+        "type": "object",
+        "description": "One metadata block for the entire admitted batch.",
+        "required": [
+          "metadata",
+          "results"
+        ],
+        "properties": {
+          "metadata": {
+            "$ref": "#/components/schemas/ResponseMetadata"
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BatchGreeksAllTenItemResult"
+            }
+          }
+        }
+      },
+      "BatchImpliedVolatilityItemResult": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BatchImpliedVolatilityOutcome"
+          },
+          {
+            "type": "object",
+            "required": [
+              "index"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "format": "int32",
+                "minimum": 0
+              }
+            }
+          }
+        ],
+        "description": "Ordered result with an explicit per-item failure alternative."
+      },
+      "BatchImpliedVolatilityOutcome": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "result",
+              "status"
+            ],
+            "properties": {
+              "result": {
+                "$ref": "#/components/schemas/ImpliedVolatilityResult"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "success"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "error",
+              "status"
+            ],
+            "properties": {
+              "error": {
+                "$ref": "#/components/schemas/ErrorBody"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "error"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "BatchImpliedVolatilityRequest": {
+        "type": "object",
+        "description": "Ordered request envelope; runtime applies the pinned plan limit.",
+        "required": [
+          "requests"
+        ],
+        "properties": {
+          "requests": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ImpliedVolatilityRequest"
+            },
+            "maxItems": 1024,
+            "minItems": 1
+          }
+        },
+        "additionalProperties": false
+      },
+      "BatchImpliedVolatilityResponse": {
+        "type": "object",
+        "description": "One metadata block for the entire admitted batch.",
+        "required": [
+          "metadata",
+          "results"
+        ],
+        "properties": {
+          "metadata": {
+            "$ref": "#/components/schemas/ResponseMetadata"
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BatchImpliedVolatilityItemResult"
+            }
+          }
+        }
+      },
+      "BatchItemResult": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BatchOutcome"
+          },
+          {
+            "type": "object",
+            "required": [
+              "index"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "format": "int32",
+                "minimum": 0
+              }
+            }
+          }
+        ],
+        "description": "Ordered result for one batch element."
+      },
+      "BatchOutcome": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "result",
+              "status"
+            ],
+            "properties": {
+              "result": {
+                "$ref": "#/components/schemas/PriceResult"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "success"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "error",
+              "status"
+            ],
+            "properties": {
+              "error": {
+                "$ref": "#/components/schemas/ErrorBody"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "error"
+                ]
+              }
+            }
+          }
+        ],
+        "description": "Per-item batch outcome. Structural request failures remain request-level errors."
+      },
+      "BatchPriceRequest": {
+        "type": "object",
+        "description": "An ordered batch of option-pricing requests.",
+        "required": [
+          "requests"
+        ],
+        "properties": {
+          "requests": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PriceRequest"
+            },
+            "maxItems": 1024,
+            "minItems": 1
+          }
+        },
+        "additionalProperties": false
+      },
+      "BatchPriceResponse": {
+        "type": "object",
+        "description": "Successful response for a batch, including any per-item pricing failures.",
+        "required": [
+          "metadata",
+          "results"
+        ],
+        "properties": {
+          "metadata": {
+            "$ref": "#/components/schemas/ResponseMetadata"
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BatchItemResult"
+            }
+          }
+        }
+      },
+      "DividendEvent": {
+        "type": "object",
+        "description": "One discrete cash dividend.\n\nTime is a year fraction on the same basis as `time_to_expiry_years`, not a\ncalendar date. The contract carries no calendar, day-count convention or\ntimezone, and introducing one here to express a dividend date would add a\nbasis the rest of the contract does not have and cannot validate. The\nengine's own `DividendEvent` is `ex_time_years` for the same reason.",
+        "required": [
+          "ex_time_years",
+          "cash_amount"
+        ],
+        "properties": {
+          "cash_amount": {
+            "type": "number",
+            "format": "double",
+            "description": "Cash amount per share, in the same currency as spot and strike."
+          },
+          "ex_time_years": {
+            "type": "number",
+            "format": "double",
+            "description": "Ex-dividend time as a year fraction from valuation."
+          }
+        },
+        "additionalProperties": false
+      },
+      "EngineIdentity": {
+        "type": "object",
+        "description": "Service-owned engine provenance, independent of any engine's Rust types.",
+        "required": [
+          "name",
+          "version",
+          "revision"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          }
+        }
+      },
+      "ErrorBody": {
+        "type": "object",
+        "description": "Stable, machine-readable error details.",
+        "required": [
+          "code",
+          "message"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "field": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "ErrorEnvelope": {
+        "type": "object",
+        "description": "Top-level HTTP error envelope.",
+        "required": [
+          "metadata",
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ErrorBody"
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/ResponseMetadata"
+          }
+        }
+      },
+      "ExerciseStyle": {
+        "type": "string",
+        "description": "Contract exercise convention, independent of the pricing algorithm.",
+        "enum": [
+          "european",
+          "american"
+        ]
+      },
+      "FusedAnalyticsRequest": {
+        "type": "object",
+        "description": "A request for price and Greeks, optionally at a volatility solved from an\nobserved premium first.\n\nWith `market_price`, volatility is solved and the Greeks are evaluated at\nthe solved value — one admission, one solve, and the solved point passed\ninward as verified evidence rather than re-derived. Without it, the\nsupplied `volatility` is used and the result is the all-ten-Greeks\noperation under another name.",
+        "required": [
+          "exercise_style",
+          "pricing_model",
+          "option_type",
+          "spot",
+          "strike",
+          "time_to_expiry_years",
+          "risk_free_rate",
+          "dividend_yield",
+          "volatility"
+        ],
+        "properties": {
+          "dividend_schedule": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DividendEvent"
+            },
+            "description": "Served only together with `market_price` (#330).",
+            "maxItems": 16
+          },
+          "dividend_yield": {
+            "type": "number",
+            "format": "double"
+          },
+          "exercise_style": {
+            "$ref": "#/components/schemas/ExerciseStyle"
+          },
+          "market_price": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "The observed premium to invert before evaluating the Greeks."
+          },
+          "model_version": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "option_type": {
+            "$ref": "#/components/schemas/OptionType"
+          },
+          "pricing_model": {
+            "$ref": "#/components/schemas/PricingModel"
+          },
+          "risk_free_rate": {
+            "type": "number",
+            "format": "double"
+          },
+          "spot": {
+            "type": "number",
+            "format": "double"
+          },
+          "strike": {
+            "type": "number",
+            "format": "double"
+          },
+          "time_to_expiry_years": {
+            "type": "number",
+            "format": "double"
+          },
+          "volatility": {
+            "type": "number",
+            "format": "double",
+            "description": "Used only when `market_price` is absent."
+          }
+        },
+        "additionalProperties": false
+      },
+      "FusedAnalyticsResponse": {
+        "type": "object",
+        "description": "Successful response for one fused-analytics operation.",
+        "required": [
+          "metadata",
+          "result"
+        ],
+        "properties": {
+          "metadata": {
+            "$ref": "#/components/schemas/ResponseMetadata"
+          },
+          "result": {
+            "$ref": "#/components/schemas/FusedAnalyticsResult"
+          }
+        }
+      },
+      "FusedAnalyticsResult": {
+        "type": "object",
+        "description": "Price, Greeks and — when a premium was supplied — the solve that produced\nthe volatility they were evaluated at.",
+        "required": [
+          "price",
+          "greeks",
+          "pricing_model",
+          "model_version"
+        ],
+        "properties": {
+          "greeks": {
+            "$ref": "#/components/schemas/GreeksAllTen"
+          },
+          "implied_volatility": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ImpliedVolatilityResult",
+                "description": "Present only when the request supplied `market_price`."
+              }
+            ]
+          },
+          "model_version": {
+            "type": "string"
+          },
+          "price": {
+            "type": "number",
+            "format": "double"
+          },
+          "pricing_model": {
+            "$ref": "#/components/schemas/ResolvedPricingModel"
+          }
+        }
+      },
+      "GreeksAllTen": {
+        "type": "object",
+        "description": "The ten Greeks, on the contract's stated bases.\n\nTime derivatives are **per year**. The engine reports them per calendar\nday, which embeds a 365-day calendar; the contract carries no calendar,\nso the service scales by the engine's own day count at this boundary and\nthe caller applies whichever convention it holds. Vega is raw `dV/dσ` per\nunit volatility, not per point. Nothing else is rescaled.",
+        "required": [
+          "delta",
+          "gamma",
+          "theta",
+          "vega",
+          "rho",
+          "vanna",
+          "volga",
+          "charm",
+          "veta",
+          "color"
+        ],
+        "properties": {
+          "charm": {
+            "type": "number",
+            "format": "double",
+            "description": "`d²V/(dS dt)`, **per year**."
+          },
+          "color": {
+            "type": "number",
+            "format": "double",
+            "description": "`d³V/(dS² dt)`, **per year**."
+          },
+          "delta": {
+            "type": "number",
+            "format": "double",
+            "description": "`dV/dS`."
+          },
+          "gamma": {
+            "type": "number",
+            "format": "double",
+            "description": "`d²V/dS²`."
+          },
+          "rho": {
+            "type": "number",
+            "format": "double",
+            "description": "`dV/dr`, per unit rate."
+          },
+          "theta": {
+            "type": "number",
+            "format": "double",
+            "description": "`dV/dt`, **per year**."
+          },
+          "vanna": {
+            "type": "number",
+            "format": "double",
+            "description": "`d²V/(dS dσ)`, per unit volatility."
+          },
+          "vega": {
+            "type": "number",
+            "format": "double",
+            "description": "`dV/dσ`, per unit volatility."
+          },
+          "veta": {
+            "type": "number",
+            "format": "double",
+            "description": "`d²V/(dσ dt)`, **per year** per unit volatility."
+          },
+          "volga": {
+            "type": "number",
+            "format": "double",
+            "description": "`d²V/dσ²`, per unit volatility squared."
+          }
+        }
+      },
+      "GreeksAllTenRequest": {
+        "type": "object",
+        "description": "A request for the price and all ten Greeks at a supplied volatility.\n\nThe same shape as `PriceRequest`: the Greeks are derivatives of the\nprice, so they are a property of the same contract and the same\ncoordinates.",
+        "required": [
+          "exercise_style",
+          "pricing_model",
+          "option_type",
+          "spot",
+          "strike",
+          "time_to_expiry_years",
+          "risk_free_rate",
+          "dividend_yield",
+          "volatility"
+        ],
+        "properties": {
+          "dividend_schedule": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DividendEvent"
+            },
+            "description": "Accepted by the wire contract, refused by this operation until the\nengine exposes schedule-aware Greeks without a premium (#330). A\nschedule is served on `FusedAnalytics` with `market_price`.",
+            "maxItems": 16
+          },
+          "dividend_yield": {
+            "type": "number",
+            "format": "double"
+          },
+          "exercise_style": {
+            "$ref": "#/components/schemas/ExerciseStyle"
+          },
+          "model_version": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "option_type": {
+            "$ref": "#/components/schemas/OptionType"
+          },
+          "pricing_model": {
+            "$ref": "#/components/schemas/PricingModel"
+          },
+          "risk_free_rate": {
+            "type": "number",
+            "format": "double"
+          },
+          "spot": {
+            "type": "number",
+            "format": "double"
+          },
+          "strike": {
+            "type": "number",
+            "format": "double"
+          },
+          "time_to_expiry_years": {
+            "type": "number",
+            "format": "double"
+          },
+          "volatility": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "GreeksAllTenResponse": {
+        "type": "object",
+        "description": "Successful response for one all-ten-Greeks operation.",
+        "required": [
+          "metadata",
+          "result"
+        ],
+        "properties": {
+          "metadata": {
+            "$ref": "#/components/schemas/ResponseMetadata"
+          },
+          "result": {
+            "$ref": "#/components/schemas/GreeksAllTenResult"
+          }
+        }
+      },
+      "GreeksAllTenResult": {
+        "type": "object",
+        "description": "The price and Greeks of one contract at the volatility supplied.",
+        "required": [
+          "price",
+          "greeks",
+          "pricing_model",
+          "model_version"
+        ],
+        "properties": {
+          "greeks": {
+            "$ref": "#/components/schemas/GreeksAllTen"
+          },
+          "model_version": {
+            "type": "string"
+          },
+          "price": {
+            "type": "number",
+            "format": "double"
+          },
+          "pricing_model": {
+            "$ref": "#/components/schemas/ResolvedPricingModel"
+          }
+        }
+      },
+      "ImpliedVolatilityRequest": {
+        "type": "object",
+        "description": "A request to invert an observed premium into a volatility.\n\nCarries `market_price` and no `volatility`: volatility is the unknown being\nsolved for, so a request that supplied one would be asking the service to\nignore it.",
+        "required": [
+          "exercise_style",
+          "pricing_model",
+          "option_type",
+          "spot",
+          "strike",
+          "time_to_expiry_years",
+          "risk_free_rate",
+          "dividend_yield",
+          "market_price"
+        ],
+        "properties": {
+          "dividend_schedule": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DividendEvent"
+            },
+            "maxItems": 16
+          },
+          "dividend_yield": {
+            "type": "number",
+            "format": "double"
+          },
+          "exercise_style": {
+            "$ref": "#/components/schemas/ExerciseStyle"
+          },
+          "market_price": {
+            "type": "number",
+            "format": "double",
+            "description": "The observed premium to invert."
+          },
+          "model_version": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "option_type": {
+            "$ref": "#/components/schemas/OptionType"
+          },
+          "pricing_model": {
+            "$ref": "#/components/schemas/PricingModel"
+          },
+          "risk_free_rate": {
+            "type": "number",
+            "format": "double"
+          },
+          "spot": {
+            "type": "number",
+            "format": "double"
+          },
+          "strike": {
+            "type": "number",
+            "format": "double"
+          },
+          "time_to_expiry_years": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ImpliedVolatilityResponse": {
+        "type": "object",
+        "description": "Successful response for one implied-volatility operation.",
+        "required": [
+          "metadata",
+          "result"
+        ],
+        "properties": {
+          "metadata": {
+            "$ref": "#/components/schemas/ResponseMetadata"
+          },
+          "result": {
+            "$ref": "#/components/schemas/ImpliedVolatilityResult"
+          }
+        }
+      },
+      "ImpliedVolatilityResult": {
+        "type": "object",
+        "description": "A solved implied volatility and the diagnostics that qualify it.",
+        "required": [
+          "implied_volatility",
+          "iterations",
+          "used_fallback",
+          "residual",
+          "residual_basis",
+          "pricing_model",
+          "model_version"
+        ],
+        "properties": {
+          "implied_volatility": {
+            "type": "number",
+            "format": "double",
+            "description": "Decimal fraction, on the same basis as `PriceRequest.volatility`."
+          },
+          "iterations": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "model_version": {
+            "type": "string"
+          },
+          "pricing_model": {
+            "$ref": "#/components/schemas/ResolvedPricingModel"
+          },
+          "residual": {
+            "type": "number",
+            "format": "double"
+          },
+          "residual_basis": {
+            "$ref": "#/components/schemas/ResidualBasis"
+          },
+          "used_fallback": {
+            "type": "boolean",
+            "description": "Whether the solve left its primary path.\n\nNot a quality signal on its own: an American solve inverts by bisection\nand reports `true` for every live solve, while a Bachelier solve reports\n`false` because bisection is its canonical solver rather than a degraded\nfallback."
+          }
+        }
+      },
+      "OptionType": {
+        "type": "string",
+        "description": "Option payoff direction.",
+        "enum": [
+          "call",
+          "put"
+        ]
+      },
+      "PolicyResponseMetadata": {
+        "type": "object",
+        "description": "Pinned policy identity and contributing record versions nested in response metadata.",
+        "required": [
+          "snapshot_id",
+          "revision",
+          "plan",
+          "records"
+        ],
+        "properties": {
+          "plan": {
+            "type": "string",
+            "description": "Versioned plan reference, formatted as id@version."
+          },
+          "records": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Contributing versioned records in resolution precedence order."
+          },
+          "revision": {
+            "type": "string",
+            "description": "Full opaque revision, encoded as 64 lowercase hexadecimal digits."
+          },
+          "snapshot_id": {
+            "type": "string"
+          }
+        }
+      },
+      "PriceRequest": {
+        "type": "object",
+        "description": "A single option-pricing request. All numeric fields are required.",
+        "required": [
+          "exercise_style",
+          "pricing_model",
+          "option_type",
+          "spot",
+          "strike",
+          "time_to_expiry_years",
+          "risk_free_rate",
+          "dividend_yield",
+          "volatility"
+        ],
+        "properties": {
+          "dividend_schedule": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DividendEvent"
+            },
+            "description": "Discrete cash dividends within the option's life. American\nBjerksund-Stensland 2002 only; omit for continuous `dividend_yield` alone.",
+            "maxItems": 16
+          },
+          "dividend_yield": {
+            "type": "number",
+            "format": "double"
+          },
+          "exercise_style": {
+            "$ref": "#/components/schemas/ExerciseStyle"
+          },
+          "model_version": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Optional algorithm-version pin. Omit to use the current version."
+          },
+          "option_type": {
+            "$ref": "#/components/schemas/OptionType"
+          },
+          "pricing_model": {
+            "$ref": "#/components/schemas/PricingModel"
+          },
+          "risk_free_rate": {
+            "type": "number",
+            "format": "double"
+          },
+          "spot": {
+            "type": "number",
+            "format": "double"
+          },
+          "strike": {
+            "type": "number",
+            "format": "double"
+          },
+          "time_to_expiry_years": {
+            "type": "number",
+            "format": "double"
+          },
+          "volatility": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PriceResponse": {
+        "type": "object",
+        "description": "Successful response for one pricing operation.",
+        "required": [
+          "metadata",
+          "result"
+        ],
+        "properties": {
+          "metadata": {
+            "$ref": "#/components/schemas/ResponseMetadata"
+          },
+          "result": {
+            "$ref": "#/components/schemas/PriceResult"
+          }
+        }
+      },
+      "PriceResult": {
+        "type": "object",
+        "description": "The transport-neutral result of one pricing operation.",
+        "required": [
+          "price",
+          "exercise_style",
+          "option_type",
+          "pricing_model",
+          "model_version"
+        ],
+        "properties": {
+          "exercise_style": {
+            "$ref": "#/components/schemas/ExerciseStyle"
+          },
+          "model_version": {
+            "type": "string",
+            "description": "Stable revision of the selected pricing algorithm."
+          },
+          "option_type": {
+            "$ref": "#/components/schemas/OptionType"
+          },
+          "price": {
+            "type": "number",
+            "format": "double"
+          },
+          "pricing_model": {
+            "$ref": "#/components/schemas/ResolvedPricingModel"
+          }
+        }
+      },
+      "PricingModel": {
+        "type": "string",
+        "description": "Pricing algorithm selection. `Auto` resolves from the exercise style.",
+        "enum": [
+          "auto",
+          "black_scholes_merton",
+          "bjerksund_stensland_2002",
+          "bjerksund_stensland_1993"
+        ]
+      },
+      "ProtobufBody": {
+        "type": "string",
+        "format": "binary"
+      },
+      "RegimeBasis": {
+        "type": "object",
+        "description": "What the model predicts, not a claim that a reference fit ran on this request.",
+        "required": [
+          "target"
+        ],
+        "properties": {
+          "target": {
+            "$ref": "#/components/schemas/RegimeTarget"
+          }
+        }
+      },
+      "RegimeConsumedPriceRange": {
+        "type": "object",
+        "description": "Contiguous half-open range in the caller's original price array. Only this\nrange enters inference; every supplied price is validated before cropping.",
+        "required": [
+          "start_index",
+          "end_index_exclusive"
+        ],
+        "properties": {
+          "end_index_exclusive": {
+            "type": "integer",
+            "description": "Exclusive original-array index; equals received_price_count in V1.",
+            "minimum": 0
+          },
+          "start_index": {
+            "type": "integer",
+            "description": "Inclusive, zero-based original-array index.",
+            "minimum": 0
+          }
+        }
+      },
+      "RegimeDecisionLabel": {
+        "type": "string",
+        "description": "Prediction targets: not_eligible = reference selection is not separate-scale;\nsupported = eligible and separation-test p-value upper bound <= 0.05;\nunsupported = eligible and lower bound > 0.05; unresolved = eligible and\nlower <= 0.05 < upper. These are offline numerical rank bounds, not served\nscores or confidence intervals. Unresolved is never a serving failure.",
+        "enum": [
+          "not_eligible",
+          "supported",
+          "unsupported",
+          "unresolved"
+        ]
+      },
+      "RegimeDirectionLabel": {
+        "type": "string",
+        "enum": [
+          "UP",
+          "DOWN",
+          "NEUTRAL"
+        ]
+      },
+      "RegimeHead_RegimeDecisionPrediction": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "basis",
+              "prediction",
+              "status"
+            ],
+            "properties": {
+              "basis": {
+                "$ref": "#/components/schemas/RegimeBasis"
+              },
+              "prediction": {
+                "type": "object",
+                "description": "Tie priority: unresolved, unsupported, supported, not_eligible (first wins).",
+                "required": [
+                  "label",
+                  "scores",
+                  "selection"
+                ],
+                "properties": {
+                  "label": {
+                    "$ref": "#/components/schemas/RegimeDecisionLabel"
+                  },
+                  "scores": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/RegimeScore_RegimeDecisionLabel"
+                    },
+                    "description": "Every allowed label occurs exactly once. Array order has no meaning.\nSerialized values satisfy abs(sum(scores[*].value) - 1) <= 1e-12\nseparately for each available prediction. The selected label\nmaximizes the serialized scores; ties use the documented label priority.",
+                    "maxItems": 4,
+                    "minItems": 4
+                  },
+                  "selection": {
+                    "$ref": "#/components/schemas/RegimeSelection"
+                  }
+                }
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "available"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "basis",
+              "prediction",
+              "reason_code",
+              "status"
+            ],
+            "properties": {
+              "basis": {
+                "$ref": "#/components/schemas/RegimeBasis"
+              },
+              "prediction": {
+                "type": "null"
+              },
+              "reason_code": {
+                "$ref": "#/components/schemas/RegimeNotApplicableReason"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "not_applicable"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "basis",
+              "prediction",
+              "reason_code",
+              "status"
+            ],
+            "properties": {
+              "basis": {
+                "$ref": "#/components/schemas/RegimeBasis"
+              },
+              "prediction": {
+                "type": "null"
+              },
+              "reason_code": {
+                "$ref": "#/components/schemas/RegimeUnavailableReason"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "unavailable"
+                ]
+              }
+            }
+          }
+        ],
+        "description": "Shared envelope for all heads. Available has a prediction and no reason_code.\nBasis is required for every status. Other statuses require prediction:null\nand a stable reason_code. A predicted\nunresolved decision is available, unlike an unavailable head. Whole-request\nruntime failures use the ordinary non-200 error envelope, not a synthetic label."
+      },
+      "RegimeHead_RegimeDirectionPrediction": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "basis",
+              "prediction",
+              "status"
+            ],
+            "properties": {
+              "basis": {
+                "$ref": "#/components/schemas/RegimeBasis"
+              },
+              "prediction": {
+                "type": "object",
+                "description": "Tie priority: NEUTRAL, DOWN, UP (first wins). NEUTRAL is a valid tendency, never missing data.",
+                "required": [
+                  "label",
+                  "scores",
+                  "selection"
+                ],
+                "properties": {
+                  "label": {
+                    "$ref": "#/components/schemas/RegimeDirectionLabel"
+                  },
+                  "scores": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/RegimeScore_RegimeDirectionLabel"
+                    },
+                    "description": "Every allowed label occurs exactly once. Array order has no meaning.\nSerialized values satisfy abs(sum(scores[*].value) - 1) <= 1e-12\nseparately for each available prediction. The selected label\nmaximizes the serialized scores; ties use the documented label priority.",
+                    "maxItems": 3,
+                    "minItems": 3
+                  },
+                  "selection": {
+                    "$ref": "#/components/schemas/RegimeSelection"
+                  }
+                }
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "available"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "basis",
+              "prediction",
+              "reason_code",
+              "status"
+            ],
+            "properties": {
+              "basis": {
+                "$ref": "#/components/schemas/RegimeBasis"
+              },
+              "prediction": {
+                "type": "null"
+              },
+              "reason_code": {
+                "$ref": "#/components/schemas/RegimeNotApplicableReason"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "not_applicable"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "basis",
+              "prediction",
+              "reason_code",
+              "status"
+            ],
+            "properties": {
+              "basis": {
+                "$ref": "#/components/schemas/RegimeBasis"
+              },
+              "prediction": {
+                "type": "null"
+              },
+              "reason_code": {
+                "$ref": "#/components/schemas/RegimeUnavailableReason"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "unavailable"
+                ]
+              }
+            }
+          }
+        ],
+        "description": "Shared envelope for all heads. Available has a prediction and no reason_code.\nBasis is required for every status. Other statuses require prediction:null\nand a stable reason_code. A predicted\nunresolved decision is available, unlike an unavailable head. Whole-request\nruntime failures use the ordinary non-200 error envelope, not a synthetic label."
+      },
+      "RegimeHead_RegimeStatePrediction": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "basis",
+              "prediction",
+              "status"
+            ],
+            "properties": {
+              "basis": {
+                "$ref": "#/components/schemas/RegimeBasis"
+              },
+              "prediction": {
+                "type": "object",
+                "description": "Tie priority: HIGHER_VOL, LOWER_VOL (first wins). Ordering is relative within the target fit, not historical volatility levels.",
+                "required": [
+                  "label",
+                  "scores",
+                  "selection"
+                ],
+                "properties": {
+                  "label": {
+                    "$ref": "#/components/schemas/RegimeStateLabel"
+                  },
+                  "scores": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/RegimeScore_RegimeStateLabel"
+                    },
+                    "description": "Every allowed label occurs exactly once. Array order has no meaning.\nSerialized values satisfy abs(sum(scores[*].value) - 1) <= 1e-12\nseparately for each available prediction. The selected label\nmaximizes the serialized scores; ties use the documented label priority.",
+                    "maxItems": 2,
+                    "minItems": 2
+                  },
+                  "selection": {
+                    "$ref": "#/components/schemas/RegimeSelection"
+                  }
+                }
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "available"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "basis",
+              "prediction",
+              "reason_code",
+              "status"
+            ],
+            "properties": {
+              "basis": {
+                "$ref": "#/components/schemas/RegimeBasis"
+              },
+              "prediction": {
+                "type": "null"
+              },
+              "reason_code": {
+                "$ref": "#/components/schemas/RegimeNotApplicableReason"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "not_applicable"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "basis",
+              "prediction",
+              "reason_code",
+              "status"
+            ],
+            "properties": {
+              "basis": {
+                "$ref": "#/components/schemas/RegimeBasis"
+              },
+              "prediction": {
+                "type": "null"
+              },
+              "reason_code": {
+                "$ref": "#/components/schemas/RegimeUnavailableReason"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "unavailable"
+                ]
+              }
+            }
+          }
+        ],
+        "description": "Shared envelope for all heads. Available has a prediction and no reason_code.\nBasis is required for every status. Other statuses require prediction:null\nand a stable reason_code. A predicted\nunresolved decision is available, unlike an unavailable head. Whole-request\nruntime failures use the ordinary non-200 error envelope, not a synthetic label."
+      },
+      "RegimeMetadata": {
+        "type": "object",
+        "required": [
+          "response_contract_version",
+          "request_id",
+          "api_version",
+          "service_version",
+          "engines",
+          "provenance",
+          "received_price_count",
+          "window_price_count",
+          "price_count",
+          "return_count",
+          "consumed_price_range",
+          "observation_index",
+          "input_price_index",
+          "as_of",
+          "return_type",
+          "return_unit",
+          "inference_time_us",
+          "all_prices_consumed"
+        ],
+        "properties": {
+          "all_prices_consumed": {
+            "type": "boolean",
+            "description": "True iff consumed_price_range covers [0, received_price_count).\nFalse means intentional contiguous truncation of the oldest prefix only,\nnever invalid-price removal or incomplete processing. Always false in V1."
+          },
+          "api_version": {
+            "type": "string"
+          },
+          "as_of": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "Final price timestamp supplied by the caller, or null when unknown.\nNull never means the HTTP response time."
+          },
+          "budget_period": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "budget_reset_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "consumed_price_range": {
+            "$ref": "#/components/schemas/RegimeConsumedPriceRange"
+          },
+          "engines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EngineIdentity"
+            },
+            "description": "Library that executed inference. Version and revision come from the\nreleased dependency pin; model weights are identified by provenance.\nDoes not include reference fitting engines that did not execute."
+          },
+          "fcu_charged": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "minimum": 0
+          },
+          "fcu_quoted": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "minimum": 0
+          },
+          "fcu_schedule_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fcu_schedule_version": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "inference_time_us": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Monotonic elapsed microseconds, truncated to an integer. Starts after\nacquiring the model lock and committing admission, before selecting the\ninput slice; ends immediately after predict returns its heads. Includes\nslice selection, preprocessing, tensors, inference, output extraction,\nsoftmax and head construction/gating. Excludes loading, admission/queue,\nmetadata construction, serialization, HTTP and network time.",
+            "minimum": 0
+          },
+          "input_price_index": {
+            "type": "integer",
+            "description": "Original-array price index at the selected return's end:\nconsumed_price_range.start_index + observation_index + 1.",
+            "minimum": 0
+          },
+          "observation_index": {
+            "type": "integer",
+            "description": "Zero-based return index within consumed_price_range: 505. Return i uses\noriginal prices[start_index + i] and prices[start_index + i + 1].",
+            "minimum": 0
+          },
+          "policy": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PolicyResponseMetadata"
+              }
+            ]
+          },
+          "price_count": {
+            "type": "integer",
+            "description": "Number of prices actually consumed by inference.",
+            "minimum": 0
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/RegimeProvenance"
+          },
+          "received_price_count": {
+            "type": "integer",
+            "description": "Number of prices received before cropping.",
+            "minimum": 0
+          },
+          "remaining_fcu_instance_estimate": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "minimum": 0
+          },
+          "request_id": {
+            "type": "string"
+          },
+          "response_contract_version": {
+            "type": "string"
+          },
+          "return_count": {
+            "type": "integer",
+            "description": "Equals consumed_price_range.end_index_exclusive - start_index - 1.",
+            "minimum": 0
+          },
+          "return_type": {
+            "$ref": "#/components/schemas/RegimeReturnType"
+          },
+          "return_unit": {
+            "$ref": "#/components/schemas/RegimeReturnUnit"
+          },
+          "service_version": {
+            "type": "string"
+          },
+          "window_price_count": {
+            "type": "integer",
+            "description": "Intermediate public window size: always 512, covering original indices\n[received_price_count - 512, received_price_count). Not the consumed count.",
+            "minimum": 0
+          }
+        }
+      },
+      "RegimeNotApplicableReason": {
+        "type": "string",
+        "enum": [
+          "predicted_not_eligible"
+        ]
+      },
+      "RegimeProvenance": {
+        "type": "object",
+        "description": "Pinned served artifact identity; no request-time reference fitting is implied.",
+        "required": [
+          "model_id",
+          "model_status",
+          "model_sha256",
+          "preprocessing",
+          "teacher_executed"
+        ],
+        "properties": {
+          "model_id": {
+            "type": "string",
+            "description": "Immutable identity covering weights, preprocessing, reference procedure\nand label definitions; see the REGIME_MODEL_V1.md identity record."
+          },
+          "model_sha256": {
+            "type": "string",
+            "description": "Lowercase SHA-256 of the exact served student.onnx file bytes, not the\ntraining checkpoint, manifest, runtime binary or response.",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "model_status": {
+            "type": "string"
+          },
+          "preprocessing": {
+            "type": "string",
+            "description": "Supplemental preprocessing identity; explicit return semantics are in metadata."
+          },
+          "teacher_executed": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RegimeRequest": {
+        "type": "object",
+        "description": "At least 512 comparable positive prices, ordered oldest to newest.\nNo sampling interval is supplied, inferred or assumed.\nLonger arrays are cropped to the latest 512; inference uses that window's\nlatest 507 prices. Every supplied price must be finite and positive.\nThe encoded request body is limited to 32 KiB (policy may narrow this).\nCorporate-action adjustment is the caller's responsibility; the V1 model\nwas trained on split-adjusted closes, without cash-dividend total-return adjustment.",
+        "required": [
+          "prices"
+        ],
+        "properties": {
+          "as_of": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "Timestamp of the final supplied price, echoed unchanged. Never inferred\nfrom the server clock. RFC 3339 with an explicit UTC offset.",
+            "maxLength": 64
+          },
+          "prices": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "format": "double"
+            },
+            "minItems": 512
+          }
+        },
+        "additionalProperties": false
+      },
+      "RegimeResponse": {
+        "type": "object",
+        "required": [
+          "result",
+          "metadata"
+        ],
+        "properties": {
+          "metadata": {
+            "$ref": "#/components/schemas/RegimeMetadata"
+          },
+          "result": {
+            "$ref": "#/components/schemas/RegimeResult"
+          }
+        }
+      },
+      "RegimeResult": {
+        "type": "object",
+        "required": [
+          "score_contract",
+          "decision",
+          "direction",
+          "state"
+        ],
+        "properties": {
+          "decision": {
+            "$ref": "#/components/schemas/RegimeHead_RegimeDecisionPrediction"
+          },
+          "direction": {
+            "$ref": "#/components/schemas/RegimeHead_RegimeDirectionPrediction"
+          },
+          "score_contract": {
+            "$ref": "#/components/schemas/RegimeScoreContract"
+          },
+          "state": {
+            "$ref": "#/components/schemas/RegimeHead_RegimeStatePrediction"
+          }
+        }
+      },
+      "RegimeReturnType": {
+        "type": "string",
+        "enum": [
+          "log"
+        ]
+      },
+      "RegimeReturnUnit": {
+        "type": "string",
+        "enum": [
+          "fraction"
+        ]
+      },
+      "RegimeScoreContract": {
+        "type": "object",
+        "description": "Applies separately to every available head; never multiply heads or interpret\ntheir scores as a joint probability. Identifies score semantics, not calibration.",
+        "required": [
+          "kind",
+          "version",
+          "sum_tolerance"
+        ],
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/RegimeScoreKind"
+          },
+          "sum_tolerance": {
+            "type": "number",
+            "format": "double",
+            "description": "For each available prediction, using serialized values:\nabs(sum(prediction.scores[*].value) - 1) <= sum_tolerance."
+          },
+          "version": {
+            "type": "string"
+          }
+        }
+      },
+      "RegimeScoreKind": {
+        "type": "string",
+        "enum": [
+          "uncalibrated_softmax"
+        ]
+      },
+      "RegimeScore_RegimeDecisionLabel": {
+        "type": "object",
+        "required": [
+          "label",
+          "value"
+        ],
+        "properties": {
+          "label": {
+            "type": "string",
+            "description": "Prediction targets: not_eligible = reference selection is not separate-scale;\nsupported = eligible and separation-test p-value upper bound <= 0.05;\nunsupported = eligible and lower bound > 0.05; unresolved = eligible and\nlower <= 0.05 < upper. These are offline numerical rank bounds, not served\nscores or confidence intervals. Unresolved is never a serving failure.",
+            "enum": [
+              "not_eligible",
+              "supported",
+              "unsupported",
+              "unresolved"
+            ]
+          },
+          "value": {
+            "type": "number",
+            "format": "double",
+            "description": "Finite score in [0,1]; not a calibrated probability.",
+            "maximum": 1,
+            "minimum": 0
+          }
+        }
+      },
+      "RegimeScore_RegimeDirectionLabel": {
+        "type": "object",
+        "required": [
+          "label",
+          "value"
+        ],
+        "properties": {
+          "label": {
+            "type": "string",
+            "enum": [
+              "UP",
+              "DOWN",
+              "NEUTRAL"
+            ]
+          },
+          "value": {
+            "type": "number",
+            "format": "double",
+            "description": "Finite score in [0,1]; not a calibrated probability.",
+            "maximum": 1,
+            "minimum": 0
+          }
+        }
+      },
+      "RegimeScore_RegimeStateLabel": {
+        "type": "object",
+        "required": [
+          "label",
+          "value"
+        ],
+        "properties": {
+          "label": {
+            "type": "string",
+            "description": "Volatility relative to the other state in the reference Markov model, not\nhistorical norms. Fixed Student-t degrees of freedom make scale ordering\nidentical to standard-deviation ordering. Neither label indicates direction.",
+            "enum": [
+              "LOWER_VOL",
+              "HIGHER_VOL"
+            ]
+          },
+          "value": {
+            "type": "number",
+            "format": "double",
+            "description": "Finite score in [0,1]; not a calibrated probability.",
+            "maximum": 1,
+            "minimum": 0
+          }
+        }
+      },
+      "RegimeSelection": {
+        "type": "string",
+        "enum": [
+          "argmax"
+        ]
+      },
+      "RegimeStateLabel": {
+        "type": "string",
+        "description": "Volatility relative to the other state in the reference Markov model, not\nhistorical norms. Fixed Student-t degrees of freedom make scale ordering\nidentical to standard-deviation ordering. Neither label indicates direction.",
+        "enum": [
+          "LOWER_VOL",
+          "HIGHER_VOL"
+        ]
+      },
+      "RegimeTarget": {
+        "type": "string",
+        "enum": [
+          "reference_procedure_outcome",
+          "selected_state_tendency",
+          "filtered_scale_order_membership"
+        ]
+      },
+      "RegimeUnavailableReason": {
+        "type": "string",
+        "enum": [
+          "prediction_unavailable"
+        ]
+      },
+      "ResidualBasis": {
+        "type": "string",
+        "description": "The basis a solved residual is expressed in.\n\nThe residual is not one quantity. European and Black paths report a\nforward-normalised price residual comparable against the engine's\nconvergence threshold; Bachelier and American Bjerksund-Stensland report a\nraw option-price residual. Publishing the number without its basis would\ninvite exactly the cross-model comparison it does not support, so the basis\ntravels with it and a client that ignores this field cannot silently get it\nwrong.",
+        "enum": [
+          "forward_normalised_price",
+          "option_price"
+        ]
+      },
+      "ResolvedPricingModel": {
+        "type": "string",
+        "description": "Pricing algorithm selected after resolving an input request.\n\nUnlike [`PricingModel`], this output-only type cannot represent `auto`.",
+        "x-extensible-enum": [
+          "black_scholes_merton",
+          "bjerksund_stensland_2002",
+          "bjerksund_stensland_1993"
+        ]
+      },
+      "ResponseMetadata": {
+        "type": "object",
+        "description": "Metadata shared by every successful response and API error.",
+        "required": [
+          "request_id",
+          "api_version",
+          "engine_version",
+          "engines",
+          "units_charged",
+          "compute_schedule_version"
+        ],
+        "properties": {
+          "api_version": {
+            "type": "string"
+          },
+          "budget_period": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "budget_reset_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "UTC end of the budget period from the pinned account snapshot, when known."
+          },
+          "compute_schedule_version": {
+            "type": "string"
+          },
+          "engine_version": {
+            "type": "string",
+            "description": "Version of the operation's primary engine (legacy compatibility field)."
+          },
+          "engines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EngineIdentity"
+            },
+            "description": "Engines selected for this operation, including their released Git revisions.\nDoes not assert execution on pre-execution failures."
+          },
+          "fcu_charged": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Committed commercial charge, including on post-commit failures.\nAbsent in open development mode; zero for protected pre-commit refusals.",
+            "minimum": 0
+          },
+          "fcu_quoted": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Commercial quote; absent until reservation succeeds.",
+            "minimum": 0
+          },
+          "fcu_schedule_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fcu_schedule_version": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "policy": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PolicyResponseMetadata"
+              }
+            ]
+          },
+          "remaining_fcu_instance_estimate": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Instance estimate, never an authoritative account balance or authorization input.",
+            "minimum": 0
+          },
+          "request_id": {
+            "type": "string"
+          },
+          "units_charged": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          }
+        }
+      },
+      "ServiceErrorEnvelope": {
+        "type": "object",
+        "description": "Errors for the regime route and router-level 404/405 refusals. No model or\nengine execution is claimed, including before authentication and on timeout.",
+        "required": [
+          "metadata",
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ErrorBody"
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/ServiceErrorMetadata"
+          }
+        }
+      },
+      "ServiceErrorMetadata": {
+        "type": "object",
+        "description": "Regime and router error metadata. Identifies the service, not a numerical\nengine. Commercial evidence is included only when admission supplies it.",
+        "required": [
+          "request_id",
+          "api_version",
+          "service_version"
+        ],
+        "properties": {
+          "api_version": {
+            "type": "string"
+          },
+          "budget_period": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "budget_reset_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fcu_charged": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "minimum": 0
+          },
+          "fcu_quoted": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "minimum": 0
+          },
+          "fcu_schedule_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fcu_schedule_version": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "policy": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PolicyResponseMetadata"
+              }
+            ]
+          },
+          "remaining_fcu_instance_estimate": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "minimum": 0
+          },
+          "request_id": {
+            "type": "string"
+          },
+          "service_version": {
+            "type": "string"
+          }
+        }
+      },
+      "StatusResponse": {
+        "type": "object",
+        "description": "Liveness/readiness representation.",
+        "required": [
+          "status",
+          "service",
+          "version"
+        ],
+        "properties": {
+          "service": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "api_key": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "pricing",
+      "description": "MorphIQ Risk pricing operations"
+    },
+    {
+      "name": "health",
+      "description": "Service lifecycle checks"
+    },
+    {
+      "name": "contract",
+      "description": "Machine-readable service contracts"
+    }
+  ],
+  "x-ferro-risk-router-responses": [
+    {
+      "condition": "unmatched_path",
+      "contentType": "application/problem+json",
+      "errorCode": "not_found",
+      "headers": [
+        "x-request-id"
+      ],
+      "schema": {
+        "$ref": "#/components/schemas/ServiceErrorEnvelope"
+      },
+      "status": 404
+    },
+    {
+      "condition": "unsupported_method",
+      "contentType": "application/problem+json",
+      "errorCode": "method_not_allowed",
+      "headers": [
+        "x-request-id"
+      ],
+      "schema": {
+        "$ref": "#/components/schemas/ServiceErrorEnvelope"
+      },
+      "status": 405
+    }
+  ]
+}
