@@ -6,21 +6,20 @@ import os
 import subprocess
 import sys
 import tempfile
+import tomllib
 import venv
 from pathlib import Path
 
 
 def main() -> None:
     root = Path(__file__).resolve().parents[1]
-    environment = os.environ.copy()
-    environment.setdefault("MORPHIQ_SDK_BUILD_VERSION", "0.0.0.dev0")
+    expected_version = tomllib.loads((root / "pyproject.toml").read_text())["project"]["version"]
     with tempfile.TemporaryDirectory(prefix="morphiq-sdk-package-") as directory:
         temporary = Path(directory)
         artifacts = temporary / "dist"
         # With no target flags, build creates the sdist, then builds its wheel.
         subprocess.run(
             [sys.executable, "-m", "build", "--outdir", str(artifacts), str(root)],
-            env=environment,
             check=True,
         )
         wheels = list(artifacts.glob("*.whl"))
@@ -43,11 +42,13 @@ def main() -> None:
                 "-c",
                 "from importlib.metadata import version; "
                 "from importlib.resources import files; "
-                "import morphiq_sdk; "
+                "import morphiq_sdk, sys; "
+                "assert morphiq_sdk.__version__ == sys.argv[1]; "
                 "assert morphiq_sdk.__version__ == version('morphiq-sdk'); "
                 "assert files('morphiq_sdk').joinpath('py.typed').is_file(); "
                 "print('Isolated wheel import and typing marker verified:', "
                 "morphiq_sdk.__version__)",
+                expected_version,
             ],
             cwd=temporary,
             check=True,

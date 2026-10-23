@@ -15,7 +15,6 @@ From a checkout with Python 3.11 or newer:
 ```sh
 python3 -m venv .venv
 source .venv/bin/activate
-export MORPHIQ_SDK_BUILD_VERSION=0.0.0.dev0
 python -m pip install -e .
 python -m examples.quickstart
 ```
@@ -56,7 +55,6 @@ release acceptance will establish the complete supported-version matrix.
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --require-hashes -r requirements-dev.txt
-export MORPHIQ_SDK_BUILD_VERSION=0.0.0.dev0
 python -m pip install --no-build-isolation -e .
 python -m ruff check .
 python -m ruff format --check .
@@ -66,17 +64,11 @@ python scripts/generate_notebook.py --check
 python scripts/check_package.py
 ```
 
-`0.0.0.dev0` is a development build value, not a release. `check_package.py`
-builds an sdist and a wheel from that sdist, then installs the wheel in a fresh
-environment outside the checkout. Routine tests use local fixture replay and need
+Versions are managed through reviewed release PRs; no version environment variable
+is needed. `check_package.py` builds an sdist and a wheel from that sdist, then
+installs the wheel in a fresh environment outside the checkout. Routine tests use local fixture replay and need
 no real credentials; native API integration is opt-in. See
 [CONTRIBUTING.md](CONTRIBUTING.md) and [RELEASE.md](RELEASE.md).
-
-## Following this first slice
-
-- Implied volatility, all-ten-Greek/fused analytics, ordered batches and regime.
-- Optional DataFrame conversion and the remaining cookbook recipes.
-- Reviewed independent package/image releases and public distribution.
 
 Pricing clients make no automatic retries and do not follow redirects. A timeout
 may leave work charged. Missing `fcu_charged` means unreported, not zero; internal
@@ -99,16 +91,3 @@ docker/            Non-root notebook startup and workspace seeding
 docs/              Roadmap and contract handoff design
 .github/           CI and pull request template
 ```
-
-## Delivery plan
-
-Implementation, issues and the SDK delivery milestone live in this GitHub repository:
-
-- [SDK v0.1 and cookbook milestone](https://github.com/MorphIQ-Labs/morphiq-sdk-python/milestone/1)
-- [Work breakdown and dependencies](docs/ROADMAP.md)
-- [Hosted notebook exploration](https://github.com/MorphIQ-Labs/morphiq-sdk-python/issues/11)
-
-API contract publication and website implementation stay in the API repository,
-linked from their SDK dependency issues. Public distribution and support routing
-are tracked before launch; this private scaffold grants no open-source license.
-Hosted notebooks are a follow-on experiment, not a prerequisite for local SDK use.

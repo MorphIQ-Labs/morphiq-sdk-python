@@ -11,7 +11,6 @@ git clone https://github.com/MorphIQ-Labs/morphiq-sdk-python.git
 cd morphiq-sdk-python
 python3 -m venv .venv
 source .venv/bin/activate
-export MORPHIQ_SDK_BUILD_VERSION=0.0.0.dev0
 python -m pip install -e .
 python -m examples.quickstart
 ```

@@ -21,7 +21,7 @@ commercial policy, account authority and execution remain server-side.
 - Run Ruff lint/format, mypy and `python scripts/check_package.py` for setup
   changes. Add meaningful transport/contract/integration tests with behavior.
 - Follow RELEASE.md: no manual release version bumps or package publication.
-  `MORPHIQ_SDK_BUILD_VERSION=0.0.0.dev0` is for development builds only.
+  Release Please owns pyproject.toml version, manifest and changelog updates.
 
 The unreleased preview implements sync/async single-option JSON pricing and its
 local notebook quickstart. Other endpoints, package/image publication and hosted
