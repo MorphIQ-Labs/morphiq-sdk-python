@@ -127,7 +127,7 @@ docker compose up --build
 ```
 
 Open the local token-authenticated URL printed by Jupyter to reach Start Here.
-Choose a dashboard; its controls initialize automatically:
+Choose an analysis workspace and run all cells once to display its controls:
 
 - [Option pricing](notebooks/pricing/options.ipynb): European/American and model
   dropdowns, call/put selection, editable assumptions, Yahoo underlying close,
@@ -135,12 +135,11 @@ Choose a dashboard; its controls initialize automatically:
 - [Regime analysis](notebooks/regime/identification.ipynb): ticker selection,
   Yahoo price history, latest regime assessment, score charts and provenance.
 
-Compose passes your API key into the container. If it is unset, the dashboards
-show setup instructions and disable API actions. Setup and control changes make no API requests. Click **Price option**
+Compose passes your API key into the container; if unset, the workspace prompts
+for it. Setup and control changes make no API requests. Click **Price option**
 for one request, **Spot sensitivity** for nine sequential requests, or
 **Analyze regime** for one request. Yahoo data remains in memory.
 Dependencies are installed at build time, and notebook edits persist in a named volume.
-The **Edit notebook** link opens JupyterLab; only that editor requires Run All Cells.
 
 Stop with Ctrl-C, then `docker compose down`; the workspace is retained. If port
 8888 is occupied, use `MORPHIQ_NOTEBOOK_PORT=8889 docker compose up --build`.

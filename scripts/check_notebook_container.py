@@ -96,25 +96,6 @@ def check(image: str) -> None:
                 raise RuntimeError("Unexpected unauthenticated notebook response") from None
         else:
             raise RuntimeError("Notebook contents are accessible without authentication")
-        # Opening a dashboard must execute setup without stdin or API credentials.
-        for route in (
-            "/",
-            "/voila/render/pricing/options.ipynb",
-            "/voila/render/regime/identification.ipynb",
-        ):
-            request = Request(endpoint + route, headers={"Authorization": "token " + token})
-            with urlopen(request, timeout=60) as response:
-                html = response.read().decode()
-                if route == "/":
-                    if "/voila/render/start-here.ipynb" not in response.url:
-                        raise RuntimeError("Default page does not open the dashboard launcher")
-                elif "application/vnd.jupyter.widget-view+json" not in html:
-                    raise RuntimeError(f"{route}: dashboard did not initialize its widgets")
-                elif "API key required" not in html:
-                    raise RuntimeError(f"{route}: missing-key instructions were not rendered")
-                if "Traceback" in html:
-                    raise RuntimeError(f"{route}: error while initializing dashboard")
-        print("Dashboard launcher and automatic widget initialization verified.", flush=True)
         notebook_root = ROOT / "notebooks"
         filenames = [
             path.relative_to(notebook_root).as_posix()
@@ -122,7 +103,7 @@ def check(image: str) -> None:
         ]
         saved = {filename: contents(endpoint, token, filename) for filename in filenames}
         for filename, item in saved.items():
-            if not item["content"]["cells"][0]["source"].startswith("# "):
+            if "MorphIQ SDK for Python" not in item["content"]["cells"][0]["source"]:
                 raise RuntimeError(f"{filename} was not seeded")
         print(
             "Local Jupyter startup, token authentication and all seeded notebooks verified.",

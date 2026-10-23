@@ -1,4 +1,4 @@
-"""Preserve notebook edits and serve authenticated dashboards with a JupyterLab editor."""
+"""Seed missing notebook files, preserve edits, then run authenticated JupyterLab."""
 
 import os
 from pathlib import Path
@@ -31,7 +31,7 @@ def main() -> None:
             "--ServerApp.port_retries=0",
             "--ServerApp.open_browser=False",
             f"--ServerApp.root_dir={workspace}",
-            "--LabApp.default_url=/voila/render/start-here.ipynb",
+            "--ServerApp.default_url=/lab/tree/start-here.ipynb",
             f"--ServerApp.custom_display_url=http://127.0.0.1:{port}",
         ],
     )
