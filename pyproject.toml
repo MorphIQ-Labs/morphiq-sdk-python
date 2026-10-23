@@ -22,8 +22,9 @@ classifiers = [
 Repository = "https://github.com/MorphIQ-Labs/morphiq-sdk-python"
 
 [project.optional-dependencies]
-notebooks = ["jupyterlab>=4.6,<5", "ipykernel>=7.4,<8", "yfinance>=1.7,<2"]
-market-data = ["yfinance>=1.7,<2"]
+# yfinance 1.7 uses inplace methods deprecated in pandas 3.1.
+notebooks = ["jupyterlab>=4.6,<5", "ipykernel>=7.4,<8", "yfinance>=1.7,<2", "pandas>=2.2,<3.1"]
+market-data = ["yfinance>=1.7,<2", "pandas>=2.2,<3.1"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/morphiq_sdk"]
