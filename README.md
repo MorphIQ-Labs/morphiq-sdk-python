@@ -3,10 +3,49 @@
 Python access to the MorphIQ Labs API, with runnable examples and notebooks for
 pricing, risk and market analytics.
 
-**Status: project foundation.** The package builds and installs, but the API
-client and cookbook are not implemented yet. Nothing has been published to PyPI.
-The distribution name `morphiq-sdk` and import name `morphiq_sdk` are provisional
-until the release work confirms name ownership and licensing.
+**Status: development preview.** Sync and async clients support single-option
+pricing, with European/American examples and a local Docker notebook. Other
+operations remain planned. Install from this repository; the package and image
+have not been published yet.
+
+## Quickstart
+
+From a checkout with Python 3.11 or newer:
+
+```sh
+python3 -m venv .venv
+source .venv/bin/activate
+export MORPHIQ_SDK_BUILD_VERSION=0.0.0.dev0
+python -m pip install -e .
+python -m examples.quickstart
+```
+
+Enter your account's API base URL and API key at the masked prompt, or supply
+`MORPHIQ_API_BASE_URL` and `MORPHIQ_API_KEY` through your environment. This submits
+two real requests and prints each price, selected model, request ID, engine
+identity and reported commercial CU charge.
+
+Run `python -m examples.price_async` for the same two requests with sequential
+awaits. Individual scripts are `examples.price_european` and `examples.price_american`.
+See [the quickstart guide](docs/QUICKSTART.md) for input units, reference results,
+configuration and errors.
+
+## Start a notebook with Docker
+
+With Docker running, from the repository root:
+
+```sh
+docker compose up --build
+```
+
+Open the local token-authenticated URL printed by Jupyter to reach Start Here.
+Enter the API endpoint and key when prompted. Opening Jupyter makes no API calls;
+running all cells submits four pricing requests, including the async examples.
+Dependencies are installed at build time, and notebook edits persist in a named volume.
+
+Stop with Ctrl-C, then `docker compose down`; the workspace is retained. If port
+8888 is occupied, use `MORPHIQ_NOTEBOOK_PORT=8889 docker compose up --build`.
+See [notebook instructions](docs/NOTEBOOKS.md) for networking and persistence.
 
 ## Development
 
@@ -16,27 +55,32 @@ release acceptance will establish the complete supported-version matrix.
 ```sh
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install -r requirements-dev.txt
+python -m pip install --require-hashes -r requirements-dev.txt
 export MORPHIQ_SDK_BUILD_VERSION=0.0.0.dev0
 python -m pip install --no-build-isolation -e .
 python -m ruff check .
 python -m ruff format --check .
 python -m mypy
+python -m pytest -q
+python scripts/generate_notebook.py --check
 python scripts/check_package.py
 ```
 
 `0.0.0.dev0` is a development build value, not a release. `check_package.py`
 builds an sdist and a wheel from that sdist, then installs the wheel in a fresh
-environment outside the checkout. These checks make no API calls and need no
-credentials. See [CONTRIBUTING.md](CONTRIBUTING.md) and [RELEASE.md](RELEASE.md).
+environment outside the checkout. Routine tests use local fixture replay and need
+no real credentials; native API integration is opt-in. See
+[CONTRIBUTING.md](CONTRIBUTING.md) and [RELEASE.md](RELEASE.md).
 
-## Planned scope
+## Following this first slice
 
-- Typed synchronous and asynchronous JSON clients.
-- Price, implied volatility, all-ten-Greek and fused analytics, individually
-  and in ordered batches; the reviewed regime operation has its own contract.
-- Authentication, timeouts, errors, conservative retries and response metadata.
-- Optional DataFrame conversion, eight executable recipes and notebook companions.
+- Implied volatility, all-ten-Greek/fused analytics, ordered batches and regime.
+- Optional DataFrame conversion and the remaining cookbook recipes.
+- Reviewed independent package/image releases and public distribution.
+
+Pricing clients make no automatic retries and do not follow redirects. A timeout
+may leave work charged. Missing `fcu_charged` means unreported, not zero; internal
+`units_charged` is not a commercial CU charge.
 
 The SDK preserves server results, numerical diagnostics, request IDs, engine
 provenance and commercial Compute Units (CU). Numerical engines, model selection,
@@ -48,8 +92,10 @@ pricing engines or calculate authoritative customer charges.
 ```text
 src/morphiq_sdk/    Installable, typed Python package
 scripts/           Development and package verification
-examples/          Cookbook implementation and execution conventions
-notebooks/         Planned notebook companions and hosted experience
+examples/          Runnable European/American sync and async examples
+notebooks/         Generated standalone Start Here notebook
+contracts/         Reviewed OpenAPI snapshot, digest and source provenance
+docker/            Non-root notebook startup and workspace seeding
 docs/              Roadmap and contract handoff design
 .github/           CI and pull request template
 ```

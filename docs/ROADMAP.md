@@ -5,7 +5,9 @@
 The SDK backlog and implementation live in this GitHub repository. Contract
 publication and website integration are implemented in the API repository and
 linked from their SDK dependency issues. Link PRs/MRs and evidence back to the
-issues. All items below are planned until their acceptance is demonstrated.
+issues. The first preview implements sync/async single-option pricing, introductory
+European/American examples, Start Here and a local Docker launcher. The broader
+issue acceptance below remains open until its full scope is demonstrated.
 
 | Work item | Owner | Dependencies |
 | --- | --- | --- |
@@ -19,6 +21,8 @@ issues. All items below are planned until their acceptance is demonstrated.
 | [#8 Website quickstart and cookbook integration](https://github.com/MorphIQ-Labs/morphiq-sdk-python/issues/8) | API web | #7 |
 | [#9 Releases and public distribution](https://github.com/MorphIQ-Labs/morphiq-sdk-python/issues/9) | SDK | #1 |
 | [#10 Clean-environment launch acceptance](https://github.com/MorphIQ-Labs/morphiq-sdk-python/issues/10) | SDK + API | #2, #6–#9 |
+| [#13 Local Docker notebook experience](https://github.com/MorphIQ-Labs/morphiq-sdk-python/issues/13) | SDK | #1, #4, #7 |
+| [#14 Notebook image checks and releases](https://github.com/MorphIQ-Labs/morphiq-sdk-python/issues/14) | SDK | #6, #9, #13 |
 
 Public release requires contract coverage, accurate error/charge semantics,
 clean installation, executable examples and a measured five-minute first-use

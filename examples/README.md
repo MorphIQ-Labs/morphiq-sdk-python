@@ -1,7 +1,21 @@
 # Executable cookbook
 
 Eight recipes are planned in [#7](https://github.com/MorphIQ-Labs/morphiq-sdk-python/issues/7).
-No runnable API examples exist in this scaffold yet.
+The first pricing slice is runnable now:
+
+```sh
+python -m examples.quickstart
+python -m examples.price_european
+python -m examples.price_american
+python -m examples.price_async
+```
+
+Each reads the endpoint/key from the environment or prompts (masked for the key).
+Imports make no requests. `_shared.py` supplies synthetic inputs and result display.
+The quickstart configures once and uses one sync client for both options; the
+async script awaits them sequentially. See [the quickstart](../docs/QUICKSTART.md).
+Start Here is generated from these tested sources. The broader recipes below are
+planned beyond this initial pricing slice.
 
 | Recipe | Outcome |
 | --- | --- |

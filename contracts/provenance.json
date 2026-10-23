@@ -1,0 +1,11 @@
+{
+  "repository": "https://gitlab.com/prophetizo/morphiq-labs/sites/morphiq-api",
+  "source_commit": "b2cb8d72b049d61c062f787724c1c02c15dd12be",
+  "source_path": "services/api/openapi.json",
+  "contract_version": "3.0.0",
+  "sha256": "09527006497b4f23bbf174f4a5b8bd9d02f75d02554b3d489eaba953ec5a18f1",
+  "import_method": "Reviewed main snapshot copied byte-for-byte from the immutable Git commit; automated artifact publication remains SDK #2.",
+  "covered_operations": [
+    "POST /v1/price"
+  ]
+}

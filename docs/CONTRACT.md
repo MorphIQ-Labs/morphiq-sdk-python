@@ -7,10 +7,16 @@ the numerical engines.
 [SDK #2](https://github.com/MorphIQ-Labs/morphiq-sdk-python/issues/2)
 coordinates the producer/import workflow with
 [API #106](https://gitlab.com/prophetizo/morphiq-labs/sites/morphiq-api/-/work_items/106).
-No snapshot is imported in this foundation.
-Record SHA-256, service source/release identity and API contract version; verify
-them before generation. Public SDK builds must work offline from the reviewed
-snapshot without private GitLab access.
+contracts/openapi.json now contains the reviewed snapshot byte-for-byte.
+contracts/provenance.json records its digest, API source commit and contract
+version. It was copied from immutable reviewed main source; automated published
+artifact delivery remains #2. SDK tests and builds use the offline snapshot
+without private repository or numerical engine access.
+
+This slice covers only POST /v1/price. Hand-written model field sets and serialized
+requests/native responses are checked against the pinned schema. Digest/version
+checks detect accidental snapshot changes. Intentional upgrades need reviewed
+provenance and tests; this is not a complete future-operation compatibility generator.
 
 Generate repetitive wire models where useful. Deliberately review the Python
 interface, errors, lifecycle and documentation. Contract updates produce a diff

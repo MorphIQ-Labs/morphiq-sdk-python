@@ -23,5 +23,6 @@ commercial policy, account authority and execution remain server-side.
 - Follow RELEASE.md: no manual release version bumps or package publication.
   `MORPHIQ_SDK_BUILD_VERSION=0.0.0.dev0` is for development builds only.
 
-This is an unreleased foundation. Do not claim that planned client methods,
-examples, notebooks, API deployments or PyPI releases exist.
+The unreleased preview implements sync/async single-option JSON pricing and its
+local notebook quickstart. Other endpoints, package/image publication and hosted
+notebooks remain planned. Keep availability statements precise.
