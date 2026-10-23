@@ -13,4 +13,3 @@ dist/
 .env
 .env.*
 .DS_Store
-prices.csv

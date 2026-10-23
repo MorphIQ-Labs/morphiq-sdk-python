@@ -1,35 +1,50 @@
-"""Identify a regime from Yahoo daily closes in prices.csv.
+"""Identify a regime directly from Yahoo daily closes.
 
-First run python examples/download_prices.py. Set MORPHIQ_API_KEY,
-then run: python examples/identify_regime_async.py
+Install: python -m pip install -e '.[market-data]'
+Set MORPHIQ_API_KEY, then run: python examples/identify_regime_async.py
 """
 
 import asyncio
-import csv
 import os
 import sys
-from datetime import date
+from datetime import date, timedelta
 from getpass import getpass
-from pathlib import Path
+
+import yfinance as yf
 
 from morphiq_sdk import APIError, AsyncMorphIQ, RegimeRequest, ResponseError, TransportError
 
 
 async def main() -> None:
-    api_key = os.environ.get("MORPHIQ_API_KEY") or getpass("MorphIQ API key: ")
+    ticker = input("Ticker symbol [SPY]: ").strip().upper() or "SPY"
+    # End is exclusive: omit today's potentially incomplete daily bar.
+    end = date.today()
+    history = yf.download(
+        ticker,
+        start=end - timedelta(days=3 * 366),
+        end=end,
+        interval="1d",
+        auto_adjust=False,  # Close is split-adjusted; Adj Close also adjusts dividends.
+        keepna=True,
+        multi_level_index=False,
+        progress=False,
+        threads=False,
+    )
+    if history is None or history.empty:
+        raise SystemExit("Yahoo returned no price history.")
+    closes = history[["Close"]].tail(512)
+    if len(closes) < 512 or closes["Close"].isna().any() or (closes["Close"] <= 0).any():
+        raise SystemExit("Need 512 consecutive valid daily closes; no rows were filled or dropped.")
+    if not closes.index.is_monotonic_increasing or not closes.index.is_unique:
+        raise SystemExit("Expected unique daily dates ordered oldest to newest.")
+    print(f"{ticker}: {len(closes)} split-adjusted daily closes")
+    print(closes.tail().to_string())
 
-    # download_prices.py saves Yahoo's split-adjusted Close, without dividend adjustment.
-    # The CSV keeps dates and prices visible and can be reused without downloading again.
-    with Path("prices.csv").open(newline="") as source:
-        rows = list(csv.DictReader(source))
-    dates = [date.fromisoformat(row["Date"]) for row in rows]
-    if dates != sorted(set(dates)):
-        raise SystemExit("CSV dates must be unique and ordered oldest to newest.")
-    prices = [float(row["Close"]) for row in rows]
-    request = RegimeRequest(prices=prices)
-    # Daily dates are not exact close timestamps, so leave as_of unspecified.
-    # If known, pass the final observation's RFC 3339 timestamp with its UTC offset.
-    print(f"Sending {len(prices)} closes: {dates[0]} through {dates[-1]}")
+    # Submit the downloaded prices directly to MorphIQ.
+    api_key = os.environ.get("MORPHIQ_API_KEY") or getpass("MorphIQ API key: ")
+    request = RegimeRequest(prices=closes["Close"].tolist())
+    # Daily date labels do not establish exact close timestamps; omit as_of.
+    print(f"Sending {len(request.prices)} closes: {closes.index[0]} through {closes.index[-1]}")
 
     try:
         # The client uses https://api.morphiqlabs.com and closes its connection pool here.

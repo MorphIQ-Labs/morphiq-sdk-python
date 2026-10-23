@@ -6,14 +6,12 @@ then run from a checkout:
 ```sh
 python -m pip install -e '.[market-data]'
 export MORPHIQ_API_KEY="YOUR_API_KEY"
-python -m examples.download_prices
 python -m examples.identify_regime
 ```
 
-The download prompts for a Yahoo ticker, defaulting to `SPY`. It requests daily
-history ending before today, selects the latest 512 closes, saves `prices.csv`
-in the working directory, and displays the latest rows. Change the ticker at
-the prompt and rerun the download to replace that file. It stops if there are
+The example prompts for a Yahoo ticker, defaulting to `SPY`. It requests daily
+history ending before today, selects the latest 512 closes in memory, and displays
+the latest rows. It passes those prices directly to the regime request. It stops if there are
 fewer than 512 observations or missing/nonpositive values; it does not fill gaps.
 
 `yfinance` is an optional market-data dependency. The download uses `Close` with
@@ -23,8 +21,8 @@ It uses daily date labels, which do not establish an exact observation timestamp
 so the regime request omits `as_of`. An exact known final observation timestamp
 can be supplied as RFC 3339 with an explicit UTC offset.
 
-The [sync example](../examples/identify_regime.py) reads the CSV, constructs a
-`RegimeRequest(prices=prices)` and calls `MorphIQ.regime`. The
+The [sync example](../examples/identify_regime.py) constructs
+`RegimeRequest(prices=closes["Close"].tolist())` and calls `MorphIQ.regime`. The
 [async example](../examples/identify_regime_async.py) shows the same data and
 response handling with `await AsyncMorphIQ.regime`. Both connect to
 `https://api.morphiqlabs.com` and read `MORPHIQ_API_KEY`, or prompt for it masked.

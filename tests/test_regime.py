@@ -2,14 +2,14 @@ import asyncio
 import copy
 import json
 import os
-import shutil
-import subprocess
-import sys
 from pathlib import Path
 
 import httpx
+import nbformat
 import pytest
 from jsonschema import Draft202012Validator
+from nbclient import NotebookClient
+from nbclient.exceptions import CellExecutionError
 from pydantic import ValidationError
 
 from morphiq_sdk import (
@@ -22,7 +22,8 @@ from morphiq_sdk import (
     ResponseError,
     models,
 )
-from scripts.execute_notebook_fixture import write_fixture_prices
+from scripts.execute_notebook_fixture import fixture_prices_source
+from scripts.generate_notebook import regime_sources
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -181,19 +182,20 @@ def test_regime_failures_never_retry(regime_cases, asynchronous, failure):
 
 
 @pytest.mark.parametrize("script", ["identify_regime.py", "identify_regime_async.py"])
-def test_regime_scripts_are_standalone(fixture_api, regime_cases, tmp_path, script):
+def test_regime_api_cells_with_in_memory_prices(fixture_api, regime_cases, tmp_path, script):
     endpoint, received = fixture_api
-    write_fixture_prices(tmp_path, regime_cases[0]["request"]["prices"])
-    shutil.copyfile(ROOT / "examples" / script, tmp_path / script)
-    result = subprocess.run(
-        [sys.executable, str(tmp_path / script)],
-        cwd=tmp_path,
-        env={**os.environ, "MORPHIQ_API_BASE_URL": endpoint, "MORPHIQ_API_KEY": "fixture-key"},
-        stdin=subprocess.DEVNULL,
-        capture_output=True,
-        text=True,
-        check=True,
+    notebook = nbformat.v4.new_notebook(
+        cells=[
+            nbformat.v4.new_code_cell(fixture_prices_source(regime_cases[0]["request"]["prices"])),
+            nbformat.v4.new_code_cell(regime_sources(script)[1]),
+        ]
     )
+    executed = NotebookClient(
+        notebook, timeout=60, resources={"metadata": {"path": str(tmp_path)}}
+    ).execute(
+        env={**os.environ, "MORPHIQ_API_BASE_URL": endpoint, "MORPHIQ_API_KEY": "fixture-key"}
+    )
+    output = json.dumps(executed)
     for expected in [
         "Decision: available",
         "Label: supported",
@@ -203,6 +205,29 @@ def test_regime_scripts_are_standalone(fixture_api, regime_cases, tmp_path, scri
         "fixture-regime",
         "not reported",
     ]:
-        assert expected in result.stdout
-    assert "fixture-key" not in result.stdout + result.stderr
+        assert expected in output
+    assert "fixture-key" not in output
     assert received == [("/v1/regime", "Bearer fixture-key", regime_cases[0]["request"])]
+    assert not list(tmp_path.iterdir())
+
+
+@pytest.mark.parametrize("script", ["identify_regime.py", "identify_regime_async.py"])
+def test_regime_api_cells_report_failures_without_retry(
+    failing_api, regime_cases, tmp_path, script
+):
+    endpoint, received, expected = failing_api
+    notebook = nbformat.v4.new_notebook(
+        cells=[
+            nbformat.v4.new_code_cell(fixture_prices_source(regime_cases[0]["request"]["prices"])),
+            nbformat.v4.new_code_cell(regime_sources(script)[1]),
+        ]
+    )
+    with pytest.raises(CellExecutionError):
+        NotebookClient(
+            notebook, timeout=60, resources={"metadata": {"path": str(tmp_path)}}
+        ).execute(
+            env={**os.environ, "MORPHIQ_API_BASE_URL": endpoint, "MORPHIQ_API_KEY": "fixture-key"}
+        )
+    assert expected in json.dumps(notebook)
+    assert "fixture-key" not in json.dumps(notebook)
+    assert len(received) == 1

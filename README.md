@@ -100,18 +100,17 @@ regime request:
 ```sh
 python -m pip install -e '.[market-data]'
 export MORPHIQ_API_KEY="YOUR_API_KEY"
-python -m examples.download_prices
 python -m examples.identify_regime
 ```
 
-Enter a Yahoo ticker at the prompt (default `SPY`). The download saves the latest
-512 daily closes to `prices.csv` and displays the last rows. It uses `Close` with
+Enter a Yahoo ticker at the prompt (default `SPY`). The example downloads the latest
+512 daily closes into memory and displays the last rows. It uses `Close` with
 `auto_adjust=False`: Yahoo's split-adjusted prices without dividend adjustment.
-The request example reads that file, constructs `RegimeRequest`, calls
+The example constructs `RegimeRequest` directly from those prices, calls
 `client.regime(request)`, and prints each head's status, label and scores, plus
 model provenance, consumed price range, request ID and reported CU charge.
 Run `python -m examples.identify_regime_async` to use the async client with the
-same file. Both scripts include the complete request and response handling.
+same workflow. Both scripts include the download, request and response handling.
 
 Open the [regime notebook](notebooks/regime/identification.ipynb) for the same
 workflow with a ticker input. See [the regime guide](docs/REGIME.md) for input
@@ -180,7 +179,7 @@ pricing engines or calculate authoritative customer charges.
 ```text
 src/morphiq_sdk/    Installable, typed Python package
 scripts/           Development and package verification
-examples/          Runnable pricing and regime examples, plus Yahoo download
+examples/          Runnable pricing and regime examples
 notebooks/         Quickstart and standalone feature notebooks
 contracts/         Reviewed OpenAPI snapshot, digest and source provenance
 docker/            Non-root notebook startup and workspace seeding

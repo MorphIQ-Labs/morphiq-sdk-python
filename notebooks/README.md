@@ -18,5 +18,5 @@ persistence and networking.
 
 Regenerate all notebooks with `python scripts/generate_notebook.py`; `--check` verifies
 agreement with the executable examples. Committed cells contain no executed
-outputs or credentials. CI executes API cells against loopback contract fixtures with synthetic CSV data;
+outputs or credentials. CI executes API cells against loopback contract fixtures with synthetic in-memory prices;
 the Yahoo download cell is skipped in offline tests.

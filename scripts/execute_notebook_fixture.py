@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 import argparse
-import csv
 import json
 import os
 import threading
-from datetime import date, timedelta
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -25,13 +23,13 @@ NOTEBOOK_CASES = {
 }
 
 
-def write_fixture_prices(directory: Path, prices: list[float]) -> None:
-    """Supply synthetic CSV input without contacting Yahoo or modifying examples."""
-    with (directory / "prices.csv").open("w", newline="") as stream:
-        writer = csv.writer(stream)
-        writer.writerow(["Date", "Close"])
-        for index, price in enumerate(prices):
-            writer.writerow([(date(2020, 1, 1) + timedelta(days=index)).isoformat(), price])
+def fixture_prices_source(prices: list[float]) -> str:
+    """An explicit synthetic-data cell for offline tests of the API cells."""
+    return (
+        "import pandas as pd\n"
+        f"closes = pd.DataFrame({{'Close': {prices!r}}}, "
+        f"index=pd.date_range('2020-01-01', periods={len(prices)}))\n"
+    )
 
 
 def execute(notebook_path: Path, fixture_paths: list[Path], notebook_root: Path) -> None:
@@ -69,7 +67,13 @@ def execute(notebook_path: Path, fixture_paths: list[Path], notebook_root: Path)
         notebook = nbformat.read(notebook_path, as_version=4)  # type: ignore[no-untyped-call]
         nbformat.validate(notebook)
         with TemporaryDirectory() as working_directory:
-            write_fixture_prices(Path(working_directory), by_name["regime"]["request"]["prices"])
+            if relative_path.startswith("regime/"):
+                notebook.cells.insert(
+                    0,
+                    nbformat.v4.new_code_cell(  # type: ignore[no-untyped-call]
+                        fixture_prices_source(by_name["regime"]["request"]["prices"])
+                    ),
+                )
             executed = NotebookClient(
                 notebook,
                 timeout=60,

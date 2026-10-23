@@ -10,7 +10,7 @@ import nbformat
 import pytest
 from nbclient import NotebookClient
 
-from scripts.execute_notebook_fixture import NOTEBOOK_CASES, write_fixture_prices
+from scripts.execute_notebook_fixture import NOTEBOOK_CASES, fixture_prices_source
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -103,16 +103,13 @@ def test_readme_request_and_response_match_executable_example(fixture_api, cases
     assert "readme-test-key" not in result.stdout + result.stderr
 
 
-def test_scripts_report_failures_without_retry(failing_api, regime_cases, tmp_path):
-    write_fixture_prices(tmp_path, regime_cases[0]["request"]["prices"])
+def test_scripts_report_failures_without_retry(failing_api, tmp_path):
     endpoint, received, expected = failing_api
     for module in (
         "price_european",
         "price_american",
         "price_async",
         "quickstart",
-        "identify_regime",
-        "identify_regime_async",
     ):
         result = subprocess.run(
             [sys.executable, str(ROOT / "examples" / (module + ".py"))],
@@ -130,7 +127,7 @@ def test_scripts_report_failures_without_retry(failing_api, regime_cases, tmp_pa
         assert expected in result.stderr
         assert "error-test-key" not in result.stdout + result.stderr
         assert "Price:" not in result.stdout
-    assert len(received) == 6
+    assert len(received) == 4
 
 
 @pytest.mark.parametrize("filename", NOTEBOOK_CASES)
@@ -153,7 +150,11 @@ def test_generated_notebook_executes_without_source_tree(
         elif cell.cell_type == "markdown":
             for link in re.findall(r"\]\(([^)]+\.ipynb)\)", cell.source):
                 assert (notebook_root / filename).parent.joinpath(link).is_file()
-    write_fixture_prices(tmp_path, regime_cases[0]["request"]["prices"])
+    if filename.startswith("regime/"):
+        notebook.cells.insert(
+            0,
+            nbformat.v4.new_code_cell(fixture_prices_source(regime_cases[0]["request"]["prices"])),
+        )
     executed = NotebookClient(
         notebook,
         timeout=60,

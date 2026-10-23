@@ -90,7 +90,7 @@ python scripts/check_notebook_container.py
 ```
 
 This check verifies authenticated startup and non-root execution, runs every
-notebook API cell against loopback contract fixtures, using synthetic CSV prices
+notebook API cell against loopback contract fixtures, using synthetic in-memory prices
 and skipping the external Yahoo download cell. It then recreates the container
 with the same volume to verify preserved edits and missing-notebook seeding. It removes only its
 own randomly named test container and volume.

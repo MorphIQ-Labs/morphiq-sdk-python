@@ -30,6 +30,38 @@ def example_source(filename: str) -> str:
     return import_source + "\n" + body
 
 
+def regime_sources(filename: str = "identify_regime.py") -> tuple[str, str]:
+    """Keep download and API cells separate while copying the executable example."""
+    source = example_source(filename)
+    download, separator, request = source.partition(
+        "# Submit the downloaded prices directly to MorphIQ.\n"
+    )
+    if not separator:
+        raise ValueError("Regime example is missing its API section marker")
+    tree = ast.parse((ROOT / "examples" / filename).read_text())
+    download = download[download.index("ticker =") :]
+
+    def with_imports(body: str) -> str:
+        names = {node.id for node in ast.walk(ast.parse(body)) if isinstance(node, ast.Name)}
+        groups: dict[str, list[str]] = {"stdlib": [], "third_party": [], "sdk": []}
+        for node in tree.body:
+            if not isinstance(node, (ast.Import, ast.ImportFrom)):
+                continue
+            if not any((alias.asname or alias.name) in names for alias in node.names):
+                continue
+            module = node.module if isinstance(node, ast.ImportFrom) else node.names[0].name
+            group = (
+                "sdk"
+                if module == "morphiq_sdk"
+                else ("third_party" if module == "yfinance" else "stdlib")
+            )
+            groups[group].append(ast.unparse(node))
+        imports = "\n\n".join("\n".join(group) for group in groups.values() if group)
+        return imports + "\n\n" + body.strip()
+
+    return with_imports(download), with_imports(request)
+
+
 def notebook() -> dict[str, Any]:
     cells: list[dict[str, Any]] = []
 
@@ -299,8 +331,8 @@ def notebooks() -> dict[str, dict[str, Any]]:
                 "The download cell fetches real SPY daily prices from Yahoo through yfinance. "
                 "Enter a ticker at the prompt (SPY is the default). "
                 "Docker includes yfinance; elsewhere install the notebooks extra. "
-                "The download writes prices.csv in the working directory, and the next cell "
-                "reads it and submits one regime request. "
+                "The download keeps prices in memory; the next cell passes them directly "
+                "to one regime request. "
                 "[Yahoo price adjustment semantics]"
                 "(https://ranaroussi.github.io/yfinance/advanced/price_adjustment.html).",
             )
@@ -310,12 +342,14 @@ def notebooks() -> dict[str, dict[str, Any]]:
                     "cell_type": "code",
                     "id": "download-prices",
                     "metadata": {"tags": ["requires-network"]},
-                    "source": example_source("download_prices.py").strip(),
+                    "source": regime_sources()[0],
                     "execution_count": None,
                     "outputs": [],
                 },
             )
             for cell in feature["cells"]:
+                if cell["id"] == "api-example":
+                    cell["source"] = regime_sources()[1]
                 if cell["id"] == "errors-help":
                     cell["source"] = cell["source"].replace(
                         "Use `response.result.price`, `response.result.pricing_model`, and\n"
