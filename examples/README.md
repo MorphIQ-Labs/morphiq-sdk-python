@@ -1,6 +1,6 @@
 # Executable cookbook
 
-Eight recipes are planned in [#111](https://gitlab.com/prophetizo/morphiq-labs/sites/morphiq-api/-/work_items/111).
+Eight recipes are planned in [#7](https://github.com/MorphIQ-Labs/morphiq-sdk-python/issues/7).
 No runnable API examples exist in this scaffold yet.
 
 | Recipe | Outcome |

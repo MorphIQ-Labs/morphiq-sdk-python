@@ -4,8 +4,10 @@ The API repository's services/api/openapi.json remains the reviewed HTTP source.
 This SDK consumes a versioned artifact without owning another schema or installing
 the numerical engines.
 
-[API #106](https://gitlab.com/prophetizo/morphiq-labs/sites/morphiq-api/-/work_items/106)
-owns the producer/import workflow. No snapshot is imported in this foundation.
+[SDK #2](https://github.com/MorphIQ-Labs/morphiq-sdk-python/issues/2)
+coordinates the producer/import workflow with
+[API #106](https://gitlab.com/prophetizo/morphiq-labs/sites/morphiq-api/-/work_items/106).
+No snapshot is imported in this foundation.
 Record SHA-256, service source/release identity and API contract version; verify
 them before generation. Public SDK builds must work offline from the reviewed
 snapshot without private GitLab access.

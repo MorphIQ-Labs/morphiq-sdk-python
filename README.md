@@ -56,14 +56,13 @@ docs/              Roadmap and contract handoff design
 
 ## Delivery plan
 
-Implementation is reviewed through GitHub pull requests. The initial delivery
-backlog remains in the API project's GitLab tracker:
+Implementation, issues and the SDK delivery milestone live in this GitHub repository:
 
-- [SDK v0.1 and cookbook milestone](https://gitlab.com/prophetizo/morphiq-labs/sites/morphiq-api/-/milestones/8)
+- [SDK v0.1 and cookbook milestone](https://github.com/MorphIQ-Labs/morphiq-sdk-python/milestone/1)
 - [Work breakdown and dependencies](docs/ROADMAP.md)
-- [Hosted notebook exploration](https://gitlab.com/prophetizo/morphiq-labs/sites/morphiq-api/-/work_items/115)
+- [Hosted notebook exploration](https://github.com/MorphIQ-Labs/morphiq-sdk-python/issues/11)
 
-GitLab planning links currently require project access. Public distribution and
-support routing are tracked before launch; this private scaffold grants no
-open-source license. Hosted notebooks are a follow-on experiment, not a prerequisite
-for using the eventual SDK locally.
+API contract publication and website implementation stay in the API repository,
+linked from their SDK dependency issues. Public distribution and support routing
+are tracked before launch; this private scaffold grants no open-source license.
+Hosted notebooks are a follow-on experiment, not a prerequisite for local SDK use.

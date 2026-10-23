@@ -1,7 +1,7 @@
 ## Change
 
-Describe the problem and resulting behavior. Link the GitLab work item and any
-related API MR; GitHub cannot automatically close a GitLab issue.
+Describe the problem and resulting behavior. Link the GitHub issue and any
+related API MR; cross-repository API work remains in its owning tracker.
 
 ## Validation
 

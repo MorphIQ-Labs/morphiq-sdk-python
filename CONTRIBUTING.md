@@ -3,7 +3,7 @@
 Start with the development commands in [README.md](README.md), then read
 [AGENTS.md](AGENTS.md) and [the contract design](docs/CONTRACT.md).
 
-Create a feature branch from main, link the relevant [GitLab work item](docs/ROADMAP.md),
+Create a feature branch from main, link the relevant [GitHub issue](docs/ROADMAP.md),
 and open a GitHub pull request. Use a conventional commit title such as
 `feat(client): add synchronous pricing`. Changes merge by squash after review
 and successful checks.

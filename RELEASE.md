@@ -9,7 +9,7 @@ The SDK will have an independent version stream. API contract, service and
 engine versions remain separate identities; never derive an SDK release from
 an engine tag.
 
-[Release automation and public distribution (#113)](https://gitlab.com/prophetizo/morphiq-labs/sites/morphiq-api/-/work_items/113)
+[Release automation and public distribution (#9)](https://github.com/MorphIQ-Labs/morphiq-sdk-python/issues/9)
 must deliver confirmed name ownership, licensing and public source/support
 routing; conventional-commit-driven release PRs and generated changelogs/tags;
 clean wheel/sdist checks and TestPyPI verification; constrained publishing
