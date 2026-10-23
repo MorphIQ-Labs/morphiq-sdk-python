@@ -92,30 +92,6 @@ are `examples.price_european` and `examples.price_american`.
 See [the quickstart guide](docs/QUICKSTART.md) for input units, reference results,
 configuration and errors.
 
-## Identify a regime from market prices
-
-Install the optional Yahoo data dependency, download daily closes, and submit a
-regime request:
-
-```sh
-python -m pip install -e '.[market-data]'
-export MORPHIQ_API_KEY="YOUR_API_KEY"
-python -m examples.identify_regime
-```
-
-Enter a Yahoo ticker at the prompt (default `SPY`). The example downloads the latest
-512 daily closes into memory and displays the last rows. It uses `Close` with
-`auto_adjust=False`: Yahoo's split-adjusted prices without dividend adjustment.
-The example constructs `RegimeRequest` directly from those prices, calls
-`client.regime(request)`, and prints each head's status, label and scores, plus
-model provenance, consumed price range, request ID and reported CU charge.
-Run `python -m examples.identify_regime_async` to use the async client with the
-same workflow. Both scripts include the download, request and response handling.
-
-Open the [regime workspace](notebooks/regime/identification.ipynb) for a ticker
-selector, history chart, regime assessment and score charts. See [the regime guide](docs/REGIME.md) for input
-requirements and interpreting results.
-
 ## Start a notebook with Docker
 
 With Docker running, from the repository root, set your API key and start
