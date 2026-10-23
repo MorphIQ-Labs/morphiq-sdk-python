@@ -176,6 +176,43 @@ for frame in [pd.DataFrame(), pd.DataFrame({'Close': [100.] * 511}),
     assert received == []
 
 
+def test_one_regime_click_publishes_complete_result_and_redraw_uses_cache(
+    fixture_api, regime_cases, tmp_path
+):
+    endpoint, received = fixture_api
+    code = (
+        fixture_prices_source(regime_cases[0]["request"]["prices"])
+        + """
+use_history(closes, 'SPY')
+analyze_button.click()
+assert last_response is not None
+assert analysis_status.value.startswith('Analysis complete')
+assert analyze_button.description == 'Show analysis'
+# Verify the widget's actual state immediately after the first callback returns.
+outputs = analysis_output.outputs
+tables = [o['data']['text/html'] for o in outputs if 'text/html' in o.get('data', {})]
+assert len(tables) == 2
+assert all(head in tables[0] for head in ['Decision', 'Direction', 'State'])
+assert 'Model SHA-256' in tables[1] and 'Engine(s)' in tables[1]
+assert sum('image/png' in o.get('data', {}) for o in outputs) == 1
+text = ''.join(o.get('text', '') for o in outputs)
+assert 'fixture-regime' in text and 'CU charged: not reported' in text
+assert not analyze_button.disabled and not ticker.disabled and not price_interval.disabled
+response = last_response
+analysis_output.outputs = ()
+analyze_button.click()
+assert last_response is response
+assert analysis_output.outputs == outputs
+ticker.value = 'QQQ'
+assert last_response is None and analysis_output.outputs == ()
+assert analyze_button.disabled
+assert analyze_button.description == 'Analyze regime · 1 request'
+"""
+    )
+    run_workspace("regime/identification.ipynb", code, endpoint, tmp_path)
+    assert len(received) == 1
+
+
 def test_pricing_interval_selection_and_timestamp_provenance(fixture_api, tmp_path):
     endpoint, received = fixture_api
     code = """

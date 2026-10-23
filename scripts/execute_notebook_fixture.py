@@ -64,6 +64,10 @@ analyze_button.click()
 assert last_response is not None and last_response.metadata.request_id == 'fixture-regime'
 assert last_response.metadata.fcu_charged is None
 assert not analyze_button.disabled
+assert sum('text/html' in output.get('data', {}) for output in analysis_output.outputs) == 2
+assert sum('image/png' in output.get('data', {}) for output in analysis_output.outputs) == 1
+assert analyze_button.description == 'Show analysis'
+analyze_button.click()  # Redraw the saved response; the server must still see one request.
 ticker.value = 'AAPL'
 assert loaded_closes is None and last_response is None and analyze_button.disabled
 """
