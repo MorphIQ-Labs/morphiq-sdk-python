@@ -1,0 +1,45 @@
+[build-system]
+requires = ["hatchling==1.32.4"]
+build-backend = "hatchling.build"
+
+[project]
+name = "morphiq-sdk"
+dynamic = ["version"]
+description = "Python SDK for the MorphIQ Labs API"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "MorphIQ Labs" }]
+dependencies = []
+classifiers = [
+  "Development Status :: 1 - Planning",
+  "Private :: Do Not Upload",
+  "Programming Language :: Python :: 3",
+  "Typing :: Typed",
+]
+
+[project.urls]
+Repository = "https://github.com/MorphIQ-Labs/morphiq-sdk-python"
+
+# Development builds supply 0.0.0.dev0; release automation will supply the
+# reviewed SDK version independently of API/service/engine versions.
+[tool.hatch.version]
+source = "env"
+variable = "MORPHIQ_SDK_BUILD_VERSION"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/morphiq_sdk"]
+
+[tool.hatch.build.targets.sdist]
+include = ["/src", "/pyproject.toml", "/README.md"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+files = ["src", "scripts"]
