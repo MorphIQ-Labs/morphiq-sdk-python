@@ -5,17 +5,33 @@ pricing, risk and market analytics.
 
 ## Quickstart
 
-From a checkout with Python 3.11 or newer:
+### 1. Get API access
+
+Start at the [MorphIQ Labs developer portal](https://developers.morphiqlabs.com)
+to get API access, an API key, and the base URL for your account. You'll use these
+to connect the SDK to the API.
+
+### 2. Install the SDK
+
+With Python 3.11 or newer:
 
 ```sh
+git clone https://github.com/MorphIQ-Labs/morphiq-sdk-python.git
+cd morphiq-sdk-python
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -e .
+```
+
+### 3. Make your first API requests
+
+```sh
 python -m examples.quickstart
 ```
 
-Enter your account's API base URL and API key at the masked prompt, or supply
-`MORPHIQ_API_BASE_URL` and `MORPHIQ_API_KEY` through your environment. This submits
+Enter your API base URL and API key when prompted; the key prompt is masked. You
+can also supply `MORPHIQ_API_BASE_URL` and `MORPHIQ_API_KEY` through your environment.
+This submits
 two real requests and prints each price, selected model, request ID, engine
 identity and reported commercial CU charge.
 

@@ -4,7 +4,12 @@ This preview supports `POST /v1/price` over JSON, synchronously and asynchronous
 You need Python 3.11+ and your account's verified API endpoint/key, or a controlled
 local service. The examples use synthetic contracts and no market data.
 
-## Install and run
+## 1. Get API access
+
+Start at the [MorphIQ Labs developer portal](https://developers.morphiqlabs.com)
+to get API access, an API key, and the base URL for your account.
+
+## 2. Install and run
 
 ```sh
 git clone https://github.com/MorphIQ-Labs/morphiq-sdk-python.git
