@@ -2,10 +2,10 @@
 
 | Notebook | Covers | Requests on Run All |
 | --- | --- | --- |
-| [Quickstart](quickstart/start-here.ipynb) | European and American pricing, then async usage | 4 |
+| [Quickstart](start-here.ipynb) | European and American pricing, then async usage | 4 |
 | [European pricing](pricing/european.ipynb) | European call inputs, price, model and charge metadata | 1 |
 | [American pricing](pricing/american.ipynb) | American put inputs, continuous dividend yield and results | 1 |
-| [Async pricing](async/pricing.ipynb) | Sequential requests with `AsyncMorphIQ` and `await` | 2 |
+| [Async pricing](pricing/async.ipynb) | Sequential requests with `AsyncMorphIQ` and `await` | 2 |
 
 Each pricing cell includes the complete script: request data, API call, response
 fields and error handling. Each notebook runs independently.

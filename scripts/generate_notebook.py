@@ -64,9 +64,9 @@ open it in JupyterLab. The notebook is self-contained; it needs no examples impo
 
 ## Feature notebooks
 
-- [European pricing](../pricing/european.ipynb)
-- [American pricing](../pricing/american.ipynb)
-- [Async pricing](../async/pricing.ipynb)
+- [European pricing](pricing/european.ipynb)
+- [American pricing](pricing/american.ipynb)
+- [Async pricing](pricing/async.ipynb)
 """,
     )
     cell(
@@ -208,7 +208,7 @@ container configured with that key. Clear outputs before sharing a notebook.
 
 def notebooks() -> dict[str, dict[str, Any]]:
     quickstart = notebook()
-    result = {"quickstart/start-here.ipynb": quickstart}
+    result = {"start-here.ipynb": quickstart}
     features = [
         (
             "pricing/european.ipynb",
@@ -231,7 +231,7 @@ def notebooks() -> dict[str, dict[str, Any]]:
             "20% volatility, a 5% interest rate and a 1% continuous dividend yield.",
         ),
         (
-            "async/pricing.ipynb",
+            "pricing/async.ipynb",
             "Async pricing",
             "price_async.py",
             2,
@@ -269,7 +269,7 @@ def notebooks() -> dict[str, dict[str, Any]]:
             "and Jupyter installed; it does not import repository helpers.\n\n"
             f"Run All makes **{calls} pricing {'request' if calls == 1 else 'requests'}**, "
             "which may consume your API allowance. Opening the notebook makes no API calls.\n\n"
-            "[Back to the quickstart](../quickstart/start-here.ipynb)\n"
+            "[Back to the quickstart](../start-here.ipynb)\n"
         )
         result[filename] = feature
     return result

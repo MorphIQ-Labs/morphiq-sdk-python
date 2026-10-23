@@ -13,7 +13,7 @@ Open the local token-authenticated URL printed by Jupyter to reach Start Here.
 Keep it as your quickstart, or follow its links to the standalone
 [European pricing](../notebooks/pricing/european.ipynb),
 [American pricing](../notebooks/pricing/american.ipynb), and
-[async pricing](../notebooks/async/pricing.ipynb) notebooks. All four are included
+[async pricing](../notebooks/pricing/async.ipynb) notebooks. All four are included
 in the image and available in Jupyter's file browser.
 Compose passes the key into the container at runtime; it is not baked into the
 image. The notebook connects to `https://api.morphiqlabs.com` automatically. Leave
@@ -56,8 +56,8 @@ The `notebook-work` named volume stores notebooks and outputs. Ctrl-C followed
 by `docker compose down` retains it; subsequent startup reuses it. Startup seeds
 only missing notebooks and never replaces an existing edited file. Rebuilding and
 restarting adds new feature notebooks to an existing workspace.
-The image preserves the `quickstart/`, `pricing/` and `async/` folders in your
-workspace. Older root-level notebook copies remain available after upgrading.
+The quickstart is `start-here.ipynb` at the workspace root. Feature notebooks are
+organized by feature, with European, American and async pricing in `pricing/`.
 
 To adopt an updated notebook after rebuilding, rename your edited copy in Jupyter,
 then restart; the missing original filename is seeded from the image. Download

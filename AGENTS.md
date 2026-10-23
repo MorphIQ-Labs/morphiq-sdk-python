@@ -17,7 +17,7 @@ commercial policy, account authority and execution remain server-side.
   scripts with synthetic fixtures; notebooks and web snippets derive from or
   verify against that source.
 - Maintain the quickstart plus a standalone notebook for each implemented feature.
-  Organize notebooks in topic folders, with the quickstart in `notebooks/quickstart/`.
+  Organize feature notebooks in topic folders; keep `notebooks/start-here.ipynb` at the root.
   Keep request construction and response handling visible in every example.
   README files describe available functionality and usage; keep plans in the roadmap.
 - Use feature branches and reviewed squash PRs with conventional commit titles.

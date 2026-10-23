@@ -14,10 +14,10 @@ import nbformat
 from nbclient import NotebookClient
 
 NOTEBOOK_CASES = {
-    "quickstart/start-here.ipynb": ("european", "american", "european", "american"),
+    "start-here.ipynb": ("european", "american", "european", "american"),
     "pricing/european.ipynb": ("european",),
     "pricing/american.ipynb": ("american",),
-    "async/pricing.ipynb": ("european", "american"),
+    "pricing/async.ipynb": ("european", "american"),
 }
 
 

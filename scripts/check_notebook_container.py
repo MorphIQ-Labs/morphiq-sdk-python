@@ -135,7 +135,7 @@ def check(image: str) -> None:
             item["content"]["cells"][0]["source"] += "\n\n" + marker
             contents(endpoint, token, filename, {"type": "notebook", "content": item["content"]})
         # An existing workspace must receive a missing feature notebook on restart.
-        missing = next(filename for filename in saved if not filename.startswith("quickstart/"))
+        missing = next(filename for filename in saved if filename != "start-here.ipynb")
         docker(
             "exec",
             identifier,

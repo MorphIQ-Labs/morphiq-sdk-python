@@ -31,7 +31,7 @@ def main() -> None:
             "--ServerApp.port_retries=0",
             "--ServerApp.open_browser=False",
             f"--ServerApp.root_dir={workspace}",
-            "--ServerApp.default_url=/lab/tree/quickstart/start-here.ipynb",
+            "--ServerApp.default_url=/lab/tree/start-here.ipynb",
             f"--ServerApp.custom_display_url=http://127.0.0.1:{port}",
         ],
     )
