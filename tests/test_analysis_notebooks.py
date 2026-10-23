@@ -158,7 +158,7 @@ assert not analyze_button.disabled
     assert reason in output and len(received) == 1
 
 
-def test_invalid_market_history_does_not_enable_analysis(fixture_api, tmp_path):
+def test_invalid_market_history_is_rejected_without_request(fixture_api, tmp_path):
     endpoint, received = fixture_api
     code = """
 for frame in [pd.DataFrame(), pd.DataFrame({'Close': [100.] * 511}),
@@ -170,7 +170,24 @@ for frame in [pd.DataFrame(), pd.DataFrame({'Close': [100.] * 511}),
         pass
     else:
         raise AssertionError('Invalid history accepted')
-    assert loaded_closes is None and analyze_button.disabled
+    assert loaded_closes is None and not analyze_button.disabled
+"""
+    run_workspace("regime/identification.ipynb", code, endpoint, tmp_path)
+    assert received == []
+
+
+def test_regime_button_is_ready_without_a_loading_cell(fixture_api, tmp_path):
+    endpoint, received = fixture_api
+    code = """
+assert loaded_closes is None and last_response is None
+assert not analyze_button.disabled
+ticker.value = ''
+analyze_button.click()
+assert 'Enter a ticker' in analysis_status.value
+assert loaded_closes is None and last_response is None
+assert not analyze_button.disabled and not ticker.disabled and not price_interval.disabled
+ticker.value = 'SPY'
+assert not analyze_button.disabled
 """
     run_workspace("regime/identification.ipynb", code, endpoint, tmp_path)
     assert received == []
@@ -205,7 +222,7 @@ assert last_response is response
 assert analysis_output.outputs == outputs
 ticker.value = 'QQQ'
 assert last_response is None and analysis_output.outputs == ()
-assert analyze_button.disabled
+assert not analyze_button.disabled
 assert analyze_button.description == 'Analyze regime · 1 request'
 """
     )
@@ -299,13 +316,9 @@ analyze_button.click()
 assert last_response is not None
 price_interval.value = '60m'
 assert loaded_closes is None and loaded_interval is None and last_response is None
-assert analyze_button.disabled
-# A stale history cannot be submitted under another interval.
-use_history(closes, 'SPY', '5m')
-analyze_regime(None)
-assert last_response is None
+assert not analyze_button.disabled
 ticker.value = 'QQQ'
-assert loaded_closes is None and loaded_ticker is None and analyze_button.disabled
+assert loaded_closes is None and loaded_ticker is None and not analyze_button.disabled
 """
     )
     output = run_workspace("regime/identification.ipynb", code, endpoint, tmp_path)

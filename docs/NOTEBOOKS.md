@@ -23,10 +23,12 @@ The container runs as UID 1000, publishes only to localhost, and retains Jupyter
 random token authentication. Dependencies and the SDK wheel are installed during
 the build. Startup installs nothing and executes no API calls.
 
-Running setup makes no MorphIQ requests. Both workspaces fetch Yahoo data on setup and
+Running setup makes no MorphIQ requests. Pricing fetches Yahoo data on setup and
 when you apply a ticker edit or select another interval. Choose daily, 1-minute,
 5-minute, 15-minute, 30-minute or hourly prices. Regime fetches a longer history
-to obtain 512 prices; analysis stays disabled if that selection lacks enough valid bars.
+to obtain 512 prices. Its **Analyze regime** button downloads and validates history,
+then submits the request and displays results in one click. If Yahoo returns too few
+valid prices, no MorphIQ request is sent. No separate data-loading cell is required.
 In pricing, **Price option** sends one
 request; **Spot sensitivity** sends nine sequential requests and stops on the first
 failure, preserving completed results. In regime, **Analyze regime** sends one

@@ -57,7 +57,7 @@ assert not price_button.disabled and not sweep_button.disabled
         return (
             fixture_prices_source(prices)
             + """
-assert loaded_closes is None and analyze_button.disabled
+assert loaded_closes is None and not analyze_button.disabled
 use_history(closes, 'SPY')
 assert len(loaded_closes) == 512 and not analyze_button.disabled
 analyze_button.click()
@@ -69,7 +69,7 @@ assert sum('image/png' in output.get('data', {}) for output in analysis_output.o
 assert analyze_button.description == 'Show analysis'
 analyze_button.click()  # Redraw the saved response; the server must still see one request.
 ticker.value = 'AAPL'
-assert loaded_closes is None and last_response is None and analyze_button.disabled
+assert loaded_closes is None and last_response is None and not analyze_button.disabled
 """
         )
     return ""
