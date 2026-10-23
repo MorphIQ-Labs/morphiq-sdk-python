@@ -7,7 +7,7 @@
 !src/
 !src/**
 !notebooks/
-!notebooks/00-start-here.ipynb
+!notebooks/*.ipynb
 !docker/
 !docker/start_notebook.py
 **/__pycache__

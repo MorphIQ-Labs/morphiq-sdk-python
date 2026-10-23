@@ -10,6 +10,8 @@ import nbformat
 import pytest
 from nbclient import NotebookClient
 
+from scripts.execute_notebook_fixture import NOTEBOOK_CASES
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -122,12 +124,14 @@ def test_scripts_report_failures_without_retry(failing_api):
     assert len(received) == 4
 
 
-def test_generated_notebook_executes_without_source_tree(fixture_api, tmp_path):
+@pytest.mark.parametrize("filename", NOTEBOOK_CASES)
+def test_generated_notebook_executes_without_source_tree(fixture_api, cases, tmp_path, filename):
     endpoint, received = fixture_api
     subprocess.run(
         [sys.executable, "scripts/generate_notebook.py", "--check"], cwd=ROOT, check=True
     )
-    notebook = nbformat.read(ROOT / "notebooks/00-start-here.ipynb", as_version=4)
+    assert {path.name for path in (ROOT / "notebooks").glob("*.ipynb")} == set(NOTEBOOK_CASES)
+    notebook = nbformat.read(ROOT / "notebooks" / filename, as_version=4)
     nbformat.validate(notebook)
     for cell in notebook.cells:
         if cell.cell_type == "code":
@@ -141,6 +145,10 @@ def test_generated_notebook_executes_without_source_tree(fixture_api, tmp_path):
             "MORPHIQ_API_KEY": "notebook-fixture-key",
         }
     )
-    assert len(received) == 4
+    by_name = {case["name"]: case for case in cases}
+    assert [item[2] for item in received] == [
+        by_name[name]["request"] for name in NOTEBOOK_CASES[filename]
+    ]
+    assert all(item[1] == "Bearer notebook-fixture-key" for item in received)
     assert "notebook-fixture-key" not in json.dumps(executed)
     assert "not reported" in json.dumps(executed)

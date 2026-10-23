@@ -108,6 +108,11 @@ API URL. If the key is unset, the notebook prompts for it. Opening Jupyter makes
 running all cells submits four pricing requests, including the async examples.
 Dependencies are installed at build time, and notebook edits persist in a named volume.
 
+The quickstart links to separate notebooks for
+[European pricing](notebooks/01-european-pricing.ipynb),
+[American pricing](notebooks/02-american-pricing.ipynb), and
+[async pricing](notebooks/03-async-pricing.ipynb). Each runs independently.
+
 Stop with Ctrl-C, then `docker compose down`; the workspace is retained. If port
 8888 is occupied, use `MORPHIQ_NOTEBOOK_PORT=8889 docker compose up --build`.
 See [notebook instructions](docs/NOTEBOOKS.md) for networking and persistence.
@@ -150,7 +155,7 @@ pricing engines or calculate authoritative customer charges.
 src/morphiq_sdk/    Installable, typed Python package
 scripts/           Development and package verification
 examples/          Runnable European/American sync and async examples
-notebooks/         Generated standalone Start Here notebook
+notebooks/         Quickstart and standalone feature notebooks
 contracts/         Reviewed OpenAPI snapshot, digest and source provenance
 docker/            Non-root notebook startup and workspace seeding
 docs/              Usage guides and contract documentation

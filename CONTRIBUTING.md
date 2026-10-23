@@ -16,6 +16,14 @@ Verify installed wheels outside the checkout so source-tree imports cannot hide
 a broken distribution. Notebook tests require the development lock installed;
 `python scripts/generate_notebook.py --check` must pass after example changes.
 
+Keep the quickstart notebook and add a dedicated notebook for each implemented
+feature. Start with a self-contained executable example showing request inputs,
+the API call, response fields and error handling. Add its notebook to
+`scripts/generate_notebook.py` and its expected synthetic request sequence to
+`NOTEBOOK_CASES` in `scripts/execute_notebook_fixture.py`. Regenerate the notebooks
+and run the example tests and Docker notebook check; both execute every notebook.
+Keep development plans in `docs/ROADMAP.md`, not README files.
+
 Regenerate each dependency lock with pinned uv, retaining hashes and platform markers:
 
 ```sh

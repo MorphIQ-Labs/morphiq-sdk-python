@@ -16,6 +16,9 @@ commercial policy, account authority and execution remain server-side.
 - Keep pandas, plotting and notebook tooling optional. Examples are executable
   scripts with synthetic fixtures; notebooks and web snippets derive from or
   verify against that source.
+- Maintain the quickstart plus a standalone notebook for each implemented feature.
+  Keep request construction and response handling visible in every example.
+  README files describe available functionality and usage; keep plans in the roadmap.
 - Use feature branches and reviewed squash PRs with conventional commit titles.
   Never push implementation directly to main or hand-cut release tags.
 - Run Ruff lint/format, mypy and `python scripts/check_package.py` for setup

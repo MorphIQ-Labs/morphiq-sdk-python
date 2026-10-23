@@ -13,9 +13,18 @@ from typing import Any
 import nbformat
 from nbclient import NotebookClient
 
+NOTEBOOK_CASES = {
+    "00-start-here.ipynb": ("european", "american", "european", "american"),
+    "01-european-pricing.ipynb": ("european",),
+    "02-american-pricing.ipynb": ("american",),
+    "03-async-pricing.ipynb": ("european", "american"),
+}
+
 
 def execute(notebook_path: Path, fixture_path: Path) -> None:
     cases = json.loads(fixture_path.read_text())["cases"]
+    by_name = {case["name"]: case for case in cases}
+    expected = [by_name[name]["request"] for name in NOTEBOOK_CASES[notebook_path.name]]
     received: list[dict[str, Any]] = []
     credential = "notebook-container-test-only"
 
@@ -52,9 +61,9 @@ def execute(notebook_path: Path, fixture_path: Path) -> None:
                 "MORPHIQ_API_KEY": credential,
             }
         )
-        if len(received) != 4 or credential in json.dumps(executed):
-            raise RuntimeError("Unexpected call count or a credential in notebook output")
-        print("Notebook executed four sync/async fixture requests without exposing the API key.")
+        if received != expected or credential in json.dumps(executed):
+            raise RuntimeError("Unexpected requests or a credential in notebook output")
+        print(f"{notebook_path.name}: {len(received)} fixture requests; no credential in output.")
     finally:
         server.shutdown()
         server.server_close()
