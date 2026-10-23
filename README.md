@@ -130,7 +130,7 @@ Open the local token-authenticated URL printed by Jupyter to reach Start Here.
 Choose an analysis workspace and run all cells once to display its controls:
 
 - [Option pricing](notebooks/pricing/options.ipynb): European/American and model
-  dropdowns, call/put selection, editable assumptions, Yahoo underlying close,
+  dropdowns, call/put selection, editable assumptions, Yahoo daily/intraday underlying price,
   a valuation comparison table and a spot-sensitivity chart.
 - [Regime analysis](notebooks/regime/identification.ipynb): ticker selection,
   Yahoo price history, latest regime assessment, score charts and provenance.

@@ -5,7 +5,7 @@ Use the controls to load data and run an analysis; no code edits are required.
 
 | Workspace | Tools | API requests per action |
 | --- | --- | --- |
-| [Option pricing](pricing/options.ipynb) | European/American and model selectors, call/put, option inputs, Yahoo underlying close, comparison table, spot-sensitivity chart | Price: 1; sensitivity: 9 sequential |
+| [Option pricing](pricing/options.ipynb) | European/American and model selectors, call/put, option inputs, Yahoo daily/intraday underlying price, comparison table, spot-sensitivity chart | Price: 1; sensitivity: 9 sequential |
 | [Regime analysis](regime/identification.ipynb) | Ticker selection, Yahoo price-history chart, latest regime assessment, score charts, provenance | Analyze: 1 |
 
 Setup, control changes and Yahoo downloads make no MorphIQ requests. Data stays

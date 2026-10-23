@@ -73,7 +73,7 @@ def notebook() -> dict[str, Any]:
 ## Choose an analysis
 
 - [Option pricing](pricing/options.ipynb): value European or American calls and puts,
-  load an underlying close from Yahoo, compare assumptions, and chart spot sensitivity.
+  load a daily or intraday underlying price from Yahoo, compare assumptions, and chart sensitivity.
 - [Regime analysis](regime/identification.ipynb): load a ticker's price history and
   inspect its latest regime assessment, scores and model provenance.
 

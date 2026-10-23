@@ -171,3 +171,43 @@ for frame in [pd.DataFrame(), pd.DataFrame({'Close': [100.] * 511}),
 """
     run_workspace("regime/identification.ipynb", code, endpoint, tmp_path)
     assert received == []
+
+
+def test_pricing_interval_selection_and_timestamp_provenance(fixture_api, tmp_path):
+    endpoint, received = fixture_api
+    code = """
+assert price_interval.value == '1d'
+assert set(price_interval.options) == {
+    ('Daily close', '1d'), ('1 minute', '1m'), ('5 minutes', '5m'),
+    ('15 minutes', '15m'), ('30 minutes', '30m'), ('1 hour', '60m')
+}
+daily = yahoo_price_options('1d')
+assert daily['end'] == date.today()
+assert daily['start'] == date.today() - timedelta(days=14)
+for interval in ['1m', '5m', '15m', '30m', '60m']:
+    price_interval.value = interval
+    assert yahoo_price_options(interval) == {'interval': interval, 'period': '5d'}
+assert price_history == [] and last_response is None
+history = pd.DataFrame({'Close': [101.25, 102.75]}, index=pd.date_range(
+    '2026-10-23 10:00', periods=2, freq='5min', tz='America/New_York'))
+use_yahoo_close(history, 'SPY', '5m')
+assert spot.value == 102.75
+assert '5m' in spot_source and '2026-10-23T10:05:00-04:00' in spot_source
+assert 'America/New_York' in spot_source
+source = spot_source
+price_interval.value = '1d'
+assert spot_source == source  # Selecting a new interval does not relabel the loaded price.
+spot.value = 103
+assert spot_source == 'Manual input'
+history.iloc[-1, 0] = float('nan')
+try:
+    use_yahoo_close(history, 'SPY', '5m')
+except ValueError:
+    pass
+else:
+    raise AssertionError('Missing latest bar silently replaced')
+assert spot.value == 103
+assert not price_button.disabled and not load_button.disabled
+"""
+    run_workspace("pricing/options.ipynb", code, endpoint, tmp_path)
+    assert received == []
