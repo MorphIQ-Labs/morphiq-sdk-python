@@ -14,17 +14,18 @@ import nbformat
 from nbclient import NotebookClient
 
 NOTEBOOK_CASES = {
-    "00-start-here.ipynb": ("european", "american", "european", "american"),
-    "01-european-pricing.ipynb": ("european",),
-    "02-american-pricing.ipynb": ("american",),
-    "03-async-pricing.ipynb": ("european", "american"),
+    "quickstart/start-here.ipynb": ("european", "american", "european", "american"),
+    "pricing/european.ipynb": ("european",),
+    "pricing/american.ipynb": ("american",),
+    "async/pricing.ipynb": ("european", "american"),
 }
 
 
-def execute(notebook_path: Path, fixture_path: Path) -> None:
+def execute(notebook_path: Path, fixture_path: Path, notebook_root: Path) -> None:
     cases = json.loads(fixture_path.read_text())["cases"]
     by_name = {case["name"]: case for case in cases}
-    expected = [by_name[name]["request"] for name in NOTEBOOK_CASES[notebook_path.name]]
+    relative_path = notebook_path.relative_to(notebook_root).as_posix()
+    expected = [by_name[name]["request"] for name in NOTEBOOK_CASES[relative_path]]
     received: list[dict[str, Any]] = []
     credential = "notebook-container-test-only"
 
@@ -63,7 +64,7 @@ def execute(notebook_path: Path, fixture_path: Path) -> None:
         )
         if received != expected or credential in json.dumps(executed):
             raise RuntimeError("Unexpected requests or a credential in notebook output")
-        print(f"{notebook_path.name}: {len(received)} fixture requests; no credential in output.")
+        print(f"{relative_path}: {len(received)} fixture requests; no credential in output.")
     finally:
         server.shutdown()
         server.server_close()
@@ -73,9 +74,10 @@ def execute(notebook_path: Path, fixture_path: Path) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--notebook", required=True, type=Path)
+    parser.add_argument("--notebook-root", required=True, type=Path)
     parser.add_argument("--fixtures", required=True, type=Path)
     args = parser.parse_args()
-    execute(args.notebook, args.fixtures)
+    execute(args.notebook, args.fixtures, args.notebook_root)
 
 
 if __name__ == "__main__":

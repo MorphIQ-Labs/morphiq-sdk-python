@@ -109,9 +109,9 @@ running all cells submits four pricing requests, including the async examples.
 Dependencies are installed at build time, and notebook edits persist in a named volume.
 
 The quickstart links to separate notebooks for
-[European pricing](notebooks/01-european-pricing.ipynb),
-[American pricing](notebooks/02-american-pricing.ipynb), and
-[async pricing](notebooks/03-async-pricing.ipynb). Each runs independently.
+[European pricing](notebooks/pricing/european.ipynb),
+[American pricing](notebooks/pricing/american.ipynb), and
+[async pricing](notebooks/async/pricing.ipynb). Each runs independently.
 
 Stop with Ctrl-C, then `docker compose down`; the workspace is retained. If port
 8888 is occupied, use `MORPHIQ_NOTEBOOK_PORT=8889 docker compose up --build`.

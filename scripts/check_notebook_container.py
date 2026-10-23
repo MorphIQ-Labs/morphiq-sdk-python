@@ -96,10 +96,12 @@ def check(image: str) -> None:
                 raise RuntimeError("Unexpected unauthenticated notebook response") from None
         else:
             raise RuntimeError("Notebook contents are accessible without authentication")
-        saved = {
-            path.name: contents(endpoint, token, path.name)
-            for path in sorted((ROOT / "notebooks").glob("*.ipynb"))
-        }
+        notebook_root = ROOT / "notebooks"
+        filenames = [
+            path.relative_to(notebook_root).as_posix()
+            for path in sorted(notebook_root.rglob("*.ipynb"))
+        ]
+        saved = {filename: contents(endpoint, token, filename) for filename in filenames}
         for filename, item in saved.items():
             if "MorphIQ SDK for Python" not in item["content"]["cells"][0]["source"]:
                 raise RuntimeError(f"{filename} was not seeded")
@@ -123,6 +125,8 @@ def check(image: str) -> None:
                     "/tmp/execute_notebook_fixture.py",
                     "--notebook",
                     "/home/notebook/work/" + filename,
+                    "--notebook-root",
+                    "/home/notebook/work",
                     "--fixtures",
                     "/tmp/pricing.json",
                 ),
@@ -131,7 +135,7 @@ def check(image: str) -> None:
             item["content"]["cells"][0]["source"] += "\n\n" + marker
             contents(endpoint, token, filename, {"type": "notebook", "content": item["content"]})
         # An existing workspace must receive a missing feature notebook on restart.
-        missing = next(reversed(saved))
+        missing = next(filename for filename in saved if not filename.startswith("quickstart/"))
         docker(
             "exec",
             identifier,

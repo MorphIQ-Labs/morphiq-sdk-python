@@ -130,12 +130,18 @@ def test_generated_notebook_executes_without_source_tree(fixture_api, cases, tmp
     subprocess.run(
         [sys.executable, "scripts/generate_notebook.py", "--check"], cwd=ROOT, check=True
     )
-    assert {path.name for path in (ROOT / "notebooks").glob("*.ipynb")} == set(NOTEBOOK_CASES)
+    notebook_root = ROOT / "notebooks"
+    assert {
+        path.relative_to(notebook_root).as_posix() for path in notebook_root.rglob("*.ipynb")
+    } == set(NOTEBOOK_CASES)
     notebook = nbformat.read(ROOT / "notebooks" / filename, as_version=4)
     nbformat.validate(notebook)
     for cell in notebook.cells:
         if cell.cell_type == "code":
             assert not cell.outputs and cell.execution_count is None
+        elif cell.cell_type == "markdown":
+            for link in re.findall(r"\]\(([^)]+\.ipynb)\)", cell.source):
+                assert (notebook_root / filename).parent.joinpath(link).is_file()
     executed = NotebookClient(
         notebook, timeout=60, kernel_name="python3", resources={"metadata": {"path": str(tmp_path)}}
     ).execute(

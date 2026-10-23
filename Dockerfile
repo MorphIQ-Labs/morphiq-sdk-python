@@ -18,7 +18,7 @@ RUN python -m pip install --no-cache-dir --no-deps /tmp/wheels/*.whl \
     && useradd --create-home --uid 1000 notebook \
     && mkdir -p /home/notebook/work \
     && chown notebook:notebook /home/notebook/work
-COPY notebooks/*.ipynb /opt/morphiq/notebooks/
+COPY notebooks/ /opt/morphiq/notebooks/
 COPY docker/start_notebook.py /opt/morphiq/start_notebook.py
 USER notebook
 WORKDIR /home/notebook/work

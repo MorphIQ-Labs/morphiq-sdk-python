@@ -162,7 +162,7 @@ Use `docker compose up --build`, or install the notebook extra:
 
 ```sh
 python -m pip install -e '.[notebooks]'
-jupyter lab notebooks/00-start-here.ipynb
+jupyter lab notebooks/quickstart/start-here.ipynb
 ```
 
 The [notebook guide](NOTEBOOKS.md) covers credentials, four-call Run All behavior,

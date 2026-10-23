@@ -64,9 +64,9 @@ open it in JupyterLab. The notebook is self-contained; it needs no examples impo
 
 ## Feature notebooks
 
-- [European pricing](01-european-pricing.ipynb)
-- [American pricing](02-american-pricing.ipynb)
-- [Async pricing](03-async-pricing.ipynb)
+- [European pricing](../pricing/european.ipynb)
+- [American pricing](../pricing/american.ipynb)
+- [Async pricing](../async/pricing.ipynb)
 """,
     )
     cell(
@@ -208,10 +208,10 @@ container configured with that key. Clear outputs before sharing a notebook.
 
 def notebooks() -> dict[str, dict[str, Any]]:
     quickstart = notebook()
-    result = {"00-start-here.ipynb": quickstart}
+    result = {"quickstart/start-here.ipynb": quickstart}
     features = [
         (
-            "01-european-pricing.ipynb",
+            "pricing/european.ipynb",
             "European pricing",
             "price_european.py",
             1,
@@ -221,7 +221,7 @@ def notebooks() -> dict[str, dict[str, Any]]:
             "and a 5% interest rate. The price is per share in the input currency.",
         ),
         (
-            "02-american-pricing.ipynb",
+            "pricing/american.ipynb",
             "American pricing",
             "price_american.py",
             1,
@@ -231,7 +231,7 @@ def notebooks() -> dict[str, dict[str, Any]]:
             "20% volatility, a 5% interest rate and a 1% continuous dividend yield.",
         ),
         (
-            "03-async-pricing.ipynb",
+            "async/pricing.ipynb",
             "Async pricing",
             "price_async.py",
             2,
@@ -269,7 +269,7 @@ def notebooks() -> dict[str, dict[str, Any]]:
             "and Jupyter installed; it does not import repository helpers.\n\n"
             f"Run All makes **{calls} pricing {'request' if calls == 1 else 'requests'}**, "
             "which may consume your API allowance. Opening the notebook makes no API calls.\n\n"
-            "[Back to the quickstart](00-start-here.ipynb)\n"
+            "[Back to the quickstart](../quickstart/start-here.ipynb)\n"
         )
         result[filename] = feature
     return result
@@ -286,6 +286,7 @@ def main() -> None:
             if not target.exists() or target.read_text() != expected:
                 raise SystemExit(f"{filename} is stale: run python scripts/generate_notebook.py")
         else:
+            target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(expected)
     if args.check:
         print("All notebooks match the executable examples.")

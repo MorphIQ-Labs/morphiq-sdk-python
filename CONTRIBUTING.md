@@ -17,7 +17,8 @@ a broken distribution. Notebook tests require the development lock installed;
 `python scripts/generate_notebook.py --check` must pass after example changes.
 
 Keep the quickstart notebook and add a dedicated notebook for each implemented
-feature. Start with a self-contained executable example showing request inputs,
+feature, organized in folders by topic under `notebooks/`. Keep the quickstart
+in `notebooks/quickstart/`. Start with a self-contained executable example showing request inputs,
 the API call, response fields and error handling. Add its notebook to
 `scripts/generate_notebook.py` and its expected synthetic request sequence to
 `NOTEBOOK_CASES` in `scripts/execute_notebook_fixture.py`. Regenerate the notebooks
