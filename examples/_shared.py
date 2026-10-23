@@ -8,9 +8,7 @@ from morphiq_sdk import PriceRequest, PriceResponse
 
 
 def configure() -> None:
-    """Read settings from the environment, or prompt without displaying the key."""
-    if not os.environ.get("MORPHIQ_API_BASE_URL"):
-        os.environ["MORPHIQ_API_BASE_URL"] = input("Your API base URL: ").strip()
+    """Read the API key from the environment, or prompt without displaying it."""
     if not os.environ.get("MORPHIQ_API_KEY"):
         os.environ["MORPHIQ_API_KEY"] = getpass("Your API key (hidden): ").strip()
 

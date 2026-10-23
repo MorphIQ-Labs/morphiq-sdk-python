@@ -6,6 +6,7 @@ services:
     environment:
       MORPHIQ_NOTEBOOK_PORT: "${MORPHIQ_NOTEBOOK_PORT:-8888}"
       MORPHIQ_API_BASE_URL: "${MORPHIQ_API_BASE_URL:-}"
+      MORPHIQ_API_KEY: "${MORPHIQ_API_KEY:-}"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:

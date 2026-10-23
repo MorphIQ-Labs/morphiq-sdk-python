@@ -81,11 +81,22 @@ print("MorphIQ SDK:", morphiq_sdk.__version__)
         """
 ## Connect to your API
 
-Use the base URL and key for your account or controlled test service. Settings
-can come from `MORPHIQ_API_BASE_URL` and `MORPHIQ_API_KEY`, otherwise the cell
-below prompts. The key prompt is masked: **do not paste your key into a code
+Get your API key from the
+[MorphIQ Labs developer portal](https://developers.morphiqlabs.com).
+The SDK connects to `https://api.morphiqlabs.com` automatically. Before starting
+Jupyter or Docker Compose, set your API key in the terminal:
+
+```sh
+export MORPHIQ_API_KEY="YOUR_API_KEY"
+```
+
+Docker Compose passes the key into the notebook container. If it is unset,
+the cell below prompts. The key prompt is masked: **do not paste your key into a code
 cell**. The key stays in this kernel's process environment, not notebook source
 or outputs; clear it in the cleanup cell and shut down the kernel when finished.
+
+For a local or controlled test service, set `MORPHIQ_API_BASE_URL` before startup
+to override the default API URL.
 
 The following helpers are copied from the tested Python examples. Editing an
 input later sends that value unchanged to the API; the server validates model
@@ -159,7 +170,9 @@ reported charge before deliberately submitting another request.
 ## Finish
 
 The next cell removes the API key from this kernel's environment. Shut down the
-kernel to release its remaining memory. Clear outputs before sharing a notebook.
+kernel to release its remaining memory. If you exported the key in your terminal,
+run `unset MORPHIQ_API_KEY` there when finished; `docker compose down` removes the
+container configured with that key. Clear outputs before sharing a notebook.
 """,
     )
     cell(

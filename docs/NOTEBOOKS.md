@@ -1,22 +1,30 @@
 # Local notebook environment
 
-From a checkout with Docker running:
+Get your API key from the
+[MorphIQ Labs developer portal](https://developers.morphiqlabs.com). From a checkout
+with Docker running, replace the key placeholder and start the notebook:
 
 ```sh
+export MORPHIQ_API_KEY="YOUR_API_KEY"
 docker compose up --build
 ```
 
 Open the local token-authenticated URL printed by Jupyter to reach Start Here.
-The Jupyter access token is separate from the MorphIQ API key entered at the masked
-notebook prompt. Compose does not copy a host API key into container configuration.
+Compose passes the key into the container at runtime; it is not baked into the
+image. The notebook connects to `https://api.morphiqlabs.com` automatically. Leave
+the key unset to enter it at the masked notebook prompt instead. The Jupyter
+access token in the local URL is separate from your MorphIQ API key.
 
 The container runs as UID 1000, publishes only to localhost, and retains Jupyter's
 random token authentication. Dependencies and the SDK wheel are installed during
 the build. Startup installs nothing and executes no pricing cells.
 
 The sync cells each make one request; the async cell makes two more. Run All makes
-four real requests that may consume your allowance. The API key stays in the kernel
-environment until cleanup/kernel shutdown. Never put keys into saved source or outputs.
+four real requests that may consume your allowance. The notebook cleanup cell
+removes the key from the kernel environment. An environment-provided key also
+remains in the container configuration until the container is removed with
+`docker compose down`; use `unset MORPHIQ_API_KEY` to clear it from your terminal.
+Never put keys into saved notebook source or outputs.
 
 ## Configuration and networking
 
@@ -25,8 +33,8 @@ MORPHIQ_NOTEBOOK_PORT=8889 docker compose up --build
 ```
 
 The displayed URL uses this host port; the container always listens on 8888.
-Set `MORPHIQ_API_BASE_URL` before startup or enter it in the notebook. Use your
-verified HTTPS endpoint for protected calls.
+The API URL needs no configuration. For a local or controlled test service,
+set `MORPHIQ_API_BASE_URL` before startup to override the default.
 
 For an API on the Docker host, use `http://host.docker.internal:PORT` inside the
 notebook. Container localhost refers to the container itself. Docker Desktop
@@ -49,7 +57,10 @@ notebooks through Jupyter's file browser for backup or standalone use.
 intentional reset after saving your work.
 
 For startup problems check Docker and host-port availability. For API failures
-check the endpoint/network path and typed error. Changing keys needs no rebuild;
+check the endpoint/network path and typed error. After changing an exported key,
+rerun `docker compose up -d` to recreate the container with the new setting. Keys
+entered at the notebook prompt can be changed by rerunning configuration after
+the cleanup cell. Changing keys needs no rebuild;
 changing dependencies or SDK versions does. This first image includes the pricing
 notebook dependencies; later plotting/DataFrame recipes can add their own dependencies.
 

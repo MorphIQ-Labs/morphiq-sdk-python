@@ -1,10 +1,20 @@
 # Price European and American options
 
 This preview supports `POST /v1/price` over JSON, synchronously and asynchronously.
-You need Python 3.11+ and your account's verified API endpoint/key, or a controlled
-local service. The examples use synthetic contracts and no market data.
+You need Python 3.11+ and an API key. The SDK connects to
+`https://api.morphiqlabs.com` by default. The examples use synthetic contracts
+and no market data.
 
-## Install and run
+## 1. Get API access
+
+Start at the [MorphIQ Labs developer portal](https://developers.morphiqlabs.com)
+to get your API key, then set it in your terminal:
+
+```sh
+export MORPHIQ_API_KEY="YOUR_API_KEY"
+```
+
+## 2. Install the SDK
 
 ```sh
 git clone https://github.com/MorphIQ-Labs/morphiq-sdk-python.git
@@ -12,22 +22,15 @@ cd morphiq-sdk-python
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -e .
-python -m examples.quickstart
 ```
 
 The repository is currently private and requires access. This development build
 has not been released; `pip install morphiq-sdk` is not yet a supported path.
 
-The script asks for your API base URL and masked key, unless supplied through
-`MORPHIQ_API_BASE_URL` and `MORPHIQ_API_KEY`. Use the API root without `/v1/price`.
-The key stays in the process environment and is not saved to a file. There is no
-assumed production endpoint; the SDK does not create accounts or deploy a service.
+## 3. Make your first API request
 
-The quickstart makes two real requests: a European call and an American put. Each
-prints its price, selected model/version, request ID, engine identity and reported
-commercial CU charge. These requests may consume your allowance.
-
-## Inputs and sync usage
+This sends one authenticated `POST https://api.morphiqlabs.com/v1/price` request
+using the key you exported, then prints the JSON response:
 
 ```python
 from morphiq_sdk import MorphIQ, PriceRequest
@@ -43,12 +46,17 @@ request = PriceRequest(
     volatility=0.20,
 )
 
-with MorphIQ() as client:  # Reads endpoint and key from the environment.
+with MorphIQ() as client:
     response = client.price(request)
-    print(response.result.price)
-    print(response.result.pricing_model, response.result.model_version)
-    print(response.metadata.request_id, response.metadata.fcu_charged)
+    print(response.model_dump_json(indent=2, exclude_unset=True))
 ```
+
+See the [example JSON response](../README.md#3-make-your-first-api-request) for
+the recorded price, model identity and metadata. Run `unset MORPHIQ_API_KEY` when
+finished. The executable examples also support a masked key prompt when the
+environment variable is unset.
+
+## Inputs and results
 
 Monetary inputs use the same currency. Rates, continuous yield and volatility are
 decimal fractions: 0.05 means 5%, 0.01 means 1%, and 0.20 means 20%. Expiry is in
@@ -106,6 +114,9 @@ submission. Close pools using the context managers, or `close()`/`await aclose()
 ## Configuration and errors
 
 Both clients accept explicit `base_url`, `api_key`, and `timeout` arguments.
+The default API URL is `https://api.morphiqlabs.com`. For a local or controlled
+test service, override it with `MORPHIQ_API_BASE_URL` or the `base_url` argument;
+an explicit argument takes precedence. Use the API root without `/v1/price`.
 The default timeout is 30 seconds per connect/read/write/pool wait, not an overall
 end-to-end deadline. Pass `httpx.Timeout` to configure them separately. Proxy and
 CA environment variables are not used automatically; an HTTPX transport can supply
