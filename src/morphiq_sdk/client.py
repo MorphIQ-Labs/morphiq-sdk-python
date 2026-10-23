@@ -42,9 +42,11 @@ class _Configuration:
     def __init__(
         self, *, base_url: str | None, api_key: str | None, allow_unauthenticated: bool
     ) -> None:
-        endpoint = base_url if base_url is not None else os.environ.get("MORPHIQ_API_BASE_URL")
-        if not endpoint:
-            raise ValueError("Pass base_url or set MORPHIQ_API_BASE_URL to your API endpoint.")
+        endpoint = (
+            base_url
+            if base_url is not None
+            else os.environ.get("MORPHIQ_API_BASE_URL") or "https://api.morphiqlabs.com"
+        )
         try:
             url = httpx.URL(endpoint)
         except httpx.InvalidURL:
@@ -110,8 +112,9 @@ class _Configuration:
 class MorphIQ:
     """Synchronous pricing client. No retries or redirects are performed.
 
-    ``base_url`` and ``api_key`` fall back to MORPHIQ_API_BASE_URL and
-    MORPHIQ_API_KEY. A numeric timeout applies to connect/read/write/pool waits;
+    The API URL defaults to https://api.morphiqlabs.com; override it with
+    ``base_url`` or MORPHIQ_API_BASE_URL. ``api_key`` falls back to MORPHIQ_API_KEY.
+    A numeric timeout applies to connect/read/write/pool waits;
     pass ``httpx.Timeout`` to tune them separately. Use a context manager or close().
     """
 

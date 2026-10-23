@@ -8,8 +8,13 @@ pricing, risk and market analytics.
 ### 1. Get API access
 
 Start at the [MorphIQ Labs developer portal](https://developers.morphiqlabs.com)
-to get API access, an API key, and the base URL for your account. You'll use these
-to connect the SDK to the API.
+to get your API key, then set it in your terminal:
+
+```sh
+export MORPHIQ_API_KEY="YOUR_API_KEY"
+```
+
+The SDK connects to `https://api.morphiqlabs.com` automatically.
 
 ### 2. Install the SDK
 
@@ -23,41 +28,83 @@ source .venv/bin/activate
 python -m pip install -e .
 ```
 
-### 3. Make your first API requests
+### 3. Make your first API request
 
-Set your credentials in the terminal, replacing the placeholders with the API
-base URL and key from the developer portal:
+Run this to price a European call with spot and strike of 100, one year to expiry,
+20% volatility, and a 5% interest rate. It sends one authenticated
+`POST https://api.morphiqlabs.com/v1/price` request and prints the JSON response:
 
-```sh
-export MORPHIQ_API_BASE_URL="YOUR_API_BASE_URL"
-export MORPHIQ_API_KEY="YOUR_API_KEY"
-python -m examples.quickstart
+```python
+from morphiq_sdk import MorphIQ, PriceRequest
+
+request = PriceRequest(
+    exercise_style="european",
+    option_type="call",
+    spot=100.0,
+    strike=100.0,
+    time_to_expiry_years=1.0,
+    risk_free_rate=0.05,
+    dividend_yield=0.0,
+    volatility=0.20,
+)
+
+with MorphIQ() as client:
+    response = client.price(request)
+    print(response.model_dump_json(indent=2, exclude_unset=True))
 ```
 
-These settings apply to all examples run from this terminal. If you leave either
-variable unset, the example prompts for it; the key prompt is masked. The quickstart
-submits two real requests and prints each price, selected model, request ID, engine
-identity and reported commercial CU charge. Run `unset MORPHIQ_API_KEY` when finished.
+Example response from the recorded synthetic fixture:
 
-Run `python -m examples.price_async` for the same two requests with sequential
-awaits. Individual scripts are `examples.price_european` and `examples.price_american`.
+```json
+{
+  "result": {
+    "price": 10.450583572185538,
+    "exercise_style": "european",
+    "option_type": "call",
+    "pricing_model": "black_scholes_merton",
+    "model_version": "black_scholes_merton/1"
+  },
+  "metadata": {
+    "request_id": "fixture-european",
+    "api_version": "v1",
+    "engine_version": "0.39.1",
+    "engines": [
+      {
+        "name": "morphiq-risk",
+        "version": "0.39.1",
+        "revision": "b4c29d492ff96dddf9b25f745d2be4d253202164"
+      }
+    ],
+    "units_charged": 1,
+    "compute_schedule_version": "2026-09-11"
+  }
+}
+```
+
+Your request ID and engine metadata will reflect the live service. This fixture
+was recorded in open development mode; authenticated responses may also report
+commercial charges in `metadata.fcu_charged`. Keep the request ID for support.
+Run `unset MORPHIQ_API_KEY` when finished.
+
+Run `python -m examples.quickstart` for European and American pricing, or
+`python -m examples.price_async` for sequential async requests. Individual scripts
+are `examples.price_european` and `examples.price_american`.
 See [the quickstart guide](docs/QUICKSTART.md) for input units, reference results,
 configuration and errors.
 
 ## Start a notebook with Docker
 
-With Docker running, from the repository root, set the same credentials and start
+With Docker running, from the repository root, set your API key and start
 the notebook:
 
 ```sh
-export MORPHIQ_API_BASE_URL="YOUR_API_BASE_URL"
 export MORPHIQ_API_KEY="YOUR_API_KEY"
 docker compose up --build
 ```
 
 Open the local token-authenticated URL printed by Jupyter to reach Start Here.
-Compose passes both variables into the notebook container. If either is unset,
-the notebook prompts for it. Opening Jupyter makes no API calls;
+Compose passes the key into the notebook container, which uses the same default
+API URL. If the key is unset, the notebook prompts for it. Opening Jupyter makes no API calls;
 running all cells submits four pricing requests, including the async examples.
 Dependencies are installed at build time, and notebook edits persist in a named volume.
 

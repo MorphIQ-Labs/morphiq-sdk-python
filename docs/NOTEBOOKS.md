@@ -1,19 +1,18 @@
 # Local notebook environment
 
-Get your API key and base URL from the
+Get your API key from the
 [MorphIQ Labs developer portal](https://developers.morphiqlabs.com). From a checkout
-with Docker running, replace the placeholders and start the notebook:
+with Docker running, replace the key placeholder and start the notebook:
 
 ```sh
-export MORPHIQ_API_BASE_URL="YOUR_API_BASE_URL"
 export MORPHIQ_API_KEY="YOUR_API_KEY"
 docker compose up --build
 ```
 
 Open the local token-authenticated URL printed by Jupyter to reach Start Here.
-Compose passes both variables into the container at runtime; they are not baked
-into the image. The notebook reads them automatically. Leave either variable unset
-to enter it in the notebook instead; the API key prompt is masked. The Jupyter
+Compose passes the key into the container at runtime; it is not baked into the
+image. The notebook connects to `https://api.morphiqlabs.com` automatically. Leave
+the key unset to enter it at the masked notebook prompt instead. The Jupyter
 access token in the local URL is separate from your MorphIQ API key.
 
 The container runs as UID 1000, publishes only to localhost, and retains Jupyter's
@@ -34,8 +33,8 @@ MORPHIQ_NOTEBOOK_PORT=8889 docker compose up --build
 ```
 
 The displayed URL uses this host port; the container always listens on 8888.
-Set `MORPHIQ_API_BASE_URL` before startup or enter it in the notebook. Use your
-verified HTTPS endpoint for protected calls.
+The API URL needs no configuration. For a local or controlled test service,
+set `MORPHIQ_API_BASE_URL` before startup to override the default.
 
 For an API on the Docker host, use `http://host.docker.internal:PORT` inside the
 notebook. Container localhost refers to the container itself. Docker Desktop

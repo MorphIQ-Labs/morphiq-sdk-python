@@ -1,6 +1,9 @@
 import asyncio
 import copy
 import json
+import os
+import subprocess
+import sys
 import traceback
 
 import httpx
@@ -205,6 +208,83 @@ def test_reflected_credentials_are_redacted(mode, cases):
     assert "test-only-key" not in repr(raised.value.headers)
 
 
+@pytest.mark.parametrize("mode", ["sync", "async"])
+@pytest.mark.parametrize(
+    "environment_url,explicit_url,expected_url",
+    [
+        (None, None, "https://api.morphiqlabs.com/v1/price"),
+        ("", None, "https://api.morphiqlabs.com/v1/price"),
+        ("https://env.example.test/prefix", None, "https://env.example.test/prefix/v1/price"),
+        (
+            "https://env.example.test",
+            "https://explicit.example.test/local",
+            "https://explicit.example.test/local/v1/price",
+        ),
+    ],
+)
+def test_default_api_url_and_overrides(mode, environment_url, explicit_url, expected_url, cases):
+    environment = {
+        name: value for name, value in os.environ.items() if name != "MORPHIQ_API_BASE_URL"
+    }
+    if environment_url is not None:
+        environment["MORPHIQ_API_BASE_URL"] = environment_url
+    program = """
+import asyncio
+import json
+import sys
+
+import httpx
+
+from morphiq_sdk import AsyncMorphIQ, MorphIQ, PriceRequest
+
+config = json.loads(sys.argv[1])
+received = []
+
+def handle(request):
+    received.append(request)
+    assert str(request.url) == config["expected_url"]
+    assert request.headers["Authorization"] == "Bearer test-only-key"
+    return httpx.Response(200, json=config["case"]["response"])
+
+settings = {
+    "base_url": config["explicit_url"],
+    "api_key": "test-only-key",
+    "transport": httpx.MockTransport(handle),
+}
+request = PriceRequest(**config["case"]["request"])
+
+async def run_async():
+    async with AsyncMorphIQ(**settings) as client:
+        await client.price(request)
+
+if config["mode"] == "async":
+    asyncio.run(run_async())
+else:
+    with MorphIQ(**settings) as client:
+        client.price(request)
+assert len(received) == 1
+"""
+    subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            program,
+            json.dumps(
+                {
+                    "mode": mode,
+                    "explicit_url": explicit_url,
+                    "expected_url": expected_url,
+                    "case": cases[0],
+                }
+            ),
+        ],
+        env=environment,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+
+
 def test_environment_configuration_and_representations(monkeypatch):
     monkeypatch.setenv("MORPHIQ_API_KEY", "environment-test-key")
     monkeypatch.setenv("MORPHIQ_API_BASE_URL", "https://api.example.test")
@@ -235,6 +315,7 @@ def test_json_escaped_credentials_are_redacted(mode, cases):
 @pytest.mark.parametrize(
     "url",
     [
+        "",
         "not-a-url",
         "ftp://example.test",
         "https://user:secret@example.test",

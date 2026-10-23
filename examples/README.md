@@ -1,12 +1,11 @@
 # Executable cookbook
 
 Eight recipes are planned in [#7](https://github.com/MorphIQ-Labs/morphiq-sdk-python/issues/7).
-Get your API key and base URL from the
+Get your API key from the
 [MorphIQ Labs developer portal](https://developers.morphiqlabs.com). After
 [installing the SDK](../docs/QUICKSTART.md), replace the placeholders and run:
 
 ```sh
-export MORPHIQ_API_BASE_URL="YOUR_API_BASE_URL"
 export MORPHIQ_API_KEY="YOUR_API_KEY"
 python -m examples.quickstart
 ```
@@ -19,7 +18,9 @@ python -m examples.price_american
 python -m examples.price_async
 ```
 
-Each reads the endpoint/key from the environment or prompts (masked for the key).
+Each connects to `https://api.morphiqlabs.com` and reads `MORPHIQ_API_KEY`, or
+prompts for the key with masked input. Set `MORPHIQ_API_BASE_URL` only to use a
+local or controlled test service.
 Run `unset MORPHIQ_API_KEY` when finished.
 Imports make no requests. `_shared.py` supplies synthetic inputs and result display.
 The quickstart configures once and uses one sync client for both options; the
@@ -43,7 +44,7 @@ or a deterministic generator, expected output, execution command and optional
 dependencies. Explain units, annualization, expiry, dividends, ordering, missing
 values and charging where relevant.
 
-Keep endpoint and credentials explicit. Never request on import or commit keys,
+Use an explicit local endpoint in tests. Never request on import or commit keys,
 private market observations or authenticated notebook outputs. Portfolio and
 scenario examples identify local arithmetic and use existing operations; they
 must not imply that planned server endpoints exist.
