@@ -1,7 +1,7 @@
 # MorphIQ SDK for Python
 
 Python access to the MorphIQ Labs API, with runnable examples and notebooks for
-pricing, risk and market analytics.
+European and American option pricing.
 
 ## Quickstart
 
@@ -114,8 +114,7 @@ See [notebook instructions](docs/NOTEBOOKS.md) for networking and persistence.
 
 ## Development
 
-Use Python 3.11 or newer. The initial CI matrix checks Python 3.11 and 3.14;
-release acceptance will establish the complete supported-version matrix.
+Use Python 3.11 or newer. CI checks Python 3.11 and 3.14.
 
 ```sh
 python3 -m venv .venv
@@ -154,6 +153,6 @@ examples/          Runnable European/American sync and async examples
 notebooks/         Generated standalone Start Here notebook
 contracts/         Reviewed OpenAPI snapshot, digest and source provenance
 docker/            Non-root notebook startup and workspace seeding
-docs/              Roadmap and contract handoff design
+docs/              Usage guides and contract documentation
 .github/           CI and pull request template
 ```

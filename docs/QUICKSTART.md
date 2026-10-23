@@ -83,6 +83,10 @@ is sent as `[]`.
 Run each script separately with `python -m examples.price_european` or
 `python -m examples.price_american`.
 
+Each script shows its request inputs, response fields and error handling in full.
+They also run directly as `python examples/price_european.py` and
+`python examples/price_american.py`, with no repository helper imports.
+
 The [native reference fixtures](../tests/fixtures/pricing.json) record about
 **10.450583572185538** for the European call (`black_scholes_merton/1`) and
 **7.584143004464017** for the American put (`bjerksund_stensland_2002/1`). These
