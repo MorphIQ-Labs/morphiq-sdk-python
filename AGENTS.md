@@ -14,11 +14,14 @@ commercial policy, account authority and execution remain server-side.
 - Do not introduce blanket retries: a timeout may occur after charge commitment.
   Keep chunking/concurrency explicit and avoid hardcoded customer plan limits.
 - Keep pandas, plotting and notebook tooling optional. Examples are executable
-  scripts with synthetic fixtures; notebooks and web snippets derive from or
-  verify against that source.
+  scripts with synthetic fixtures. Notebooks are ready-to-use analysis workspaces
+  with controls, data loading and results, verified against the contract/examples.
+  Keep SDK demonstrations in examples/, not in the notebook user flow.
 - Maintain the quickstart plus a standalone notebook for each implemented feature.
   Organize feature notebooks in topic folders; keep `notebooks/start-here.ipynb` at the root.
-  Keep request construction and response handling visible in every example.
+  Never submit API requests merely by running notebook setup or changing controls.
+  Label action request counts and keep scenario execution sequential and explicit.
+  Keep request construction and response handling visible in every Python example.
   README files describe available functionality and usage; keep plans in the roadmap.
 - Use feature branches and reviewed squash PRs with conventional commit titles.
   Never push implementation directly to main or hand-cut release tags.

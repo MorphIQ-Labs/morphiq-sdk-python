@@ -10,7 +10,7 @@ import nbformat
 import pytest
 from nbclient import NotebookClient
 
-from scripts.execute_notebook_fixture import NOTEBOOK_CASES, fixture_prices_source
+from scripts.execute_notebook_fixture import NOTEBOOK_CASES, workspace_exercise
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -150,11 +150,9 @@ def test_generated_notebook_executes_without_source_tree(
         elif cell.cell_type == "markdown":
             for link in re.findall(r"\]\(([^)]+\.ipynb)\)", cell.source):
                 assert (notebook_root / filename).parent.joinpath(link).is_file()
-    if filename.startswith("regime/"):
-        notebook.cells.insert(
-            0,
-            nbformat.v4.new_code_cell(fixture_prices_source(regime_cases[0]["request"]["prices"])),
-        )
+    exercise = workspace_exercise(filename, regime_cases[0]["request"]["prices"])
+    if exercise:
+        notebook.cells.append(nbformat.v4.new_code_cell(exercise))
     executed = NotebookClient(
         notebook,
         timeout=60,
@@ -174,4 +172,5 @@ def test_generated_notebook_executes_without_source_tree(
     ]
     assert all(item[1] == "Bearer notebook-fixture-key" for item in received)
     assert "notebook-fixture-key" not in json.dumps(executed)
-    assert "not reported" in json.dumps(executed)
+    if NOTEBOOK_CASES[filename]:
+        assert "not reported" in json.dumps(executed)

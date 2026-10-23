@@ -26,8 +26,8 @@ The [sync example](../examples/identify_regime.py) constructs
 [async example](../examples/identify_regime_async.py) shows the same data and
 response handling with `await AsyncMorphIQ.regime`. Both connect to
 `https://api.morphiqlabs.com` and read `MORPHIQ_API_KEY`, or prompt for it masked.
-The [notebook](../notebooks/regime/identification.ipynb) contains the download,
-ticker input and complete sync request code. Docker includes yfinance; outside
+The [analysis workspace](../notebooks/regime/identification.ipynb) provides ticker
+selection, a price-history chart, an Analyze button, head results and score charts. Docker includes yfinance; outside
 Docker install `.[notebooks]` to use it in Jupyter.
 
 ## Request and result semantics
