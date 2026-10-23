@@ -42,8 +42,14 @@ class PriceRequest(_Request):
     dividend_schedule: list[DividendEvent] = Field(default_factory=list, max_length=16)
 
     def to_wire(self) -> dict[str, Any]:
-        """Preserve optional-field omission and explicit null/empty values."""
-        result = self.model_dump(mode="json", exclude_unset=True)
+        """Validate current inputs, preserving omission and explicit null/empty values."""
+        values = self.model_dump(exclude={"dividend_schedule"}, exclude_unset=True)
+        # Freezing the model does not freeze lists or track their in-place edits.
+        # Include nonempty schedules and revalidate edits before JSON serialization.
+        if self.dividend_schedule or "dividend_schedule" in self.model_fields_set:
+            values["dividend_schedule"] = self.dividend_schedule
+        validated = type(self).model_validate(values)
+        result = validated.model_dump(mode="json", exclude_unset=True)
         # This required wire field has a convenience default in Python.
         result["pricing_model"] = self.pricing_model
         return result

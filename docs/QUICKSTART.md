@@ -66,6 +66,12 @@ from the European call, so the difference is not an early-exercise-premium
 comparison. Typed `DividendEvent` inputs support cash-dividend schedules, but
 those are outside this introductory example.
 
+The dividend schedule remains an editable list even though request attributes are
+frozen. Appended events are validated and included when either client sends the
+request. Invalid edits raise a Pydantic `ValidationError` before any HTTP request.
+An untouched, omitted schedule stays omitted; an explicitly supplied empty list
+is sent as `[]`.
+
 Run each script separately with `python -m examples.price_european` or
 `python -m examples.price_american`.
 

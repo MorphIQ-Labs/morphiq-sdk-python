@@ -3,11 +3,6 @@
 Python access to the MorphIQ Labs API, with runnable examples and notebooks for
 pricing, risk and market analytics.
 
-**Status: development preview.** Sync and async clients support single-option
-pricing, with European/American examples and a local Docker notebook. Other
-operations remain planned. Install from this repository; the package and image
-have not been published yet.
-
 ## Quickstart
 
 From a checkout with Python 3.11 or newer:

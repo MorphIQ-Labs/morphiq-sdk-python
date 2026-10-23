@@ -11,6 +11,7 @@ from examples._shared import american_put, european_call
 from morphiq_sdk import (
     APIError,
     AsyncMorphIQ,
+    DividendEvent,
     MorphIQ,
     PriceRequest,
     RequestTimeout,
@@ -267,6 +268,60 @@ def test_request_omission_validation_and_no_numeric_policy():
             PriceRequest(**{**request.to_wire(), **patch})
     # Model-domain checks remain with the service; do not clamp or substitute.
     assert PriceRequest(**{**request.to_wire(), "spot": -1}).spot == -1
+
+
+@pytest.mark.parametrize("mode", ["sync", "async"])
+@pytest.mark.parametrize("initial", [None, [], [{"ex_time_years": 0.1, "cash_amount": 1.0}]])
+def test_edited_dividend_schedule_is_sent_in_order(mode, initial, cases):
+    values = american_put().to_wire()
+    if initial is not None:
+        values["dividend_schedule"] = initial
+    request = PriceRequest(**values)
+    request.dividend_schedule.append(DividendEvent(ex_time_years=0.25, cash_amount=2.0))
+    received = []
+
+    def handle(wire_request):
+        received.append(json.loads(wire_request.content))
+        return httpx.Response(200, json=cases[1]["response"])
+
+    invoke(mode, httpx.MockTransport(handle), request)
+    assert len(received) == 1
+    assert received[0]["dividend_schedule"] == [
+        *(initial or []),
+        {"ex_time_years": 0.25, "cash_amount": 2.0},
+    ]
+
+
+@pytest.mark.parametrize("mode", ["sync", "async"])
+@pytest.mark.parametrize(
+    "events",
+    [
+        [DividendEvent(ex_time_years=0.25, cash_amount=2.0)] * 17,
+        [{"ex_time_years": 0.25, "cash_amount": float("nan")}],
+        [{"ex_time_years": True, "cash_amount": 2.0}],
+    ],
+)
+def test_invalid_dividend_edits_fail_before_transport(mode, events):
+    request = american_put()
+    request.dividend_schedule.extend(events)
+    received = []
+
+    def handle(wire_request):
+        received.append(wire_request)
+        return httpx.Response(200, json={})
+
+    with pytest.raises(ValidationError):
+        invoke(mode, httpx.MockTransport(handle), request)
+    assert received == []
+
+
+def test_cleared_explicit_dividend_schedule_remains_explicit():
+    request = PriceRequest(
+        **american_put().to_wire(),
+        dividend_schedule=[DividendEvent(ex_time_years=0.25, cash_amount=2.0)],
+    )
+    request.dividend_schedule.clear()
+    assert request.to_wire()["dividend_schedule"] == []
 
 
 def test_async_cancellation_closes_transport_without_retry():
