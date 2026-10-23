@@ -229,8 +229,29 @@ assert set(price_interval.options) == {
 assert yahoo_history_options('1d')['end'] == date.today()
 assert yahoo_history_options('60m') == {'interval': '60m', 'period': '6mo'}
 price_interval.value = '5m'
-closes.index = pd.date_range('2026-10-20 09:30', periods=512, freq='5min',
-                            tz='America/New_York')
+# Include an overnight gap, a weekend, and a missing bar within a session.
+closes.index = pd.DatetimeIndex([
+    stamp
+    for day in ['2026-10-15', '2026-10-16', '2026-10-19', '2026-10-20',
+                '2026-10-21', '2026-10-22', '2026-10-23']
+    for stamp in pd.date_range(day + ' 09:30', periods=78, freq='5min',
+                               tz='America/New_York')
+]).delete(100)[-512:]
+original = closes['Close'].copy()
+fig = price_history_figure(original, 'SPY', '5m')
+lines = fig.axes[0].lines
+assert len(lines) == 8
+for line in lines:
+    timestamps = pd.DatetimeIndex(line.get_xdata())
+    assert (timestamps.to_series().diff().dropna() == pd.Timedelta(minutes=5)).all()
+assert [value for line in lines for value in line.get_ydata()] == original.tolist()
+assert [stamp for line in lines for stamp in line.get_xdata()] == list(original.index)
+assert 'America/New_York' in fig.axes[0].get_xlabel()
+plt.close(fig)
+daily_fig = price_history_figure(original, 'SPY', '1d')
+assert len(daily_fig.axes[0].lines) == 1
+plt.close(daily_fig)
+pd.testing.assert_series_equal(original, closes['Close'])
 use_history(closes, 'SPY', '5m')
 assert loaded_interval == '5m'
 assert loaded_closes.tolist() == closes['Close'].tolist()
