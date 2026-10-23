@@ -4,7 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "morphiq-sdk"
-dynamic = ["version"]
+# Release Please manages this version through reviewed release PRs.
+version = "0.1.0.dev0"
 description = "Python SDK for the MorphIQ Labs API"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -22,12 +23,6 @@ Repository = "https://github.com/MorphIQ-Labs/morphiq-sdk-python"
 
 [project.optional-dependencies]
 notebooks = ["jupyterlab>=4.6,<5", "ipykernel>=7.4,<8"]
-
-# Development builds supply 0.0.0.dev0; release automation will supply the
-# reviewed SDK version independently of API/service/engine versions.
-[tool.hatch.version]
-source = "env"
-variable = "MORPHIQ_SDK_BUILD_VERSION"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/morphiq_sdk"]

@@ -4,8 +4,7 @@ COPY requirements-build.txt ./
 RUN python -m pip install --no-cache-dir --require-hashes -r requirements-build.txt
 COPY pyproject.toml README.md ./
 COPY src ./src
-ARG MORPHIQ_SDK_BUILD_VERSION=0.0.0.dev0
-RUN MORPHIQ_SDK_BUILD_VERSION=${MORPHIQ_SDK_BUILD_VERSION} python -m pip wheel \
+RUN python -m pip wheel \
     --no-deps --no-build-isolation --wheel-dir /wheels .
 
 FROM python:3.14-slim-bookworm@sha256:945c2676dc2b18e0c1f16879244122c57c0ffede60006bf3df159c507a31bcae

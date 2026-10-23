@@ -5,6 +5,7 @@ on:
     types: [opened, synchronize, reopened, edited]
   push:
     branches: [main]
+    tags: ["v*"]
 
 permissions:
   contents: read
@@ -33,12 +34,11 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ['3.11', '3.14']
-    env:
-      MORPHIQ_SDK_BUILD_VERSION: 0.0.0.dev0
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
+          fetch-depth: 0
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: ${{ matrix.python-version }}
@@ -48,6 +48,10 @@ jobs:
         run: |
           python -m pip install --require-hashes -r requirements-dev.txt
           python -m pip install --no-build-isolation -e .
+      - name: Verify package, release proposal and tag versions
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: python scripts/check_release_version.py
       - run: python -m ruff check .
       - run: python -m ruff format --check .
       - run: python -m mypy

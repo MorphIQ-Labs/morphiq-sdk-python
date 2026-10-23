@@ -1,0 +1,36 @@
+name: SDK releases
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sdk-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      # The shared organization token also lets bot-created PRs and tags trigger
+      # CI. The default GITHUB_TOKEN suppresses those events.
+      - name: Require organization release token
+        env:
+          RELEASE_TOKEN: ${{ secrets.RELEASE_PLZ_TOKEN }}
+        run: |
+          if [ -z "$RELEASE_TOKEN" ]; then
+            echo 'The organization RELEASE_PLZ_TOKEN must be available to this repository.' >&2
+            exit 1
+          fi
+      - name: Propose versions and tag merged release PRs
+        uses: googleapis/release-please-action@5c625bfb5d1ff62eadeeb3772007f7f66fdcf071 # v4.4.1
+        with:
+          token: ${{ secrets.RELEASE_PLZ_TOKEN }}
+          target-branch: main
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
