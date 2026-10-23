@@ -7,8 +7,10 @@ from pathlib import Path
 def main() -> None:
     workspace = Path("/home/notebook/work")
     workspace.mkdir(parents=True, exist_ok=True)
-    for source in Path("/opt/morphiq/notebooks").glob("*.ipynb"):
-        destination = workspace / source.name
+    notebooks = Path("/opt/morphiq/notebooks")
+    for source in notebooks.rglob("*.ipynb"):
+        destination = workspace / source.relative_to(notebooks)
+        destination.parent.mkdir(parents=True, exist_ok=True)
         try:
             with destination.open("xb") as target:
                 target.write(source.read_bytes())
@@ -29,7 +31,7 @@ def main() -> None:
             "--ServerApp.port_retries=0",
             "--ServerApp.open_browser=False",
             f"--ServerApp.root_dir={workspace}",
-            "--ServerApp.default_url=/lab/tree/00-start-here.ipynb",
+            "--ServerApp.default_url=/lab/tree/start-here.ipynb",
             f"--ServerApp.custom_display_url=http://127.0.0.1:{port}",
         ],
     )

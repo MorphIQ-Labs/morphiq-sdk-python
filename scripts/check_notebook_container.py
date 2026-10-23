@@ -72,10 +72,13 @@ def check(image: str) -> None:
         return endpoint, token
 
     def contents(
-        endpoint: str, token: str, payload: dict[str, Any] | None = None
+        endpoint: str,
+        token: str,
+        filename: str,
+        payload: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         request = Request(
-            endpoint + "/api/contents/00-start-here.ipynb",
+            endpoint + "/api/contents/" + filename,
             headers={"Authorization": "token " + token, "Content-Type": "application/json"},
             data=json.dumps(payload).encode() if payload is not None else None,
             method="PUT" if payload is not None else "GET",
@@ -93,11 +96,18 @@ def check(image: str) -> None:
                 raise RuntimeError("Unexpected unauthenticated notebook response") from None
         else:
             raise RuntimeError("Notebook contents are accessible without authentication")
-        saved = contents(endpoint, token)
-        if "MorphIQ SDK for Python" not in saved["content"]["cells"][0]["source"]:
-            raise RuntimeError("Start Here was not seeded")
+        notebook_root = ROOT / "notebooks"
+        filenames = [
+            path.relative_to(notebook_root).as_posix()
+            for path in sorted(notebook_root.rglob("*.ipynb"))
+        ]
+        saved = {filename: contents(endpoint, token, filename) for filename in filenames}
+        for filename, item in saved.items():
+            if "MorphIQ SDK for Python" not in item["content"]["cells"][0]["source"]:
+                raise RuntimeError(f"{filename} was not seeded")
         print(
-            "Local Jupyter startup, token authentication and seeded notebook verified.", flush=True
+            "Local Jupyter startup, token authentication and all seeded notebooks verified.",
+            flush=True,
         )
         docker("cp", str(ROOT / "tests/fixtures/pricing.json"), identifier + ":/tmp/pricing.json")
         docker(
@@ -105,28 +115,48 @@ def check(image: str) -> None:
             str(ROOT / "scripts/execute_notebook_fixture.py"),
             identifier + ":/tmp/execute_notebook_fixture.py",
         )
-        print(
-            docker(
-                "exec",
-                identifier,
-                "python",
-                "/tmp/execute_notebook_fixture.py",
-                "--notebook",
-                "/home/notebook/work/00-start-here.ipynb",
-                "--fixtures",
-                "/tmp/pricing.json",
-            ),
-            flush=True,
-        )
         marker = "Workspace persistence verified"
-        saved["content"]["cells"][0]["source"] += "\n\n" + marker
-        contents(endpoint, token, {"type": "notebook", "content": saved["content"]})
+        for filename, item in saved.items():
+            print(
+                docker(
+                    "exec",
+                    identifier,
+                    "python",
+                    "/tmp/execute_notebook_fixture.py",
+                    "--notebook",
+                    "/home/notebook/work/" + filename,
+                    "--notebook-root",
+                    "/home/notebook/work",
+                    "--fixtures",
+                    "/tmp/pricing.json",
+                ),
+                flush=True,
+            )
+            item["content"]["cells"][0]["source"] += "\n\n" + marker
+            contents(endpoint, token, filename, {"type": "notebook", "content": item["content"]})
+        # An existing workspace must receive a missing feature notebook on restart.
+        missing = next(filename for filename in saved if filename != "start-here.ipynb")
+        docker(
+            "exec",
+            identifier,
+            "python",
+            "-c",
+            "import pathlib,sys; pathlib.Path(sys.argv[1]).unlink()",
+            "/home/notebook/work/" + missing,
+        )
         docker("rm", "--force", identifier)
         endpoint, token = start()
-        if marker not in contents(endpoint, token)["content"]["cells"][0]["source"]:
-            raise RuntimeError("Recreating the container overwrote user notebook edits")
+        for filename, item in saved.items():
+            restored = contents(endpoint, token, filename)["content"]["cells"][0]["source"]
+            expected = item["content"]["cells"][0]["source"]
+            if filename == missing:
+                expected = expected.removesuffix("\n\n" + marker)
+            if restored != expected:
+                raise RuntimeError(
+                    f"Notebook persistence or missing-file seeding failed: {filename}"
+                )
         print(
-            "Notebook edits survived container recreation with the same workspace volume.",
+            "Notebook edits survived recreation and the missing feature notebook was seeded.",
             flush=True,
         )
     finally:

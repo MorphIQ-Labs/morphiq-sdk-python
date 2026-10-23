@@ -13,9 +13,19 @@ from typing import Any
 import nbformat
 from nbclient import NotebookClient
 
+NOTEBOOK_CASES = {
+    "start-here.ipynb": ("european", "american", "european", "american"),
+    "pricing/european.ipynb": ("european",),
+    "pricing/american.ipynb": ("american",),
+    "pricing/async.ipynb": ("european", "american"),
+}
 
-def execute(notebook_path: Path, fixture_path: Path) -> None:
+
+def execute(notebook_path: Path, fixture_path: Path, notebook_root: Path) -> None:
     cases = json.loads(fixture_path.read_text())["cases"]
+    by_name = {case["name"]: case for case in cases}
+    relative_path = notebook_path.relative_to(notebook_root).as_posix()
+    expected = [by_name[name]["request"] for name in NOTEBOOK_CASES[relative_path]]
     received: list[dict[str, Any]] = []
     credential = "notebook-container-test-only"
 
@@ -52,9 +62,9 @@ def execute(notebook_path: Path, fixture_path: Path) -> None:
                 "MORPHIQ_API_KEY": credential,
             }
         )
-        if len(received) != 4 or credential in json.dumps(executed):
-            raise RuntimeError("Unexpected call count or a credential in notebook output")
-        print("Notebook executed four sync/async fixture requests without exposing the API key.")
+        if received != expected or credential in json.dumps(executed):
+            raise RuntimeError("Unexpected requests or a credential in notebook output")
+        print(f"{relative_path}: {len(received)} fixture requests; no credential in output.")
     finally:
         server.shutdown()
         server.server_close()
@@ -64,9 +74,10 @@ def execute(notebook_path: Path, fixture_path: Path) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--notebook", required=True, type=Path)
+    parser.add_argument("--notebook-root", required=True, type=Path)
     parser.add_argument("--fixtures", required=True, type=Path)
     args = parser.parse_args()
-    execute(args.notebook, args.fixtures)
+    execute(args.notebook, args.fixtures, args.notebook_root)
 
 
 if __name__ == "__main__":
