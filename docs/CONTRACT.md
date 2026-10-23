@@ -13,8 +13,8 @@ version. It was copied from immutable reviewed main source; automated published
 artifact delivery remains #2. SDK tests and builds use the offline snapshot
 without private repository or numerical engine access.
 
-This slice covers only POST /v1/price. Hand-written model field sets and serialized
-requests/native responses are checked against the pinned schema. Digest/version
+The SDK covers POST /v1/price and POST /v1/regime. Hand-written model field sets and serialized
+requests/responses are checked against the pinned schema. Digest/version
 checks detect accidental snapshot changes. Intentional upgrades need reviewed
 provenance and tests; this is not a complete future-operation compatibility generator.
 
@@ -32,3 +32,9 @@ and commercial policy remain server-owned.
 Public CI uses reviewed synthetic fixtures. Controlled service integration can
 run in the API's private pipeline with both source identities recorded. Neither
 needs a production key here or establishes a public deployment.
+
+Regime tests use a hand-authored synthetic wire fixture, not a recorded model
+prediction. They cover the three head statuses, ordered scores, consumed-range
+metadata, model provenance and service errors. The reviewed OpenAPI bytes and
+source identity are unchanged. Optional controlled-service integration checks
+SDK results against native JSON; it does not expect synthetic fixture scores.

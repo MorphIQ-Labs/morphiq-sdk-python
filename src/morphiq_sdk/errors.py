@@ -16,13 +16,13 @@ class RequestTimeout(TransportError):
 
 
 class ResponseError(MorphIQError):
-    """A successful HTTP status carried an invalid pricing response."""
+    """A successful HTTP status carried an invalid API response."""
 
     def __init__(self, *, request_id: str | None, body: bytes, headers: dict[str, str]) -> None:
         self.request_id = request_id
         self.body = body
         self.headers = headers
-        super().__init__("The API returned an invalid pricing response; no retry was attempted.")
+        super().__init__("The API returned an invalid API response; no retry was attempted.")
 
 
 class APIError(MorphIQError):

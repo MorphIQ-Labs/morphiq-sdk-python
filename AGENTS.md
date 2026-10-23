@@ -27,6 +27,6 @@ commercial policy, account authority and execution remain server-side.
 - Follow RELEASE.md: no manual release version bumps or package publication.
   Release Please owns pyproject.toml version, manifest and changelog updates.
 
-The unreleased preview implements sync/async single-option JSON pricing and its
-local notebook quickstart. Other endpoints, package/image publication and hosted
+The unreleased preview implements sync/async single-option JSON pricing and
+regime identification, with a local quickstart and feature notebooks. Other endpoints, package/image publication and hosted
 notebooks remain planned. Keep availability statements precise.

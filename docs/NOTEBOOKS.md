@@ -12,8 +12,9 @@ docker compose up --build
 Open the local token-authenticated URL printed by Jupyter to reach Start Here.
 Keep it as your quickstart, or follow its links to the standalone
 [European pricing](../notebooks/pricing/european.ipynb),
-[American pricing](../notebooks/pricing/american.ipynb), and
-[async pricing](../notebooks/pricing/async.ipynb) notebooks. All four are included
+[American pricing](../notebooks/pricing/american.ipynb),
+[async pricing](../notebooks/pricing/async.ipynb), and
+[regime identification](../notebooks/regime/identification.ipynb) notebooks. All five are included
 in the image and available in Jupyter's file browser.
 Compose passes the key into the container at runtime; it is not baked into the
 image. The notebook connects to `https://api.morphiqlabs.com` automatically. Leave
@@ -22,10 +23,12 @@ access token in the local URL is separate from your MorphIQ API key.
 
 The container runs as UID 1000, publishes only to localhost, and retains Jupyter's
 random token authentication. Dependencies and the SDK wheel are installed during
-the build. Startup installs nothing and executes no pricing cells.
+the build. Startup installs nothing and executes no API calls.
 
 Run All in the quickstart makes four pricing requests. The European and American
-notebooks each make one; the async notebook makes two. These are real requests
+notebooks each make one; the async notebook makes two. The regime notebook prompts
+for a ticker (default SPY), downloads Yahoo daily closes and makes one regime
+request. These are real requests
 that may consume your allowance. Each notebook's cleanup cell
 removes the key from the kernel environment. An environment-provided key also
 remains in the container configuration until the container is removed with
@@ -57,7 +60,8 @@ by `docker compose down` retains it; subsequent startup reuses it. Startup seeds
 only missing notebooks and never replaces an existing edited file. Rebuilding and
 restarting adds new feature notebooks to an existing workspace.
 The quickstart is `start-here.ipynb` at the workspace root. Feature notebooks are
-organized by feature, with European, American and async pricing in `pricing/`.
+organized by feature, with European, American and async pricing in `pricing/`
+and regime identification in `regime/`.
 
 To adopt an updated notebook after rebuilding, rename your edited copy in Jupyter,
 then restart; the missing original filename is seeded from the image. Download
@@ -70,8 +74,8 @@ check the endpoint/network path and typed error. After changing an exported key,
 rerun `docker compose up -d` to recreate the container with the new setting. Keys
 entered at the notebook prompt can be changed by rerunning configuration after
 the cleanup cell. Changing keys needs no rebuild;
-changing dependencies or SDK versions does. This first image includes the pricing
-notebook dependencies; later plotting/DataFrame recipes can add their own dependencies.
+changing dependencies or SDK versions does. The image includes Jupyter and yfinance for the
+pricing and regime notebooks.
 
 ## Source and verification
 
@@ -86,7 +90,8 @@ python scripts/check_notebook_container.py
 ```
 
 This check verifies authenticated startup and non-root execution, runs every
-notebook against loopback native-response fixtures, then recreates the container
+notebook API cell against loopback contract fixtures, using synthetic in-memory prices
+and skipping the external Yahoo download cell. It then recreates the container
 with the same volume to verify preserved edits and missing-notebook seeding. It removes only its
 own randomly named test container and volume.
 

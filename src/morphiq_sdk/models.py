@@ -1,6 +1,6 @@
-"""Pricing wire models for the reviewed HTTP contract; no pricing logic lives here."""
+"""API wire models for the reviewed HTTP contract; no pricing logic lives here."""
 
-from typing import Any, Literal
+from typing import Annotated, Any, Generic, Literal, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field, FiniteFloat, PrivateAttr
 
@@ -113,9 +113,7 @@ class PriceResult(_Response):
     model_version: str
 
 
-class PriceResponse(_Response):
-    result: PriceResult
-    metadata: ResponseMetadata
+class _EvidenceResponse(_Response):
     _raw_body: bytes = PrivateAttr(default=b"")
     _headers: dict[str, str] = PrivateAttr(default_factory=dict)
 
@@ -128,6 +126,149 @@ class PriceResponse(_Response):
     def headers(self) -> dict[str, str]:
         """HTTP response headers without retaining a credential-bearing request."""
         return self._headers.copy()
+
+
+class PriceResponse(_EvidenceResponse):
+    result: PriceResult
+    metadata: ResponseMetadata
+
+
+class RegimeRequest(_Request):
+    """Comparable positive prices, oldest first; no sampling interval is assumed.
+
+    V1 requires 512 prices and consumes the latest 507. Supply split-adjusted
+    closes without cash-dividend total-return adjustment. The service validates
+    timestamp/domain semantics and request byte limits; no cropping occurs here.
+    """
+
+    prices: list[Annotated[FiniteFloat, Field(gt=0)]] = Field(min_length=512)
+    as_of: str | None = Field(default=None, max_length=64)
+
+    def to_wire(self) -> dict[str, Any]:
+        # Revalidate mutable price lists without dropping explicit null timestamps.
+        values = self.model_dump(exclude={"prices"}, exclude_unset=True)
+        values["prices"] = self.prices
+        validated = type(self).model_validate(values)
+        return validated.model_dump(mode="json", exclude_unset=True)
+
+
+RegimeDecisionLabel = Literal["not_eligible", "supported", "unsupported", "unresolved"]
+RegimeDirectionLabel = Literal["UP", "DOWN", "NEUTRAL"]
+RegimeStateLabel = Literal["LOWER_VOL", "HIGHER_VOL"]
+_Label = TypeVar("_Label")
+_Prediction = TypeVar("_Prediction")
+
+
+class RegimeScore(_Response, Generic[_Label]):
+    label: _Label
+    value: FiniteFloat = Field(ge=0, le=1)
+
+
+class RegimePrediction(_Response, Generic[_Label]):
+    label: _Label
+    scores: list[RegimeScore[_Label]]
+    selection: Literal["argmax"]
+
+
+class RegimeDecisionPrediction(RegimePrediction[RegimeDecisionLabel]):
+    scores: list[RegimeScore[RegimeDecisionLabel]] = Field(min_length=4, max_length=4)
+
+
+class RegimeDirectionPrediction(RegimePrediction[RegimeDirectionLabel]):
+    scores: list[RegimeScore[RegimeDirectionLabel]] = Field(min_length=3, max_length=3)
+
+
+class RegimeStatePrediction(RegimePrediction[RegimeStateLabel]):
+    scores: list[RegimeScore[RegimeStateLabel]] = Field(min_length=2, max_length=2)
+
+
+class RegimeBasis(_Response):
+    target: Literal[
+        "reference_procedure_outcome",
+        "selected_state_tendency",
+        "filtered_scale_order_membership",
+    ]
+
+
+class RegimeAvailable(_Response, Generic[_Prediction]):
+    status: Literal["available"]
+    basis: RegimeBasis
+    prediction: _Prediction
+
+
+class RegimeNotApplicable(_Response):
+    status: Literal["not_applicable"]
+    basis: RegimeBasis
+    prediction: None
+    reason_code: Literal["predicted_not_eligible"]
+
+
+class RegimeUnavailable(_Response):
+    status: Literal["unavailable"]
+    basis: RegimeBasis
+    prediction: None
+    reason_code: Literal["prediction_unavailable"]
+
+
+class RegimeScoreContract(_Response):
+    kind: Literal["uncalibrated_softmax"]
+    version: str
+    sum_tolerance: FiniteFloat
+
+
+class RegimeResult(_Response):
+    score_contract: RegimeScoreContract
+    decision: Annotated[
+        RegimeAvailable[RegimeDecisionPrediction] | RegimeNotApplicable | RegimeUnavailable,
+        Field(discriminator="status"),
+    ]
+    direction: Annotated[
+        RegimeAvailable[RegimeDirectionPrediction] | RegimeNotApplicable | RegimeUnavailable,
+        Field(discriminator="status"),
+    ]
+    state: Annotated[
+        RegimeAvailable[RegimeStatePrediction] | RegimeNotApplicable | RegimeUnavailable,
+        Field(discriminator="status"),
+    ]
+
+
+class RegimeProvenance(_Response):
+    model_id: str
+    model_status: str
+    model_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    preprocessing: str
+    teacher_executed: bool
+
+
+class RegimeConsumedPriceRange(_Response):
+    start_index: int = Field(ge=0)
+    end_index_exclusive: int = Field(ge=0)
+
+
+class RegimeMetadata(_CommercialMetadata):
+    response_contract_version: str
+    request_id: str
+    api_version: str
+    service_version: str
+    engines: list[EngineIdentity]
+    provenance: RegimeProvenance
+    received_price_count: int = Field(ge=0)
+    window_price_count: int = Field(ge=0)
+    price_count: int = Field(ge=0)
+    return_count: int = Field(ge=0)
+    consumed_price_range: RegimeConsumedPriceRange
+    observation_index: int = Field(ge=0)
+    input_price_index: int = Field(ge=0)
+    as_of: str | None
+    return_type: Literal["log"]
+    return_unit: Literal["fraction"]
+    inference_time_us: int = Field(ge=0)
+    all_prices_consumed: bool
+
+
+class RegimeResponse(_EvidenceResponse):
+    result: RegimeResult
+    metadata: RegimeMetadata
 
 
 class ErrorDetails(_Response):

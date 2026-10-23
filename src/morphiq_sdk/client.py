@@ -1,17 +1,19 @@
-"""Shared JSON pricing behavior for synchronous and asynchronous HTTPX clients."""
+"""Shared JSON API behavior for synchronous and asynchronous HTTPX clients."""
 
 from __future__ import annotations
 
 import json
 import os
 from types import TracebackType
-from typing import Any
+from typing import Any, TypeVar
 
 import httpx
 from pydantic import ValidationError
 
 from .errors import APIError, RequestTimeout, ResponseError, TransportError
-from .models import ErrorEnvelope, PriceRequest, PriceResponse
+from .models import ErrorEnvelope, PriceRequest, PriceResponse, RegimeRequest, RegimeResponse
+
+_ResponseType = TypeVar("_ResponseType", PriceResponse, RegimeResponse)
 
 
 def _redact_body(body: bytes, key: str) -> bytes:
@@ -78,7 +80,7 @@ class _Configuration:
             result["Authorization"] = f"Bearer {self._key}"
         return result
 
-    def decode(self, response: httpx.Response) -> PriceResponse:
+    def decode(self, response: httpx.Response, model: type[_ResponseType]) -> _ResponseType:
         # Retain response evidence, never the request or its Authorization header.
         body = response.content
         headers = dict(response.headers)
@@ -101,7 +103,7 @@ class _Configuration:
                 headers=headers,
             )
         try:
-            result = PriceResponse.model_validate_json(body)
+            result = model.model_validate_json(body)
         except ValidationError:
             raise ResponseError(request_id=request_id, body=body, headers=headers) from None
         result._raw_body = body
@@ -110,7 +112,7 @@ class _Configuration:
 
 
 class MorphIQ:
-    """Synchronous pricing client. No retries or redirects are performed.
+    """Synchronous API client. No retries or redirects are performed.
 
     The API URL defaults to https://api.morphiqlabs.com; override it with
     ``base_url`` or MORPHIQ_API_BASE_URL. ``api_key`` falls back to MORPHIQ_API_KEY.
@@ -141,8 +143,17 @@ class MorphIQ:
 
     def price(self, request: PriceRequest) -> PriceResponse:
         """Price one option; preserve server model selection and charge evidence."""
+        return self._post("v1/price", request.to_wire(), PriceResponse)
+
+    def regime(self, request: RegimeRequest) -> RegimeResponse:
+        """Identify regime heads; preserve scores, applicability and provenance."""
+        return self._post("v1/regime", request.to_wire(), RegimeResponse)
+
+    def _post(
+        self, path: str, payload: dict[str, Any], model: type[_ResponseType]
+    ) -> _ResponseType:
         try:
-            response = self._http.post("v1/price", json=request.to_wire())
+            response = self._http.post(path, json=payload)
         except httpx.TimeoutException:
             raise RequestTimeout(
                 "The request timed out; execution and CU charges may be unknown. "
@@ -153,7 +164,7 @@ class MorphIQ:
                 "The request failed before a complete response was received. "
                 "Execution and CU charges may be unknown; no retry was attempted."
             ) from None
-        return self._config.decode(response)
+        return self._config.decode(response, model)
 
     def close(self) -> None:
         self._http.close()
@@ -196,9 +207,18 @@ class AsyncMorphIQ:
         )
 
     async def price(self, request: PriceRequest) -> PriceResponse:
-        """Await one option price. Cancellation never triggers a retry."""
+        """Price one option; preserve server model selection and charge evidence."""
+        return await self._post("v1/price", request.to_wire(), PriceResponse)
+
+    async def regime(self, request: RegimeRequest) -> RegimeResponse:
+        """Identify regime heads; preserve scores, applicability and provenance."""
+        return await self._post("v1/regime", request.to_wire(), RegimeResponse)
+
+    async def _post(
+        self, path: str, payload: dict[str, Any], model: type[_ResponseType]
+    ) -> _ResponseType:
         try:
-            response = await self._http.post("v1/price", json=request.to_wire())
+            response = await self._http.post(path, json=payload)
         except httpx.TimeoutException:
             raise RequestTimeout(
                 "The request timed out; execution and CU charges may be unknown. "
@@ -209,7 +229,7 @@ class AsyncMorphIQ:
                 "The request failed before a complete response was received. "
                 "Execution and CU charges may be unknown; no retry was attempted."
             ) from None
-        return self._config.decode(response)
+        return self._config.decode(response, model)
 
     async def aclose(self) -> None:
         await self._http.aclose()

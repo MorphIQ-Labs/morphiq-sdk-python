@@ -1,4 +1,4 @@
-"""Generate the quickstart and feature notebooks from runnable pricing examples."""
+"""Generate the quickstart and feature notebooks from runnable API examples."""
 
 from __future__ import annotations
 
@@ -28,6 +28,38 @@ def example_source(filename: str) -> str:
         import_source = import_source.replace("import asyncio\n", "")
     body = textwrap.dedent("".join(lines[function.lineno : function.end_lineno]))
     return import_source + "\n" + body
+
+
+def regime_sources(filename: str = "identify_regime.py") -> tuple[str, str]:
+    """Keep download and API cells separate while copying the executable example."""
+    source = example_source(filename)
+    download, separator, request = source.partition(
+        "# Submit the downloaded prices directly to MorphIQ.\n"
+    )
+    if not separator:
+        raise ValueError("Regime example is missing its API section marker")
+    tree = ast.parse((ROOT / "examples" / filename).read_text())
+    download = download[download.index("ticker =") :]
+
+    def with_imports(body: str) -> str:
+        names = {node.id for node in ast.walk(ast.parse(body)) if isinstance(node, ast.Name)}
+        groups: dict[str, list[str]] = {"stdlib": [], "third_party": [], "sdk": []}
+        for node in tree.body:
+            if not isinstance(node, (ast.Import, ast.ImportFrom)):
+                continue
+            if not any((alias.asname or alias.name) in names for alias in node.names):
+                continue
+            module = node.module if isinstance(node, ast.ImportFrom) else node.names[0].name
+            group = (
+                "sdk"
+                if module == "morphiq_sdk"
+                else ("third_party" if module == "yfinance" else "stdlib")
+            )
+            groups[group].append(ast.unparse(node))
+        imports = "\n\n".join("\n".join(group) for group in groups.values() if group)
+        return imports + "\n\n" + body.strip()
+
+    return with_imports(download), with_imports(request)
 
 
 def notebook() -> dict[str, Any]:
@@ -67,6 +99,7 @@ open it in JupyterLab. The notebook is self-contained; it needs no examples impo
 - [European pricing](pricing/european.ipynb)
 - [American pricing](pricing/american.ipynb)
 - [Async pricing](pricing/async.ipynb)
+- [Regime identification](regime/identification.ipynb)
 """,
     )
     cell(
@@ -104,9 +137,9 @@ or outputs; clear it in the cleanup cell and shut down the kernel when finished.
 For a local or controlled test service, set `MORPHIQ_API_BASE_URL` before startup
 to override the default API URL.
 
-Each pricing cell contains a complete example: request inputs, API call, response
+Each example cell contains a complete example: request inputs, API call, response
 fields and error handling. The code is copied from the executable Python scripts.
-The server validates model domains and selects the pricing algorithm.
+The server validates input domains and performs pricing or regime inference.
 """,
     )
     cell(
@@ -240,6 +273,27 @@ def notebooks() -> dict[str, dict[str, Any]]:
             "Read each response and handle failures without automatically replaying requests. "
             "Jupyter supports await directly; asyncio.run is only needed in a Python script.",
         ),
+        (
+            "regime/identification.ipynb",
+            "Regime identification",
+            "identify_regime.py",
+            1,
+            "Send at least 512 comparable positive prices, ordered oldest to newest. "
+            "V1 selects the latest 512 and consumes their latest 507 prices; every supplied "
+            "price is validated before cropping. No sampling interval is inferred. "
+            "Use split-adjusted closes without cash-dividend total-return adjustment. "
+            "The optional as_of is the final price's RFC 3339 timestamp with an explicit "
+            "UTC offset; omission means unknown, not the server clock.\n\n"
+            "Read each head's status before accessing its prediction. An unresolved decision "
+            "is available; not_applicable and unavailable have reasons and no prediction. "
+            "Scores are uncalibrated softmax values, not probabilities, p-values or confidence "
+            "intervals. Never multiply heads. LOWER_VOL/HIGHER_VOL are relative to the "
+            "reference model's other state, not historical norms or price direction. "
+            "The basis describes the prediction target; it does not mean a reference fit "
+            "ran for this request.\n\n"
+            "For async Python usage, run python -m examples.identify_regime_async. "
+            "That standalone script shows the same request with AsyncMorphIQ and await.",
+        ),
     ]
     for filename, title, example, calls, introduction in features:
         feature = deepcopy(quickstart)
@@ -256,7 +310,7 @@ def notebooks() -> dict[str, dict[str, Any]]:
             -2,
             {
                 "cell_type": "code",
-                "id": "pricing-example",
+                "id": "api-example",
                 "metadata": {},
                 "source": example_source(example).strip(),
                 "execution_count": None,
@@ -267,10 +321,49 @@ def notebooks() -> dict[str, dict[str, Any]]:
             f"# MorphIQ SDK for Python — {title}\n\n{introduction}\n\n"
             "The inputs are synthetic. This notebook runs independently with the SDK "
             "and Jupyter installed; it does not import repository helpers.\n\n"
-            f"Run All makes **{calls} pricing {'request' if calls == 1 else 'requests'}**, "
+            f"Run All makes **{calls} API {'request' if calls == 1 else 'requests'}**, "
             "which may consume your API allowance. Opening the notebook makes no API calls.\n\n"
             "[Back to the quickstart](../start-here.ipynb)\n"
         )
+        if filename.startswith("regime/"):
+            feature["cells"][0]["source"] = feature["cells"][0]["source"].replace(
+                "The inputs are synthetic.",
+                "The download cell fetches real SPY daily prices from Yahoo through yfinance. "
+                "Enter a ticker at the prompt (SPY is the default). "
+                "Docker includes yfinance; elsewhere install the notebooks extra. "
+                "The download keeps prices in memory; the next cell passes them directly "
+                "to one regime request. "
+                "[Yahoo price adjustment semantics]"
+                "(https://ranaroussi.github.io/yfinance/advanced/price_adjustment.html).",
+            )
+            feature["cells"].insert(
+                -3,
+                {
+                    "cell_type": "code",
+                    "id": "download-prices",
+                    "metadata": {"tags": ["requires-network"]},
+                    "source": regime_sources()[0],
+                    "execution_count": None,
+                    "outputs": [],
+                },
+            )
+            for cell in feature["cells"]:
+                if cell["id"] == "api-example":
+                    cell["source"] = regime_sources()[1]
+                if cell["id"] == "errors-help":
+                    cell["source"] = cell["source"].replace(
+                        "Use `response.result.price`, `response.result.pricing_model`, and\n"
+                        "`response.metadata.request_id`. Commercial charges are "
+                        "`metadata.fcu_charged`;\n"
+                        "if absent they are **unreported**, not zero. "
+                        "`units_charged` is a separate\n"
+                        "internal compute weight. Keep the request ID when contacting support.",
+                        "Use the decision, direction and state heads in `response.result`. "
+                        "Keep `response.metadata.request_id` for support. Commercial charges are "
+                        "`metadata.fcu_charged`; missing charges are **unreported**, not zero. "
+                        "The consumed range is half-open in the original array. The server "
+                        "reports model provenance separately from the engine identity.",
+                    )
         result[filename] = feature
     return result
 

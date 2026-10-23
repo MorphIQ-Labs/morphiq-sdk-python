@@ -1,4 +1,4 @@
-"""Execute a notebook against loopback native-response fixtures; no external API calls."""
+"""Execute a notebook against loopback contract fixtures; no external API calls."""
 
 from __future__ import annotations
 
@@ -8,6 +8,7 @@ import os
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import Any
 
 import nbformat
@@ -18,11 +19,21 @@ NOTEBOOK_CASES = {
     "pricing/european.ipynb": ("european",),
     "pricing/american.ipynb": ("american",),
     "pricing/async.ipynb": ("european", "american"),
+    "regime/identification.ipynb": ("regime",),
 }
 
 
-def execute(notebook_path: Path, fixture_path: Path, notebook_root: Path) -> None:
-    cases = json.loads(fixture_path.read_text())["cases"]
+def fixture_prices_source(prices: list[float]) -> str:
+    """An explicit synthetic-data cell for offline tests of the API cells."""
+    return (
+        "import pandas as pd\n"
+        f"closes = pd.DataFrame({{'Close': {prices!r}}}, "
+        f"index=pd.date_range('2020-01-01', periods={len(prices)}))\n"
+    )
+
+
+def execute(notebook_path: Path, fixture_paths: list[Path], notebook_root: Path) -> None:
+    cases = [case for path in fixture_paths for case in json.loads(path.read_text())["cases"]]
     by_name = {case["name"]: case for case in cases}
     relative_path = notebook_path.relative_to(notebook_root).as_posix()
     expected = [by_name[name]["request"] for name in NOTEBOOK_CASES[relative_path]]
@@ -34,7 +45,7 @@ def execute(notebook_path: Path, fixture_path: Path, notebook_root: Path) -> Non
             body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
             match = next((case for case in cases if case["request"] == body), None)
             if (
-                self.path != "/v1/price"
+                self.path != (match or {}).get("path", "/v1/price")
                 or self.headers.get("Authorization") != f"Bearer {credential}"
                 or match is None
             ):
@@ -55,13 +66,27 @@ def execute(notebook_path: Path, fixture_path: Path, notebook_root: Path) -> Non
     try:
         notebook = nbformat.read(notebook_path, as_version=4)  # type: ignore[no-untyped-call]
         nbformat.validate(notebook)
-        executed = NotebookClient(notebook, timeout=60, kernel_name="python3").execute(
-            env={
-                **os.environ,
-                "MORPHIQ_API_BASE_URL": f"http://127.0.0.1:{server.server_port}",
-                "MORPHIQ_API_KEY": credential,
-            }
-        )
+        with TemporaryDirectory() as working_directory:
+            if relative_path.startswith("regime/"):
+                notebook.cells.insert(
+                    0,
+                    nbformat.v4.new_code_cell(  # type: ignore[no-untyped-call]
+                        fixture_prices_source(by_name["regime"]["request"]["prices"])
+                    ),
+                )
+            executed = NotebookClient(
+                notebook,
+                timeout=60,
+                kernel_name="python3",
+                skip_cells_with_tag="requires-network",
+                resources={"metadata": {"path": working_directory}},
+            ).execute(
+                env={
+                    **os.environ,
+                    "MORPHIQ_API_BASE_URL": f"http://127.0.0.1:{server.server_port}",
+                    "MORPHIQ_API_KEY": credential,
+                }
+            )
         if received != expected or credential in json.dumps(executed):
             raise RuntimeError("Unexpected requests or a credential in notebook output")
         print(f"{relative_path}: {len(received)} fixture requests; no credential in output.")
@@ -75,7 +100,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--notebook", required=True, type=Path)
     parser.add_argument("--notebook-root", required=True, type=Path)
-    parser.add_argument("--fixtures", required=True, type=Path)
+    parser.add_argument("--fixtures", required=True, type=Path, nargs="+")
     args = parser.parse_args()
     execute(args.notebook, args.fixtures, args.notebook_root)
 
