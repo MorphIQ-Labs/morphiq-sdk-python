@@ -27,7 +27,7 @@ notebooks = ["jupyterlab>=4.6,<5", "ipykernel>=7.4,<8", "yfinance>=1.7,<2", "pan
 market-data = ["yfinance>=1.7,<2", "pandas>=2.2,<3.1"]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/morphiq_sdk"]
+packages = ["src/morphiq_sdk", "src/morphiq_sdk_yahoo"]
 
 [tool.hatch.build.targets.sdist]
 include = ["/src", "/pyproject.toml", "/README.md", "/examples", "/notebooks"]
