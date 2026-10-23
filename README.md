@@ -130,13 +130,14 @@ Open the local token-authenticated URL printed by Jupyter to reach Start Here.
 Choose an analysis workspace and run all cells once to display its controls:
 
 - [Option pricing](notebooks/pricing/options.ipynb): European/American and model
-  dropdowns, call/put selection, editable assumptions, Yahoo daily/intraday underlying price,
+  dropdowns, call/put selection, editable assumptions, automatic Yahoo daily/intraday underlying prices,
   a valuation comparison table and a spot-sensitivity chart.
 - [Regime analysis](notebooks/regime/identification.ipynb): ticker selection,
   Yahoo price history, latest regime assessment, score charts and provenance.
 
 Compose passes your API key into the container; if unset, the workspace prompts
-for it. Setup and control changes make no API requests. Click **Price option**
+for it. Setup and control changes make no MorphIQ requests. Yahoo prices load automatically
+on setup and when the ticker or interval changes. Click **Price option**
 for one request, **Spot sensitivity** for nine sequential requests, or
 **Analyze regime** for one request. Yahoo data remains in memory.
 Dependencies are installed at build time, and notebook edits persist in a named volume.

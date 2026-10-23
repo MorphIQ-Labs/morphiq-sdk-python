@@ -20,7 +20,10 @@ def run_workspace(filename, code, endpoint, tmp_path):
     notebook = nbformat.read(ROOT / "notebooks" / filename, as_version=4)
     notebook.cells.append(nbformat.v4.new_code_cell(code))
     executed = NotebookClient(
-        notebook, timeout=60, resources={"metadata": {"path": str(tmp_path)}}
+        notebook,
+        timeout=60,
+        skip_cells_with_tag="requires-network",
+        resources={"metadata": {"path": str(tmp_path)}},
     ).execute(
         env={**os.environ, "MORPHIQ_API_BASE_URL": endpoint, "MORPHIQ_API_KEY": "ui-test-key"}
     )
@@ -117,7 +120,7 @@ def test_analysis_errors_keep_charge_evidence_and_reenable_actions(
             + "use_history(closes, 'SPY')\n"
         )
     code += action + "\nassert last_response is None\n"
-    code += "assert not load_button.disabled\n"
+    code += "assert not ticker.disabled\n"
     output = run_workspace(filename, code, endpoint, tmp_path)
     assert len(received) == 1
     if "charged" in expected:
@@ -207,7 +210,7 @@ except ValueError:
 else:
     raise AssertionError('Missing latest bar silently replaced')
 assert spot.value == 103
-assert not price_button.disabled and not load_button.disabled
+assert not price_button.disabled and not ticker.disabled
 """
     run_workspace("pricing/options.ipynb", code, endpoint, tmp_path)
     assert received == []
