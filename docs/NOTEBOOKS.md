@@ -1,22 +1,31 @@
 # Local notebook environment
 
-From a checkout with Docker running:
+Get your API key and base URL from the
+[MorphIQ Labs developer portal](https://developers.morphiqlabs.com). From a checkout
+with Docker running, replace the placeholders and start the notebook:
 
 ```sh
+export MORPHIQ_API_BASE_URL="YOUR_API_BASE_URL"
+export MORPHIQ_API_KEY="YOUR_API_KEY"
 docker compose up --build
 ```
 
 Open the local token-authenticated URL printed by Jupyter to reach Start Here.
-The Jupyter access token is separate from the MorphIQ API key entered at the masked
-notebook prompt. Compose does not copy a host API key into container configuration.
+Compose passes both variables into the container at runtime; they are not baked
+into the image. The notebook reads them automatically. Leave either variable unset
+to enter it in the notebook instead; the API key prompt is masked. The Jupyter
+access token in the local URL is separate from your MorphIQ API key.
 
 The container runs as UID 1000, publishes only to localhost, and retains Jupyter's
 random token authentication. Dependencies and the SDK wheel are installed during
 the build. Startup installs nothing and executes no pricing cells.
 
 The sync cells each make one request; the async cell makes two more. Run All makes
-four real requests that may consume your allowance. The API key stays in the kernel
-environment until cleanup/kernel shutdown. Never put keys into saved source or outputs.
+four real requests that may consume your allowance. The notebook cleanup cell
+removes the key from the kernel environment. An environment-provided key also
+remains in the container configuration until the container is removed with
+`docker compose down`; use `unset MORPHIQ_API_KEY` to clear it from your terminal.
+Never put keys into saved notebook source or outputs.
 
 ## Configuration and networking
 
@@ -49,7 +58,10 @@ notebooks through Jupyter's file browser for backup or standalone use.
 intentional reset after saving your work.
 
 For startup problems check Docker and host-port availability. For API failures
-check the endpoint/network path and typed error. Changing keys needs no rebuild;
+check the endpoint/network path and typed error. After changing an exported key,
+rerun `docker compose up -d` to recreate the container with the new setting. Keys
+entered at the notebook prompt can be changed by rerunning configuration after
+the cleanup cell. Changing keys needs no rebuild;
 changing dependencies or SDK versions does. This first image includes the pricing
 notebook dependencies; later plotting/DataFrame recipes can add their own dependencies.
 

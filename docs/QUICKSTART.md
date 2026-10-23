@@ -9,7 +9,7 @@ local service. The examples use synthetic contracts and no market data.
 Start at the [MorphIQ Labs developer portal](https://developers.morphiqlabs.com)
 to get API access, an API key, and the base URL for your account.
 
-## 2. Install and run
+## 2. Install the SDK
 
 ```sh
 git clone https://github.com/MorphIQ-Labs/morphiq-sdk-python.git
@@ -17,16 +17,26 @@ cd morphiq-sdk-python
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -e .
-python -m examples.quickstart
 ```
 
 The repository is currently private and requires access. This development build
 has not been released; `pip install morphiq-sdk` is not yet a supported path.
 
-The script asks for your API base URL and masked key, unless supplied through
-`MORPHIQ_API_BASE_URL` and `MORPHIQ_API_KEY`. Use the API root without `/v1/price`.
-The key stays in the process environment and is not saved to a file. There is no
-assumed production endpoint; the SDK does not create accounts or deploy a service.
+## 3. Set your API credentials and run
+
+In your terminal, replace the placeholders with the base URL and API key from the
+developer portal. Use the API root without `/v1/price`:
+
+```sh
+export MORPHIQ_API_BASE_URL="YOUR_API_BASE_URL"
+export MORPHIQ_API_KEY="YOUR_API_KEY"
+python -m examples.quickstart
+```
+
+All examples and both SDK clients read these environment variables. They apply to
+programs launched from this terminal. Run `unset MORPHIQ_API_KEY` when finished.
+To enter the key through a masked prompt instead, leave `MORPHIQ_API_KEY` unset
+and run the example. The example also prompts for the base URL if it is unset.
 
 The quickstart makes two real requests: a European call and an American put. Each
 prints its price, selected model/version, request ID, engine identity and reported

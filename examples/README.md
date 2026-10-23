@@ -1,16 +1,26 @@
 # Executable cookbook
 
 Eight recipes are planned in [#7](https://github.com/MorphIQ-Labs/morphiq-sdk-python/issues/7).
-The first pricing slice is runnable now:
+Get your API key and base URL from the
+[MorphIQ Labs developer portal](https://developers.morphiqlabs.com). After
+[installing the SDK](../docs/QUICKSTART.md), replace the placeholders and run:
 
 ```sh
+export MORPHIQ_API_BASE_URL="YOUR_API_BASE_URL"
+export MORPHIQ_API_KEY="YOUR_API_KEY"
 python -m examples.quickstart
+```
+
+The other examples use the same environment settings:
+
+```sh
 python -m examples.price_european
 python -m examples.price_american
 python -m examples.price_async
 ```
 
 Each reads the endpoint/key from the environment or prompts (masked for the key).
+Run `unset MORPHIQ_API_KEY` when finished.
 Imports make no requests. `_shared.py` supplies synthetic inputs and result display.
 The quickstart configures once and uses one sync client for both options; the
 async script awaits them sequentially. See [the quickstart](../docs/QUICKSTART.md).

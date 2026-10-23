@@ -25,15 +25,19 @@ python -m pip install -e .
 
 ### 3. Make your first API requests
 
+Set your credentials in the terminal, replacing the placeholders with the API
+base URL and key from the developer portal:
+
 ```sh
+export MORPHIQ_API_BASE_URL="YOUR_API_BASE_URL"
+export MORPHIQ_API_KEY="YOUR_API_KEY"
 python -m examples.quickstart
 ```
 
-Enter your API base URL and API key when prompted; the key prompt is masked. You
-can also supply `MORPHIQ_API_BASE_URL` and `MORPHIQ_API_KEY` through your environment.
-This submits
-two real requests and prints each price, selected model, request ID, engine
-identity and reported commercial CU charge.
+These settings apply to all examples run from this terminal. If you leave either
+variable unset, the example prompts for it; the key prompt is masked. The quickstart
+submits two real requests and prints each price, selected model, request ID, engine
+identity and reported commercial CU charge. Run `unset MORPHIQ_API_KEY` when finished.
 
 Run `python -m examples.price_async` for the same two requests with sequential
 awaits. Individual scripts are `examples.price_european` and `examples.price_american`.
@@ -42,14 +46,18 @@ configuration and errors.
 
 ## Start a notebook with Docker
 
-With Docker running, from the repository root:
+With Docker running, from the repository root, set the same credentials and start
+the notebook:
 
 ```sh
+export MORPHIQ_API_BASE_URL="YOUR_API_BASE_URL"
+export MORPHIQ_API_KEY="YOUR_API_KEY"
 docker compose up --build
 ```
 
 Open the local token-authenticated URL printed by Jupyter to reach Start Here.
-Enter the API endpoint and key when prompted. Opening Jupyter makes no API calls;
+Compose passes both variables into the notebook container. If either is unset,
+the notebook prompts for it. Opening Jupyter makes no API calls;
 running all cells submits four pricing requests, including the async examples.
 Dependencies are installed at build time, and notebook edits persist in a named volume.
 
