@@ -10,7 +10,6 @@ import httpx
 import pytest
 from pydantic import ValidationError
 
-from examples._shared import american_put, european_call
 from morphiq_sdk import (
     APIError,
     AsyncMorphIQ,
@@ -21,6 +20,32 @@ from morphiq_sdk import (
     ResponseError,
     TransportError,
 )
+
+
+def european_call():
+    return PriceRequest(
+        exercise_style="european",
+        option_type="call",
+        spot=100.0,
+        strike=100.0,
+        time_to_expiry_years=1.0,
+        risk_free_rate=0.05,
+        dividend_yield=0.0,
+        volatility=0.20,
+    )
+
+
+def american_put():
+    return PriceRequest(
+        exercise_style="american",
+        option_type="put",
+        spot=100.0,
+        strike=105.0,
+        time_to_expiry_years=0.5,
+        risk_free_rate=0.05,
+        dividend_yield=0.01,
+        volatility=0.20,
+    )
 
 
 def invoke(mode, transport, request=None, **kwargs):

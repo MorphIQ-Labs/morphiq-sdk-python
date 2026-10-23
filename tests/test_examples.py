@@ -1,25 +1,31 @@
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
 
 import nbformat
+import pytest
 from nbclient import NotebookClient
-
-from examples import _shared
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_configuration_only_needs_api_key():
+def test_examples_import_without_credentials_or_requests():
     environment = {
-        name: value for name, value in os.environ.items() if name != "MORPHIQ_API_BASE_URL"
+        name: value
+        for name, value in os.environ.items()
+        if name not in ("MORPHIQ_API_BASE_URL", "MORPHIQ_API_KEY")
     }
-    environment["MORPHIQ_API_KEY"] = "example-test-only"
     result = subprocess.run(
-        [sys.executable, "-c", "from examples._shared import configure; configure()"],
+        [
+            sys.executable,
+            "-c",
+            "import examples.price_european, examples.price_american, "
+            "examples.price_async, examples.quickstart",
+        ],
         cwd=ROOT,
         env=environment,
         stdin=subprocess.DEVNULL,
@@ -30,20 +36,38 @@ def test_configuration_only_needs_api_key():
     assert result.stdout == result.stderr == ""
 
 
-def test_scripts_use_same_requests_and_preserve_unreported_charges(fixture_api):
+@pytest.mark.parametrize("standalone", [False, True])
+def test_scripts_use_same_requests_and_preserve_unreported_charges(
+    fixture_api, cases, tmp_path, standalone
+):
     endpoint, received = fixture_api
     environment = {**os.environ, "MORPHIQ_API_BASE_URL": endpoint, "MORPHIQ_API_KEY": "fixture-key"}
     for module in ("price_european", "price_american", "price_async", "quickstart"):
+        if standalone:
+            script = tmp_path / (module + ".py")
+            shutil.copyfile(ROOT / "examples" / script.name, script)
+            command = [sys.executable, str(script)]
+        else:
+            command = [sys.executable, "-m", "examples." + module]
         result = subprocess.run(
-            [sys.executable, "-m", "examples." + module],
-            cwd=ROOT,
+            command,
+            cwd=tmp_path if standalone else ROOT,
             env=environment,
+            stdin=subprocess.DEVNULL,
             capture_output=True,
             text=True,
             check=True,
         )
         assert "not reported" in result.stdout
         assert "fixture-key" not in result.stdout + result.stderr
+        expected = cases[:1] if module == "price_european" else cases[1:]
+        if module in ("quickstart", "price_async"):
+            expected = cases
+        for case in expected:
+            assert f"Price: {case['response']['result']['price']}" in result.stdout
+            assert case["response"]["result"]["model_version"] in result.stdout
+            assert case["response"]["metadata"]["request_id"] in result.stdout
+            assert case["response"]["metadata"]["engines"][0]["revision"] in result.stdout
     assert len(received) == 6
     assert [request[2]["exercise_style"] for request in received] == [
         "european",
@@ -70,10 +94,32 @@ def test_readme_request_and_response_match_executable_example(fixture_api, cases
         text=True,
         check=True,
     )
-    assert received == [("/v1/price", "Bearer readme-test-key", _shared.european_call().to_wire())]
+    assert received == [("/v1/price", "Bearer readme-test-key", cases[0]["request"])]
     assert json.loads(result.stdout) == json.loads(documented_response.group(1))
     assert json.loads(result.stdout) == cases[0]["response"]
     assert "readme-test-key" not in result.stdout + result.stderr
+
+
+def test_scripts_report_failures_without_retry(failing_api):
+    endpoint, received, expected = failing_api
+    for module in ("price_european", "price_american", "price_async", "quickstart"):
+        result = subprocess.run(
+            [sys.executable, "-m", "examples." + module],
+            cwd=ROOT,
+            env={
+                **os.environ,
+                "MORPHIQ_API_BASE_URL": endpoint,
+                "MORPHIQ_API_KEY": "error-test-key",
+            },
+            stdin=subprocess.DEVNULL,
+            capture_output=True,
+            text=True,
+        )
+        assert result.returncode == 1
+        assert expected in result.stderr
+        assert "error-test-key" not in result.stdout + result.stderr
+        assert "Price:" not in result.stdout
+    assert len(received) == 4
 
 
 def test_generated_notebook_executes_without_source_tree(fixture_api, tmp_path):

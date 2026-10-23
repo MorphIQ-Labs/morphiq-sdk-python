@@ -12,21 +12,21 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def function_source(filename: str, *, body_only: bool) -> str:
+def example_source(filename: str) -> str:
+    """Copy imports and the main body; notebooks support top-level await."""
     source = (ROOT / "examples" / filename).read_text()
     tree = ast.parse(source)
+    imports = [node for node in tree.body if isinstance(node, (ast.Import, ast.ImportFrom))]
     function = next(
-        node
-        for node in tree.body
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == "main"
+        node for node in tree.body if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
     )
-    if body_only:
-        return textwrap.dedent(
-            "".join(
-                source.splitlines(keepends=True)[function.body[0].lineno - 1 : function.end_lineno]
-            )
-        )
-    return ast.get_source_segment(source, function) or ""
+    lines = source.splitlines(keepends=True)
+    import_source = "".join(lines[imports[0].lineno - 1 : imports[-1].end_lineno])
+    if isinstance(function, ast.AsyncFunctionDef):
+        # asyncio.run is only needed by the script's __main__ entry point.
+        import_source = import_source.replace("import asyncio\n", "")
+    body = textwrap.dedent("".join(lines[function.lineno : function.end_lineno]))
+    return import_source + "\n" + body
 
 
 def notebook() -> dict[str, Any]:
@@ -69,7 +69,6 @@ open it in JupyterLab. The notebook is self-contained; it needs no examples impo
 import sys
 
 import morphiq_sdk
-from morphiq_sdk import AsyncMorphIQ, MorphIQ
 
 print("Python:", sys.version.split()[0])
 print("MorphIQ SDK:", morphiq_sdk.__version__)
@@ -98,15 +97,22 @@ or outputs; clear it in the cleanup cell and shut down the kernel when finished.
 For a local or controlled test service, set `MORPHIQ_API_BASE_URL` before startup
 to override the default API URL.
 
-The following helpers are copied from the tested Python examples. Editing an
-input later sends that value unchanged to the API; the server validates model
-domains and selects the pricing algorithm.
+Each pricing cell contains a complete example: request inputs, API call, response
+fields and error handling. The code is copied from the executable Python scripts.
+The server validates model domains and selects the pricing algorithm.
 """,
     )
-    shared = (ROOT / "examples/_shared.py").read_text()
-    docstring = ast.parse(shared).body[0]
-    cell("code", "shared-examples", "\n".join(shared.splitlines()[docstring.end_lineno :]))
-    cell("code", "configure", "configure()")
+    cell(
+        "code",
+        "configure",
+        """
+import os
+from getpass import getpass
+
+if not os.environ.get("MORPHIQ_API_KEY"):
+    os.environ["MORPHIQ_API_KEY"] = getpass("MorphIQ API key: ")
+""",
+    )
     cell(
         "markdown",
         "european-help",
@@ -120,7 +126,7 @@ algorithm version. The price uses the same currency units as spot and strike;
 no contract multiplier is applied.
 """,
     )
-    cell("code", "european-price", function_source("price_european.py", body_only=True))
+    cell("code", "european-price", example_source("price_european.py"))
     cell(
         "markdown",
         "american-help",
@@ -133,7 +139,7 @@ synthetic contract, not a like-for-like exercise-premium comparison with the cal
 Cash-dividend schedules and date/day-count conversion are outside this first example.
 """,
     )
-    cell("code", "american-price", function_source("price_american.py", body_only=True))
+    cell("code", "american-price", example_source("price_american.py"))
     cell(
         "markdown",
         "async-help",
@@ -148,7 +154,7 @@ that permit only one request at a time. This cell makes **two additional calls**
     cell(
         "code",
         "async-pricing",
-        function_source("price_async.py", body_only=False) + "\n\n\nawait main()",
+        example_source("price_async.py"),
     )
     cell(
         "markdown",
