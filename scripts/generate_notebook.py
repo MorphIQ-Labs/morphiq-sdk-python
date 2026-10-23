@@ -74,11 +74,11 @@ def notebook() -> dict[str, Any]:
 
 - [Option pricing](pricing/options.ipynb): value European or American calls and puts,
   load a daily or intraday underlying price from Yahoo, compare assumptions, and chart sensitivity.
-- [Regime analysis](regime/identification.ipynb): load a ticker's price history and
-  inspect its latest regime assessment, scores and model provenance.
+- [Regime analysis](regime/identification.ipynb): load daily or intraday price history
+  and inspect the latest regime assessment, scores and model provenance.
 
 Open a workspace and select **Run → Run All Cells** once to display its controls.
-Then use its buttons. Running the setup makes no API requests; each action button
+Then use its buttons. Running the setup makes no MorphIQ requests; each action button
 states how many requests it sends. All market data stays in memory.
 
 ## API access

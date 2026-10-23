@@ -214,3 +214,42 @@ assert not price_button.disabled and not ticker.disabled
 """
     run_workspace("pricing/options.ipynb", code, endpoint, tmp_path)
     assert received == []
+
+
+def test_regime_intraday_prices_and_selection_invalidation(fixture_api, regime_cases, tmp_path):
+    endpoint, received = fixture_api
+    code = (
+        fixture_prices_source(regime_cases[0]["request"]["prices"])
+        + """
+assert price_interval.value == '1d'
+assert set(price_interval.options) == {
+    ('Daily close', '1d'), ('1 minute', '1m'), ('5 minutes', '5m'),
+    ('15 minutes', '15m'), ('30 minutes', '30m'), ('1 hour', '60m')
+}
+assert yahoo_history_options('1d')['end'] == date.today()
+assert yahoo_history_options('60m') == {'interval': '60m', 'period': '6mo'}
+price_interval.value = '5m'
+closes.index = pd.date_range('2026-10-20 09:30', periods=512, freq='5min',
+                            tz='America/New_York')
+use_history(closes, 'SPY', '5m')
+assert loaded_interval == '5m'
+assert loaded_closes.tolist() == closes['Close'].tolist()
+assert 'America/New_York' in price_timestamp(loaded_closes.index[-1], loaded_interval)
+assert '-04:00' in price_timestamp(loaded_closes.index[-1], loaded_interval)
+assert last_response is None
+analyze_button.click()
+assert last_response is not None
+price_interval.value = '60m'
+assert loaded_closes is None and loaded_interval is None and last_response is None
+assert analyze_button.disabled
+# A stale history cannot be submitted under another interval.
+use_history(closes, 'SPY', '5m')
+analyze_regime(None)
+assert last_response is None
+ticker.value = 'QQQ'
+assert loaded_closes is None and loaded_ticker is None and analyze_button.disabled
+"""
+    )
+    output = run_workspace("regime/identification.ipynb", code, endpoint, tmp_path)
+    assert "may still be forming" in output
+    assert len(received) == 1

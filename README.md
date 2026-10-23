@@ -133,7 +133,7 @@ Choose an analysis workspace and run all cells once to display its controls:
   dropdowns, call/put selection, editable assumptions, automatic Yahoo daily/intraday underlying prices,
   a valuation comparison table and a spot-sensitivity chart.
 - [Regime analysis](notebooks/regime/identification.ipynb): ticker selection,
-  Yahoo price history, latest regime assessment, score charts and provenance.
+  automatic Yahoo daily/intraday price history, latest regime assessment, score charts and provenance.
 
 Compose passes your API key into the container; if unset, the workspace prompts
 for it. Setup and control changes make no MorphIQ requests. Yahoo prices load automatically
