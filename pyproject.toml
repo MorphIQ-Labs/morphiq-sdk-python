@@ -22,7 +22,8 @@ classifiers = [
 Repository = "https://github.com/MorphIQ-Labs/morphiq-sdk-python"
 
 [project.optional-dependencies]
-notebooks = ["jupyterlab>=4.6,<5", "ipykernel>=7.4,<8"]
+notebooks = ["jupyterlab>=4.6,<5", "ipykernel>=7.4,<8", "yfinance>=1.7,<2"]
+market-data = ["yfinance>=1.7,<2"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/morphiq_sdk"]
@@ -43,7 +44,7 @@ strict = true
 files = ["src", "scripts", "examples", "docker"]
 
 [[tool.mypy.overrides]]
-module = ["nbformat", "nbformat.*", "nbclient", "nbclient.*"]
+module = ["nbformat", "nbformat.*", "nbclient", "nbclient.*", "yfinance", "yfinance.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

@@ -1,4 +1,4 @@
-"""Generate the quickstart and feature notebooks from runnable pricing examples."""
+"""Generate the quickstart and feature notebooks from runnable API examples."""
 
 from __future__ import annotations
 
@@ -67,6 +67,7 @@ open it in JupyterLab. The notebook is self-contained; it needs no examples impo
 - [European pricing](pricing/european.ipynb)
 - [American pricing](pricing/american.ipynb)
 - [Async pricing](pricing/async.ipynb)
+- [Regime identification](regime/identification.ipynb)
 """,
     )
     cell(
@@ -104,9 +105,9 @@ or outputs; clear it in the cleanup cell and shut down the kernel when finished.
 For a local or controlled test service, set `MORPHIQ_API_BASE_URL` before startup
 to override the default API URL.
 
-Each pricing cell contains a complete example: request inputs, API call, response
+Each example cell contains a complete example: request inputs, API call, response
 fields and error handling. The code is copied from the executable Python scripts.
-The server validates model domains and selects the pricing algorithm.
+The server validates input domains and performs pricing or regime inference.
 """,
     )
     cell(
@@ -240,6 +241,27 @@ def notebooks() -> dict[str, dict[str, Any]]:
             "Read each response and handle failures without automatically replaying requests. "
             "Jupyter supports await directly; asyncio.run is only needed in a Python script.",
         ),
+        (
+            "regime/identification.ipynb",
+            "Regime identification",
+            "identify_regime.py",
+            1,
+            "Send at least 512 comparable positive prices, ordered oldest to newest. "
+            "V1 selects the latest 512 and consumes their latest 507 prices; every supplied "
+            "price is validated before cropping. No sampling interval is inferred. "
+            "Use split-adjusted closes without cash-dividend total-return adjustment. "
+            "The optional as_of is the final price's RFC 3339 timestamp with an explicit "
+            "UTC offset; omission means unknown, not the server clock.\n\n"
+            "Read each head's status before accessing its prediction. An unresolved decision "
+            "is available; not_applicable and unavailable have reasons and no prediction. "
+            "Scores are uncalibrated softmax values, not probabilities, p-values or confidence "
+            "intervals. Never multiply heads. LOWER_VOL/HIGHER_VOL are relative to the "
+            "reference model's other state, not historical norms or price direction. "
+            "The basis describes the prediction target; it does not mean a reference fit "
+            "ran for this request.\n\n"
+            "For async Python usage, run python -m examples.identify_regime_async. "
+            "That standalone script shows the same request with AsyncMorphIQ and await.",
+        ),
     ]
     for filename, title, example, calls, introduction in features:
         feature = deepcopy(quickstart)
@@ -256,7 +278,7 @@ def notebooks() -> dict[str, dict[str, Any]]:
             -2,
             {
                 "cell_type": "code",
-                "id": "pricing-example",
+                "id": "api-example",
                 "metadata": {},
                 "source": example_source(example).strip(),
                 "execution_count": None,
@@ -267,10 +289,47 @@ def notebooks() -> dict[str, dict[str, Any]]:
             f"# MorphIQ SDK for Python — {title}\n\n{introduction}\n\n"
             "The inputs are synthetic. This notebook runs independently with the SDK "
             "and Jupyter installed; it does not import repository helpers.\n\n"
-            f"Run All makes **{calls} pricing {'request' if calls == 1 else 'requests'}**, "
+            f"Run All makes **{calls} API {'request' if calls == 1 else 'requests'}**, "
             "which may consume your API allowance. Opening the notebook makes no API calls.\n\n"
             "[Back to the quickstart](../start-here.ipynb)\n"
         )
+        if filename.startswith("regime/"):
+            feature["cells"][0]["source"] = feature["cells"][0]["source"].replace(
+                "The inputs are synthetic.",
+                "The download cell fetches real SPY daily prices from Yahoo through yfinance. "
+                "Enter a ticker at the prompt (SPY is the default). "
+                "Docker includes yfinance; elsewhere install the notebooks extra. "
+                "The download writes prices.csv in the working directory, and the next cell "
+                "reads it and submits one regime request. "
+                "[Yahoo price adjustment semantics]"
+                "(https://ranaroussi.github.io/yfinance/advanced/price_adjustment.html).",
+            )
+            feature["cells"].insert(
+                -3,
+                {
+                    "cell_type": "code",
+                    "id": "download-prices",
+                    "metadata": {"tags": ["requires-network"]},
+                    "source": example_source("download_prices.py").strip(),
+                    "execution_count": None,
+                    "outputs": [],
+                },
+            )
+            for cell in feature["cells"]:
+                if cell["id"] == "errors-help":
+                    cell["source"] = cell["source"].replace(
+                        "Use `response.result.price`, `response.result.pricing_model`, and\n"
+                        "`response.metadata.request_id`. Commercial charges are "
+                        "`metadata.fcu_charged`;\n"
+                        "if absent they are **unreported**, not zero. "
+                        "`units_charged` is a separate\n"
+                        "internal compute weight. Keep the request ID when contacting support.",
+                        "Use the decision, direction and state heads in `response.result`. "
+                        "Keep `response.metadata.request_id` for support. Commercial charges are "
+                        "`metadata.fcu_charged`; missing charges are **unreported**, not zero. "
+                        "The consumed range is half-open in the original array. The server "
+                        "reports model provenance separately from the engine identity.",
+                    )
         result[filename] = feature
     return result
 

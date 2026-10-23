@@ -109,7 +109,10 @@ def check(image: str) -> None:
             "Local Jupyter startup, token authentication and all seeded notebooks verified.",
             flush=True,
         )
-        docker("cp", str(ROOT / "tests/fixtures/pricing.json"), identifier + ":/tmp/pricing.json")
+        for name in ("pricing", "regime"):
+            docker(
+                "cp", str(ROOT / f"tests/fixtures/{name}.json"), identifier + f":/tmp/{name}.json"
+            )
         docker(
             "cp",
             str(ROOT / "scripts/execute_notebook_fixture.py"),
@@ -129,6 +132,7 @@ def check(image: str) -> None:
                     "/home/notebook/work",
                     "--fixtures",
                     "/tmp/pricing.json",
+                    "/tmp/regime.json",
                 ),
                 flush=True,
             )

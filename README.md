@@ -1,7 +1,7 @@
 # MorphIQ SDK for Python
 
 Python access to the MorphIQ Labs API, with runnable examples and notebooks for
-European and American option pricing.
+European and American option pricing and regime identification.
 
 ## Quickstart
 
@@ -92,6 +92,31 @@ are `examples.price_european` and `examples.price_american`.
 See [the quickstart guide](docs/QUICKSTART.md) for input units, reference results,
 configuration and errors.
 
+## Identify a regime from market prices
+
+Install the optional Yahoo data dependency, download daily closes, and submit a
+regime request:
+
+```sh
+python -m pip install -e '.[market-data]'
+export MORPHIQ_API_KEY="YOUR_API_KEY"
+python -m examples.download_prices
+python -m examples.identify_regime
+```
+
+Enter a Yahoo ticker at the prompt (default `SPY`). The download saves the latest
+512 daily closes to `prices.csv` and displays the last rows. It uses `Close` with
+`auto_adjust=False`: Yahoo's split-adjusted prices without dividend adjustment.
+The request example reads that file, constructs `RegimeRequest`, calls
+`client.regime(request)`, and prints each head's status, label and scores, plus
+model provenance, consumed price range, request ID and reported CU charge.
+Run `python -m examples.identify_regime_async` to use the async client with the
+same file. Both scripts include the complete request and response handling.
+
+Open the [regime notebook](notebooks/regime/identification.ipynb) for the same
+workflow with a ticker input. See [the regime guide](docs/REGIME.md) for input
+requirements and interpreting results.
+
 ## Start a notebook with Docker
 
 With Docker running, from the repository root, set your API key and start
@@ -110,8 +135,9 @@ Dependencies are installed at build time, and notebook edits persist in a named 
 
 The quickstart links to separate notebooks for
 [European pricing](notebooks/pricing/european.ipynb),
-[American pricing](notebooks/pricing/american.ipynb), and
-[async pricing](notebooks/pricing/async.ipynb). Each runs independently.
+[American pricing](notebooks/pricing/american.ipynb),
+[async pricing](notebooks/pricing/async.ipynb), and
+[regime identification](notebooks/regime/identification.ipynb). Each runs independently.
 
 Stop with Ctrl-C, then `docker compose down`; the workspace is retained. If port
 8888 is occupied, use `MORPHIQ_NOTEBOOK_PORT=8889 docker compose up --build`.
@@ -140,7 +166,7 @@ installs the wheel in a fresh environment outside the checkout. Routine tests us
 no real credentials; native API integration is opt-in. See
 [CONTRIBUTING.md](CONTRIBUTING.md) and [RELEASE.md](RELEASE.md).
 
-Pricing clients make no automatic retries and do not follow redirects. A timeout
+Clients make no automatic retries and do not follow redirects. A timeout
 may leave work charged. Missing `fcu_charged` means unreported, not zero; internal
 `units_charged` is not a commercial CU charge.
 
@@ -154,7 +180,7 @@ pricing engines or calculate authoritative customer charges.
 ```text
 src/morphiq_sdk/    Installable, typed Python package
 scripts/           Development and package verification
-examples/          Runnable European/American sync and async examples
+examples/          Runnable pricing and regime examples, plus Yahoo download
 notebooks/         Quickstart and standalone feature notebooks
 contracts/         Reviewed OpenAPI snapshot, digest and source provenance
 docker/            Non-root notebook startup and workspace seeding

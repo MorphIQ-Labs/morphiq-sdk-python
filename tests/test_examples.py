@@ -10,7 +10,7 @@ import nbformat
 import pytest
 from nbclient import NotebookClient
 
-from scripts.execute_notebook_fixture import NOTEBOOK_CASES
+from scripts.execute_notebook_fixture import NOTEBOOK_CASES, write_fixture_prices
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -26,7 +26,8 @@ def test_examples_import_without_credentials_or_requests():
             sys.executable,
             "-c",
             "import examples.price_european, examples.price_american, "
-            "examples.price_async, examples.quickstart",
+            "examples.price_async, examples.quickstart, "
+            "examples.identify_regime, examples.identify_regime_async",
         ],
         cwd=ROOT,
         env=environment,
@@ -102,12 +103,20 @@ def test_readme_request_and_response_match_executable_example(fixture_api, cases
     assert "readme-test-key" not in result.stdout + result.stderr
 
 
-def test_scripts_report_failures_without_retry(failing_api):
+def test_scripts_report_failures_without_retry(failing_api, regime_cases, tmp_path):
+    write_fixture_prices(tmp_path, regime_cases[0]["request"]["prices"])
     endpoint, received, expected = failing_api
-    for module in ("price_european", "price_american", "price_async", "quickstart"):
+    for module in (
+        "price_european",
+        "price_american",
+        "price_async",
+        "quickstart",
+        "identify_regime",
+        "identify_regime_async",
+    ):
         result = subprocess.run(
-            [sys.executable, "-m", "examples." + module],
-            cwd=ROOT,
+            [sys.executable, str(ROOT / "examples" / (module + ".py"))],
+            cwd=tmp_path,
             env={
                 **os.environ,
                 "MORPHIQ_API_BASE_URL": endpoint,
@@ -121,11 +130,13 @@ def test_scripts_report_failures_without_retry(failing_api):
         assert expected in result.stderr
         assert "error-test-key" not in result.stdout + result.stderr
         assert "Price:" not in result.stdout
-    assert len(received) == 4
+    assert len(received) == 6
 
 
 @pytest.mark.parametrize("filename", NOTEBOOK_CASES)
-def test_generated_notebook_executes_without_source_tree(fixture_api, cases, tmp_path, filename):
+def test_generated_notebook_executes_without_source_tree(
+    fixture_api, cases, regime_cases, tmp_path, filename
+):
     endpoint, received = fixture_api
     subprocess.run(
         [sys.executable, "scripts/generate_notebook.py", "--check"], cwd=ROOT, check=True
@@ -142,8 +153,13 @@ def test_generated_notebook_executes_without_source_tree(fixture_api, cases, tmp
         elif cell.cell_type == "markdown":
             for link in re.findall(r"\]\(([^)]+\.ipynb)\)", cell.source):
                 assert (notebook_root / filename).parent.joinpath(link).is_file()
+    write_fixture_prices(tmp_path, regime_cases[0]["request"]["prices"])
     executed = NotebookClient(
-        notebook, timeout=60, kernel_name="python3", resources={"metadata": {"path": str(tmp_path)}}
+        notebook,
+        timeout=60,
+        kernel_name="python3",
+        skip_cells_with_tag="requires-network",
+        resources={"metadata": {"path": str(tmp_path)}},
     ).execute(
         env={
             **os.environ,
@@ -151,7 +167,7 @@ def test_generated_notebook_executes_without_source_tree(fixture_api, cases, tmp
             "MORPHIQ_API_KEY": "notebook-fixture-key",
         }
     )
-    by_name = {case["name"]: case for case in cases}
+    by_name = {case["name"]: case for case in cases + regime_cases}
     assert [item[2] for item in received] == [
         by_name[name]["request"] for name in NOTEBOOK_CASES[filename]
     ]

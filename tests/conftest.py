@@ -13,6 +13,11 @@ def cases():
     return json.loads((ROOT / "tests/fixtures/pricing.json").read_text())["cases"]
 
 
+@pytest.fixture
+def regime_cases():
+    return json.loads((ROOT / "tests/fixtures/regime.json").read_text())["cases"]
+
+
 @pytest.fixture(autouse=True)
 def isolate_credentials(monkeypatch):
     monkeypatch.delenv("MORPHIQ_API_KEY", raising=False)
@@ -20,16 +25,17 @@ def isolate_credentials(monkeypatch):
 
 
 @pytest.fixture
-def fixture_api(cases):
-    """Loopback replay of native responses; no numerical implementation or external calls."""
+def fixture_api(cases, regime_cases):
+    """Loopback replay of contract fixtures; no numerical implementation or external calls."""
     received = []
+    cases = cases + regime_cases
 
     class Handler(BaseHTTPRequestHandler):
         def do_POST(self):
             body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
             received.append((self.path, self.headers.get("Authorization"), body))
             match = next((case for case in cases if case["request"] == body), None)
-            if self.path != "/v1/price" or match is None:
+            if match is None or self.path != match.get("path", "/v1/price"):
                 self.send_error(422)
                 return
             self.send_response(200)
