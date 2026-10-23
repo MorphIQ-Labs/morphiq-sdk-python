@@ -10,12 +10,10 @@ docker compose up --build
 ```
 
 Open the local token-authenticated URL printed by Jupyter to reach Start Here.
-Keep it as your quickstart, or follow its links to the standalone
-[European pricing](../notebooks/pricing/european.ipynb),
-[American pricing](../notebooks/pricing/american.ipynb),
-[async pricing](../notebooks/pricing/async.ipynb), and
-[regime identification](../notebooks/regime/identification.ipynb) notebooks. All five are included
-in the image and available in Jupyter's file browser.
+Choose [option pricing](../notebooks/pricing/options.ipynb) or
+[regime analysis](../notebooks/regime/identification.ipynb), then select
+**Run → Run All Cells** to initialize the controls. The start page and both
+workspaces are included in the image.
 Compose passes the key into the container at runtime; it is not baked into the
 image. The notebook connects to `https://api.morphiqlabs.com` automatically. Leave
 the key unset to enter it at the masked notebook prompt instead. The Jupyter
@@ -25,15 +23,22 @@ The container runs as UID 1000, publishes only to localhost, and retains Jupyter
 random token authentication. Dependencies and the SDK wheel are installed during
 the build. Startup installs nothing and executes no API calls.
 
-Run All in the quickstart makes four pricing requests. The European and American
-notebooks each make one; the async notebook makes two. The regime notebook prompts
-for a ticker (default SPY), downloads Yahoo daily closes and makes one regime
-request. These are real requests
-that may consume your allowance. Each notebook's cleanup cell
-removes the key from the kernel environment. An environment-provided key also
-remains in the container configuration until the container is removed with
+Running setup makes no MorphIQ requests. Pricing fetches Yahoo data on setup and
+when you apply a ticker edit or select another interval. Choose daily, 1-minute,
+5-minute, 15-minute, 30-minute or hourly prices. Regime fetches a longer history
+to obtain 512 prices. Its **Analyze regime** button downloads and validates history,
+then submits the request and displays results in one click. If Yahoo returns too few
+valid prices, no MorphIQ request is sent. No separate data-loading cell is required.
+In pricing, **Price option** sends one
+request; **Spot sensitivity** sends nine sequential requests and stops on the first
+failure, preserving completed results. In regime, **Analyze regime** sends one
+API request. Each API action may
+consume your allowance. Changing a widget never submits a MorphIQ request.
+
+API keys remain in the kernel environment; shut down the kernel when finished.
+An environment-provided key remains in the container configuration until
 `docker compose down`; use `unset MORPHIQ_API_KEY` to clear it from your terminal.
-Never put keys into saved notebook source or outputs.
+Never put keys into saved notebook source, outputs or widget values.
 
 ## Configuration and networking
 
@@ -60,7 +65,7 @@ by `docker compose down` retains it; subsequent startup reuses it. Startup seeds
 only missing notebooks and never replaces an existing edited file. Rebuilding and
 restarting adds new feature notebooks to an existing workspace.
 The quickstart is `start-here.ipynb` at the workspace root. Feature notebooks are
-organized by feature, with European, American and async pricing in `pricing/`
+organized by feature, with option pricing in `pricing/`
 and regime identification in `regime/`.
 
 To adopt an updated notebook after rebuilding, rename your edited copy in Jupyter,
@@ -72,17 +77,17 @@ intentional reset after saving your work.
 For startup problems check Docker and host-port availability. For API failures
 check the endpoint/network path and typed error. After changing an exported key,
 rerun `docker compose up -d` to recreate the container with the new setting. Keys
-entered at the notebook prompt can be changed by rerunning configuration after
-the cleanup cell. Changing keys needs no rebuild;
-changing dependencies or SDK versions does. The image includes Jupyter and yfinance for the
-pricing and regime notebooks.
+entered at the notebook prompt can be changed by restarting the kernel. Changing keys needs no rebuild;
+changing dependencies or SDK versions does. The image includes Jupyter, ipywidgets, matplotlib and yfinance for the
+pricing and regime workspaces.
 
 ## Source and verification
 
-`scripts/generate_notebook.py` generates the quickstart and feature notebooks from
-the executable scripts; `--check` detects drift across all of them. Each notebook
-needs an installed SDK and Jupyter,
-but not the repository's examples directory.
+`scripts/generate_notebook.py` generates the start page and verifies that analysis
+notebooks have no saved outputs or widget state. Workspaces are authored directly
+as self-contained notebooks; their actions are verified against the reviewed
+contract and executable examples. They need the SDK and notebook extra installed,
+but do not import repository helpers.
 
 ```sh
 docker compose build
@@ -90,8 +95,8 @@ python scripts/check_notebook_container.py
 ```
 
 This check verifies authenticated startup and non-root execution, runs every
-notebook API cell against loopback contract fixtures, using synthetic in-memory prices
-and skipping the external Yahoo download cell. It then recreates the container
+workspace controls against loopback contract fixtures, using synthetic in-memory
+prices without contacting Yahoo. It then recreates the container
 with the same volume to verify preserved edits and missing-notebook seeding. It removes only its
 own randomly named test container and volume.
 

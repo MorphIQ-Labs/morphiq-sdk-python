@@ -112,8 +112,8 @@ model provenance, consumed price range, request ID and reported CU charge.
 Run `python -m examples.identify_regime_async` to use the async client with the
 same workflow. Both scripts include the download, request and response handling.
 
-Open the [regime notebook](notebooks/regime/identification.ipynb) for the same
-workflow with a ticker input. See [the regime guide](docs/REGIME.md) for input
+Open the [regime workspace](notebooks/regime/identification.ipynb) for a ticker
+selector, history chart, regime assessment and score charts. See [the regime guide](docs/REGIME.md) for input
 requirements and interpreting results.
 
 ## Start a notebook with Docker
@@ -127,16 +127,21 @@ docker compose up --build
 ```
 
 Open the local token-authenticated URL printed by Jupyter to reach Start Here.
-Compose passes the key into the notebook container, which uses the same default
-API URL. If the key is unset, the notebook prompts for it. Opening Jupyter makes no API calls;
-running all cells submits four pricing requests, including the async examples.
-Dependencies are installed at build time, and notebook edits persist in a named volume.
+Choose an analysis workspace and run all cells once to display its controls:
 
-The quickstart links to separate notebooks for
-[European pricing](notebooks/pricing/european.ipynb),
-[American pricing](notebooks/pricing/american.ipynb),
-[async pricing](notebooks/pricing/async.ipynb), and
-[regime identification](notebooks/regime/identification.ipynb). Each runs independently.
+- [Option pricing](notebooks/pricing/options.ipynb): European/American and model
+  dropdowns, call/put selection, editable assumptions, automatic Yahoo daily/intraday underlying prices,
+  a valuation comparison table and a spot-sensitivity chart.
+- [Regime analysis](notebooks/regime/identification.ipynb): ticker selection,
+  Yahoo daily/intraday price history, latest regime assessment, score charts and provenance.
+
+Compose passes your API key into the container; if unset, the workspace prompts
+for it. Setup and control changes make no MorphIQ requests. Pricing loads Yahoo prices automatically
+on setup and when the ticker or interval changes. In regime, **Analyze regime** loads
+Yahoo history and displays the complete assessment in one click. Click **Price option**
+for one request, **Spot sensitivity** for nine sequential requests, or
+**Analyze regime** for one request. Yahoo data remains in memory.
+Dependencies are installed at build time, and notebook edits persist in a named volume.
 
 Stop with Ctrl-C, then `docker compose down`; the workspace is retained. If port
 8888 is occupied, use `MORPHIQ_NOTEBOOK_PORT=8889 docker compose up --build`.

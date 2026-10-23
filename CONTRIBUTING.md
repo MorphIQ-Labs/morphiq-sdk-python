@@ -16,13 +16,17 @@ Verify installed wheels outside the checkout so source-tree imports cannot hide
 a broken distribution. Notebook tests require the development lock installed;
 `python scripts/generate_notebook.py --check` must pass after example changes.
 
-Keep the quickstart notebook and add a dedicated notebook for each implemented
-feature, organized in folders by topic under `notebooks/`. Keep the quickstart
-at `notebooks/start-here.ipynb`. Start with a self-contained executable example showing request inputs,
-the API call, response fields and error handling. Add its notebook to
-`scripts/generate_notebook.py` and its expected synthetic request sequence to
-`NOTEBOOK_CASES` in `scripts/execute_notebook_fixture.py`. Regenerate the notebooks
-and run the example tests and Docker notebook check; both execute every notebook.
+Keep the start page at `notebooks/start-here.ipynb` and maintain a ready-to-use
+analysis workspace for each domain under topic folders. Workspaces should use
+controls, data, tables and plots to solve a task. Python scripts in `examples/`
+remain the SDK demonstrations. Author self-contained feature notebooks directly;
+keep code inspectable and committed outputs/widget state empty. Setup and widget
+changes must not issue billed requests. Label the request count on each API action.
+
+Register workspaces in `scripts/generate_notebook.py` and exercise their actual
+widget actions in `scripts/execute_notebook_fixture.py`. Test input conversions,
+request ordering, response handling, failures and stale data with synthetic inputs.
+Run notebook tests and the Docker check; both execute every workspace.
 Keep development plans in `docs/ROADMAP.md`, not README files.
 
 Regenerate each dependency lock with pinned uv, retaining hashes and platform markers:

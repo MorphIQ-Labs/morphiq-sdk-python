@@ -1,22 +1,22 @@
-# Notebook examples
+# Analysis workspaces
 
-| Notebook | Covers | Requests on Run All |
+Open [Start Here](start-here.ipynb), choose a workspace, and run all cells once.
+Use the controls to load data and run an analysis; no code edits are required.
+
+| Workspace | Tools | API requests per action |
 | --- | --- | --- |
-| [Quickstart](start-here.ipynb) | European and American pricing, then async usage | 4 |
-| [European pricing](pricing/european.ipynb) | European call inputs, price, model and charge metadata | 1 |
-| [American pricing](pricing/american.ipynb) | American put inputs, continuous dividend yield and results | 1 |
-| [Async pricing](pricing/async.ipynb) | Sequential requests with `AsyncMorphIQ` and `await` | 2 |
+| [Option pricing](pricing/options.ipynb) | European/American and model selectors, call/put, option inputs, automatic Yahoo daily/intraday underlying prices, comparison table, spot-sensitivity chart | Price: 1; sensitivity: 9 sequential |
+| [Regime analysis](regime/identification.ipynb) | Ticker and interval selection, one-click Yahoo history download and analysis, price-history chart, latest regime assessment, score charts, provenance | Analyze: 1 |
 
-| [Regime identification](regime/identification.ipynb) | Yahoo ticker input, daily closes, regime heads and provenance | 1 |
+Setup, control changes and Yahoo downloads make no MorphIQ requests. Data stays
+in memory. Run `docker compose up --build`, or install `.[notebooks]` and open
+JupyterLab. Set `MORPHIQ_API_KEY` before startup, or use the masked prompt.
+See [the notebook guide](../docs/NOTEBOOKS.md) for environment and persistence.
 
-Each API example cell includes the complete script: request data, API call, response
-fields and error handling. Each notebook runs independently.
-Run `docker compose up --build`, or install the notebook extra and open it with
-JupyterLab. Docker opens the quickstart; its links and Jupyter's file browser open
-the feature notebooks. See [the notebook guide](../docs/NOTEBOOKS.md) for credentials,
-persistence and networking.
+These notebooks are analysis tools. The Python scripts in `examples/` separately
+demonstrate SDK usage. Notebook code is self-contained and can be expanded for
+inspection. Committed notebooks contain no executed outputs or widget state.
 
-Regenerate all notebooks with `python scripts/generate_notebook.py`; `--check` verifies
-agreement with the executable examples. Committed cells contain no executed
-outputs or credentials. CI executes API cells against loopback contract fixtures with synthetic in-memory prices;
-the Yahoo download cell is skipped in offline tests.
+`python scripts/generate_notebook.py --check` verifies the start page and clean
+notebooks. Tests exercise widget actions against synthetic contract fixtures,
+including input conversion, scenario ordering, failure handling and stale-data clearing.

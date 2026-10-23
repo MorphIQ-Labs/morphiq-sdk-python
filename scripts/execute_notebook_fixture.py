@@ -15,12 +15,64 @@ import nbformat
 from nbclient import NotebookClient
 
 NOTEBOOK_CASES = {
-    "start-here.ipynb": ("european", "american", "european", "american"),
-    "pricing/european.ipynb": ("european",),
-    "pricing/american.ipynb": ("american",),
-    "pricing/async.ipynb": ("european", "american"),
+    "start-here.ipynb": (),
+    "pricing/options.ipynb": ("european", "american"),
     "regime/identification.ipynb": ("regime",),
 }
+
+
+def workspace_exercise(filename: str, prices: list[float]) -> str:
+    """Exercise real widget actions with explicit synthetic market data in offline checks."""
+    if filename == "pricing/options.ipynb":
+        return """
+assert price_history == []
+assert sweep_results == []
+spot.value = 120
+use_yahoo_close(pd.DataFrame({'Close': [100.0]}, index=pd.to_datetime(['2026-01-02'])), 'SPY')
+assert spot.value == 100.0 and 'SPY' in spot_source
+price_button.click()
+assert len(price_history) == 1 and last_response.result.price == 10.450583572185538
+exercise.value = 'american'
+assert 'black_scholes_merton' not in model.options
+model.value = 'bjerksund_stensland_1993'
+assert current_request().pricing_model == 'bjerksund_stensland_1993'
+model.value = 'auto'
+option_type.value = 'put'
+strike.value = 105
+expiry.value = 0.5
+yield_input.value = 1
+assert current_request().dividend_yield == 0.01
+assert current_request().volatility == 0.2
+price_button.click()
+assert len(price_history) == 2
+assert price_history[0]['Style'] == 'european' and price_history[1]['Style'] == 'american'
+assert price_history[0]['Strike'] == 100 and price_history[1]['Strike'] == 105
+assert price_history[0]['CU charged'] == 'not reported'
+spot.value = -1
+price_button.click()
+assert last_response is None and len(price_history) == 2
+assert not price_button.disabled and not sweep_button.disabled
+"""
+    if filename == "regime/identification.ipynb":
+        return (
+            fixture_prices_source(prices)
+            + """
+assert loaded_closes is None and not analyze_button.disabled
+use_history(closes, 'SPY')
+assert len(loaded_closes) == 512 and not analyze_button.disabled
+analyze_button.click()
+assert last_response is not None and last_response.metadata.request_id == 'fixture-regime'
+assert last_response.metadata.fcu_charged is None
+assert not analyze_button.disabled
+assert sum('text/html' in output.get('data', {}) for output in analysis_output.outputs) == 2
+assert sum('image/png' in output.get('data', {}) for output in analysis_output.outputs) == 1
+assert analyze_button.description == 'Show analysis'
+analyze_button.click()  # Redraw the saved response; the server must still see one request.
+ticker.value = 'AAPL'
+assert loaded_closes is None and last_response is None and not analyze_button.disabled
+"""
+        )
+    return ""
 
 
 def fixture_prices_source(prices: list[float]) -> str:
@@ -67,13 +119,9 @@ def execute(notebook_path: Path, fixture_paths: list[Path], notebook_root: Path)
         notebook = nbformat.read(notebook_path, as_version=4)  # type: ignore[no-untyped-call]
         nbformat.validate(notebook)
         with TemporaryDirectory() as working_directory:
-            if relative_path.startswith("regime/"):
-                notebook.cells.insert(
-                    0,
-                    nbformat.v4.new_code_cell(  # type: ignore[no-untyped-call]
-                        fixture_prices_source(by_name["regime"]["request"]["prices"])
-                    ),
-                )
+            exercise = workspace_exercise(relative_path, by_name["regime"]["request"]["prices"])
+            if exercise:
+                notebook.cells.append(nbformat.v4.new_code_cell(exercise))  # type: ignore[no-untyped-call]
             executed = NotebookClient(
                 notebook,
                 timeout=60,

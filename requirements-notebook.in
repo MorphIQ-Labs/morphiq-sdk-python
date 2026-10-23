@@ -6,3 +6,5 @@ ipykernel==7.4.0
 yfinance==1.7.0
 # Compatible with yfinance 1.7; pandas 3.1 deprecates its inplace calls.
 pandas==3.0.6
+ipywidgets==8.1.9
+matplotlib==3.11.2
