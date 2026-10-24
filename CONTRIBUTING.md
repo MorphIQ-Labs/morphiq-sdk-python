@@ -49,7 +49,8 @@ mode, then run:
 MORPHIQ_TEST_API_URL=http://127.0.0.1:18080 python -m pytest -q -m integration
 ```
 
-The test verifies the served contract digest before sending pricing requests.
+The tests verify the served contract digest before sending pricing, Greeks, IV,
+analytics, batch and regime requests.
 Never point it at a billed production endpoint. Native integration requires the
 API repository's build access; public SDK tests/builds do not.
 

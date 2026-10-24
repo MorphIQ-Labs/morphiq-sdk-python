@@ -1,6 +1,7 @@
 # Price European and American options
 
-This preview supports `POST /v1/price` over JSON, synchronously and asynchronously.
+This guide covers `POST /v1/price` over JSON, synchronously and asynchronously.
+See [all SDK features](README.md) for Greeks, IV, combined analytics, batches and regime.
 You need Python 3.11+ and an API key. The SDK connects to
 `https://api.morphiqlabs.com` by default. The examples use synthetic contracts
 and no market data.
@@ -129,12 +130,30 @@ advanced network configuration.
 Wrap an existing call with this pattern when you need application error handling:
 
 ```python
-from morphiq_sdk import APIError, RequestTimeout, TransportError
+from morphiq_sdk import (
+    APIError,
+    MorphIQ,
+    RateLimitError,
+    RequestTimeout,
+    ResponseError,
+    TransportError,
+)
 
 try:
-    response = client.price(request)  # Inside the client's context manager.
+    with MorphIQ() as client:
+        response = client.price(request)
+except RateLimitError as error:
+    print("Rate limited:", error.code, error.request_id)
+    print("Retry-After:", error.retry_after, "Delay in seconds:", error.retry_delay())
+    charged = error.metadata.fcu_charged if error.metadata else None
+    print("Commercial CU charge:", charged if charged is not None else "unreported")
+    # Decide when to submit a new request; this handler does not retry.
 except APIError as error:
     print(error.status_code, error.code, error.request_id)
+    charged = error.metadata.fcu_charged if error.metadata else None
+    print("Commercial CU charge:", charged if charged is not None else "unreported")
+except ResponseError as error:
+    print("Invalid response:", error.request_id)
     charged = error.metadata.fcu_charged if error.metadata else None
     print("Commercial CU charge:", charged if charged is not None else "unreported")
 except RequestTimeout:
@@ -145,7 +164,10 @@ except TransportError:
 
 `APIError` also retains headers, `retry_after`, response body, server message and
 optional typed metadata. Non-JSON gateway failures remain inspectable. Malformed
-success bodies raise `ResponseError`. Use request IDs for support, not keys.
+success bodies raise `ResponseError`, retaining independently valid pricing
+metadata when available. A 429 raises `RateLimitError` even for a non-JSON gateway
+body. See [429 handling](BATCH.md#http-429) for retry guidance and charge semantics.
+Use request IDs for support, not keys.
 
 Neither client automatically retries requests or follows redirects. A server can
 commit work before a client timeout; another submission can incur another charge.
@@ -165,9 +187,11 @@ python -m pip install -e '.[notebooks]'
 jupyter lab notebooks/start-here.ipynb
 ```
 
-The [notebook guide](NOTEBOOKS.md) covers credentials, four-call Run All behavior,
-workspace persistence and networking. The generated notebook uses the same tested
-example functions and runs without the repository's examples module.
+The [notebook guide](NOTEBOOKS.md) covers credentials, analysis controls,
+workspace persistence and networking. Start Here links to the pricing and regime
+workspaces. Run All initializes their controls without MorphIQ requests; actions
+send requests only when pressed. The workspaces are self-contained and do not
+import the repository's examples module.
 
 For a controlled open local service only, set a non-secret placeholder such as
 `MORPHIQ_API_KEY=local-development-only` when running scripts, or use

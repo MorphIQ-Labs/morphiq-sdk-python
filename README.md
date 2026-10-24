@@ -3,7 +3,8 @@
 Python access to the MorphIQ Labs API, with runnable examples and notebooks for
 European and American option pricing, all-ten-Greeks analysis, implied volatility, combined analytics and regime identification.
 Pricing, Greeks, IV and combined analytics also support ordered batches.
-See [batch operations and rate limits](docs/BATCH.md).
+See the [documentation index](docs/README.md) for all feature guides and the
+[Python API reference](docs/API.md) for methods, models and errors.
 
 ## Quickstart
 
@@ -163,7 +164,7 @@ pricing engines or calculate authoritative customer charges.
 ```text
 src/morphiq_sdk/    Installable, typed Python package
 scripts/           Development and package verification
-examples/          Runnable pricing and regime examples
+examples/          Runnable pricing, Greeks, IV, analytics, batch and regime examples
 notebooks/         Quickstart and standalone feature notebooks
 contracts/         Reviewed OpenAPI snapshot, digest and source provenance
 docker/            Non-root notebook startup and workspace seeding

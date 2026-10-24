@@ -84,3 +84,6 @@ submission. Its controls use continuous dividend yield, without a cash schedule.
 Service errors preserve their code, status and charge evidence. A timeout or
 malformed response can leave execution and charges unknown. Neither client nor
 example retries automatically.
+
+See the [client/model reference](API.md) for shared configuration and errors,
+and the [documentation index](README.md) for related features.

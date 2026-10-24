@@ -3,7 +3,9 @@
 `MorphIQ.analytics()` and `AsyncMorphIQ.analytics()` call `POST /v1/analytics`.
 With a market premium, the service solves implied volatility and evaluates price
 and all ten Greeks at that solved volatility in one request. Without a premium,
-it evaluates price and Greeks at the supplied volatility.
+it evaluates price and Greeks at the supplied volatility. The API invokes the
+Rust engine's native combined operation; the SDK sends one request rather than
+chaining separate IV and Greeks calls.
 
 Set `MORPHIQ_API_KEY`, then run a self-contained example:
 
@@ -65,7 +67,7 @@ from Price option, Price + Greeks, Solve IV, Analyze premium and Spot sensitivit
 - A malformed numerical response can still carry valid metadata. The SDK exposes
   independently validated metadata on `ResponseError.metadata`, and its reported
   charge is included. Invalid metadata is not trusted.
-- Missing/null charges, malformed metadata and transport failures remain unknown.
+- Missing/null charges, malformed metadata, transport failures and user interruptions remain unknown.
   The UI labels the sum as a **reported subtotal**, with an unknown-charge count;
   it cannot claim a complete total until every attempt has a reported charge.
 - Redrawing results does not add charges. Clicking an action again sends a new
