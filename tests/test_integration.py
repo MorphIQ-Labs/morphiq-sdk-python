@@ -10,6 +10,7 @@ import httpx
 import pytest
 
 from morphiq_sdk import (
+    AnalyticsRequest,
     APIError,
     AsyncMorphIQ,
     GreeksRequest,
@@ -77,6 +78,36 @@ def test_native_greeks_sync_async_and_validation(greeks_cases):
         request = GreeksRequest(**{**greeks_cases[0]["request"], "spot": -1})
         with pytest.raises(APIError) as error:
             client.greeks(request)
+        assert error.value.status_code == 422 and error.value.request_id
+
+
+def test_native_analytics_sync_async_and_validation(analytics_cases):
+    provenance = json.loads((Path(__file__).parents[1] / "contracts/provenance.json").read_text())
+    assert (
+        hashlib.sha256(httpx.get(f"{ENDPOINT}/openapi.json").content).hexdigest()
+        == provenance["sha256"]
+    )
+
+    async def run_async(request):
+        async with AsyncMorphIQ(base_url=ENDPOINT, allow_unauthenticated=True) as client:
+            return await client.analytics(request)
+
+    with MorphIQ(base_url=ENDPOINT, allow_unauthenticated=True) as client:
+        for case in analytics_cases:
+            request = AnalyticsRequest(**case["request"])
+            sync = client.analytics(request)
+            asynchronous = asyncio.run(run_async(request))
+            raw = httpx.post(f"{ENDPOINT}/v1/analytics", json=request.to_wire()).json()
+            assert (
+                sync.result.model_dump(exclude_unset=True)
+                == asynchronous.result.model_dump(exclude_unset=True)
+                == raw["result"]
+            )
+            assert sync.result.model_dump(exclude_unset=True) == case["response"]["result"]
+            assert sync.metadata.fcu_charged is None
+        request = AnalyticsRequest(**{**analytics_cases[0]["request"], "spot": -1})
+        with pytest.raises(APIError) as error:
+            client.analytics(request)
         assert error.value.status_code == 422 and error.value.request_id
 
 

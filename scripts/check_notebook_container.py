@@ -109,7 +109,7 @@ def check(image: str) -> None:
             "Local Jupyter startup, token authentication and all seeded notebooks verified.",
             flush=True,
         )
-        for name in ("pricing", "regime", "greeks", "implied_volatility"):
+        for name in ("pricing", "regime", "greeks", "implied_volatility", "analytics"):
             docker(
                 "cp", str(ROOT / f"tests/fixtures/{name}.json"), identifier + f":/tmp/{name}.json"
             )
@@ -135,6 +135,7 @@ def check(image: str) -> None:
                     "/tmp/regime.json",
                     "/tmp/greeks.json",
                     "/tmp/implied_volatility.json",
+                    "/tmp/analytics.json",
                 ),
                 flush=True,
             )

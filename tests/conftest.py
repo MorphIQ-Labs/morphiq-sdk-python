@@ -28,6 +28,11 @@ def iv_cases():
     return json.loads((ROOT / "tests/fixtures/implied_volatility.json").read_text())["cases"]
 
 
+@pytest.fixture
+def analytics_cases():
+    return json.loads((ROOT / "tests/fixtures/analytics.json").read_text())["cases"]
+
+
 @pytest.fixture(autouse=True)
 def isolate_credentials(monkeypatch):
     monkeypatch.delenv("MORPHIQ_API_KEY", raising=False)
@@ -35,10 +40,10 @@ def isolate_credentials(monkeypatch):
 
 
 @pytest.fixture
-def fixture_api(cases, regime_cases, greeks_cases, iv_cases):
+def fixture_api(cases, regime_cases, greeks_cases, iv_cases, analytics_cases):
     """Loopback replay of contract fixtures; no numerical implementation or external calls."""
     received = []
-    cases = cases + regime_cases + greeks_cases + iv_cases
+    cases = cases + regime_cases + greeks_cases + iv_cases + analytics_cases
 
     class Handler(BaseHTTPRequestHandler):
         def do_POST(self):

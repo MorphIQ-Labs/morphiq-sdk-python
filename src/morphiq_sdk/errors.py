@@ -16,10 +16,22 @@ class RequestTimeout(TransportError):
 
 
 class ResponseError(MorphIQError):
-    """A successful HTTP status carried an invalid API response."""
+    """A successful HTTP status carried an invalid API response.
 
-    def __init__(self, *, request_id: str | None, body: bytes, headers: dict[str, str]) -> None:
-        self.request_id = request_id
+    Independently valid pricing metadata remains available even when the result
+    is malformed. Missing metadata does not establish a zero charge.
+    """
+
+    def __init__(
+        self,
+        *,
+        request_id: str | None,
+        body: bytes,
+        headers: dict[str, str],
+        metadata: ResponseMetadata | None = None,
+    ) -> None:
+        self.metadata = metadata
+        self.request_id = request_id or (metadata.request_id if metadata else None)
         self.body = body
         self.headers = headers
         super().__init__("The API returned an invalid API response; no retry was attempted.")

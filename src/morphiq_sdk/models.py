@@ -83,6 +83,16 @@ class GreeksRequest(PriceRequest):
     """
 
 
+class AnalyticsRequest(PriceRequest):
+    """Price and Greeks, optionally evaluated at IV solved from a market premium.
+
+    The wire contract requires volatility even with a premium; the service uses
+    it only when market_price is absent or null. Preserve both fields unchanged.
+    """
+
+    market_price: FiniteFloat | None = None
+
+
 class Greeks(_Response):
     """Unscaled API values: time derivatives per year; volatility/rates per unit.
 
@@ -123,6 +133,12 @@ class ImpliedVolatilityResult(_Response):
     residual_basis: str
     pricing_model: str
     model_version: str
+
+
+class AnalyticsResult(GreeksResult):
+    """Combined result; the nested IV solve has no separate commercial charge."""
+
+    implied_volatility: ImpliedVolatilityResult | None = None
 
 
 class EngineIdentity(_Response):
@@ -205,6 +221,11 @@ class GreeksResponse(_EvidenceResponse):
 
 class ImpliedVolatilityResponse(_EvidenceResponse):
     result: ImpliedVolatilityResult
+    metadata: ResponseMetadata
+
+
+class AnalyticsResponse(_EvidenceResponse):
+    result: AnalyticsResult
     metadata: ResponseMetadata
 
 

@@ -9,6 +9,7 @@
     "POST /v1/price",
     "POST /v1/regime",
     "POST /v1/greeks",
-    "POST /v1/implied-volatility"
+    "POST /v1/implied-volatility",
+    "POST /v1/analytics"
   ]
 }

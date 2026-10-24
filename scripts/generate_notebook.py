@@ -74,7 +74,7 @@ def notebook() -> dict[str, Any]:
 
 - [Option pricing](pricing/options.ipynb): value European or American calls and puts,
   load a daily or intraday underlying price from Yahoo, inspect Greeks, solve implied
-  volatility, and chart sensitivity.
+  volatility, analyze a premium with Greeks, track session CU, and chart sensitivity.
 - [Regime analysis](regime/identification.ipynb): load daily or intraday price history
   and inspect the latest regime assessment, scores and model provenance.
 
