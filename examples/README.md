@@ -68,7 +68,11 @@ and exact reported CU subtotals if a request fails, without retries:
 ```sh
 python examples/chunked_price.py
 python examples/chunked_price_async.py
+python examples/chunked_price_async.py --max-concurrency 2
 ```
+
+The async example defaults to sequential execution. The optional flag bounds
+simultaneous requests; it does not change chunk size or retry failed requests.
 
 ## Regime and optional price data
 

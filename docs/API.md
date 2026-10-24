@@ -21,7 +21,8 @@ these keyword-only arguments:
 Use `with MorphIQ() as client` or `async with AsyncMorphIQ() as client` to close
 connection pools. Explicit alternatives are `client.close()` and
 `await client.aclose()`. Every async numerical method must be awaited. Async
-clients do not introduce concurrency or retries. HTTP redirects are disabled;
+numerical calls do not add concurrency or retries; workflow concurrency is explicit.
+HTTP redirects are disabled;
 proxy and CA environment variables are not applied automatically.
 
 The Python client reads process environment variables; it does **not** load a
@@ -50,7 +51,7 @@ All request/response classes below are exported from `morphiq_sdk`.
 price, IV and Greeks requests to reproduce it. Batch methods likewise send one
 batch envelope; they do not split requests or start parallel calls.
 
-## Sequential workflow factories
+## Workflow factories
 
 Both clients expose `price_workflow(requests, *, chunk_size)`,
 `greeks_workflow(requests, *, chunk_size)`,
@@ -61,7 +62,10 @@ without sending HTTP requests.
 
 Sync factories return `BatchWorkflow`; async factories return
 `AsyncBatchWorkflow`. Call `workflow.run()` or `await workflow.run()` once while
-the client is open. Execution is sequential and stops on request-level failure.
+the client is open. Sync execution is sequential. Async factories also accept
+`max_concurrency=1`; larger positive integers opt into bounded asyncio workers.
+Request-level failures stop new submissions while in-flight calls drain; caller
+cancellation cancels and awaits the workers.
 `ChunkAttempt` records preserve results, errors, original input ranges and each
 request's commercial charge. See [workflow properties, exact CU accounting and
 stopping behavior](WORKFLOWS.md).
