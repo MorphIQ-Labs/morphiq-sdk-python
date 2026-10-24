@@ -10,6 +10,10 @@
     "POST /v1/regime",
     "POST /v1/greeks",
     "POST /v1/implied-volatility",
-    "POST /v1/analytics"
+    "POST /v1/analytics",
+    "POST /v1/price:batch",
+    "POST /v1/greeks:batch",
+    "POST /v1/implied-volatility:batch",
+    "POST /v1/analytics:batch"
   ]
 }

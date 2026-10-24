@@ -376,3 +376,67 @@ class ErrorDetails(_Response):
 class ErrorEnvelope(_Response):
     error: ErrorDetails
     metadata: ResponseMetadata | ServiceErrorMetadata
+
+
+_OptionRequestType = TypeVar("_OptionRequestType", bound=_OptionRequest)
+_OptionResultType = TypeVar("_OptionResultType", bound=_Response)
+
+
+class _BatchRequest(_Request, Generic[_OptionRequestType]):
+    # This is the reviewed wire limit, not an account/plan limit.
+    requests: list[_OptionRequestType] = Field(min_length=1, max_length=1024)
+
+    def to_wire(self) -> dict[str, Any]:
+        validated = type(self).model_validate({"requests": self.requests})
+        return {"requests": [request.to_wire() for request in validated.requests]}
+
+
+class BatchPriceRequest(_BatchRequest[PriceRequest]):
+    """One explicit batch of pricing requests in caller order."""
+
+
+class BatchGreeksRequest(_BatchRequest[GreeksRequest]):
+    """One explicit batch of price-and-Greeks requests."""
+
+
+class BatchImpliedVolatilityRequest(_BatchRequest[ImpliedVolatilityRequest]):
+    """One explicit batch of IV solves."""
+
+
+class BatchAnalyticsRequest(_BatchRequest[AnalyticsRequest]):
+    """One explicit batch of combined analytics requests."""
+
+
+class BatchSuccess(_Response, Generic[_OptionResultType]):
+    index: int = Field(ge=0)
+    status: Literal["success"]
+    result: _OptionResultType
+
+
+class BatchFailure(_Response):
+    index: int = Field(ge=0)
+    status: Literal["error"]
+    error: ErrorDetails
+
+
+class _BatchResponse(_EvidenceResponse, Generic[_OptionResultType]):
+    metadata: ResponseMetadata
+    results: list[
+        Annotated[BatchSuccess[_OptionResultType] | BatchFailure, Field(discriminator="status")]
+    ]
+
+
+class BatchPriceResponse(_BatchResponse[PriceResult]):
+    """Ordered outcomes and one metadata/charge block for the entire batch."""
+
+
+class BatchGreeksResponse(_BatchResponse[GreeksResult]):
+    """Ordered Greeks outcomes and batch-level charge evidence."""
+
+
+class BatchImpliedVolatilityResponse(_BatchResponse[ImpliedVolatilityResult]):
+    """Ordered IV outcomes and batch-level charge evidence."""
+
+
+class BatchAnalyticsResponse(_BatchResponse[AnalyticsResult]):
+    """Ordered combined analytics outcomes and batch-level charge evidence."""

@@ -3,12 +3,29 @@
 from importlib.metadata import version
 
 from .client import AsyncMorphIQ, MorphIQ
-from .errors import APIError, MorphIQError, RequestTimeout, ResponseError, TransportError
+from .errors import (
+    APIError,
+    MorphIQError,
+    RateLimitError,
+    RequestTimeout,
+    ResponseError,
+    TransportError,
+)
 from .market_data import PriceAdjustment, PriceBar, PriceHistory, PriceInterval, PriceProvider
 from .models import (
     AnalyticsRequest,
     AnalyticsResponse,
     AnalyticsResult,
+    BatchAnalyticsRequest,
+    BatchAnalyticsResponse,
+    BatchFailure,
+    BatchGreeksRequest,
+    BatchGreeksResponse,
+    BatchImpliedVolatilityRequest,
+    BatchImpliedVolatilityResponse,
+    BatchPriceRequest,
+    BatchPriceResponse,
+    BatchSuccess,
     DividendEvent,
     Greeks,
     GreeksRequest,
@@ -26,6 +43,17 @@ from .models import (
 __version__ = version("morphiq-sdk")
 
 __all__ = [
+    "BatchPriceRequest",
+    "BatchPriceResponse",
+    "BatchGreeksRequest",
+    "BatchGreeksResponse",
+    "BatchImpliedVolatilityRequest",
+    "BatchImpliedVolatilityResponse",
+    "BatchAnalyticsRequest",
+    "BatchAnalyticsResponse",
+    "BatchSuccess",
+    "BatchFailure",
+    "RateLimitError",
     "APIError",
     "AnalyticsRequest",
     "AnalyticsResponse",

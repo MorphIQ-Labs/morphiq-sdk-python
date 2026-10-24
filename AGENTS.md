@@ -31,5 +31,6 @@ commercial policy, account authority and execution remain server-side.
   Release Please owns pyproject.toml version, manifest and changelog updates.
 
 The unreleased preview implements sync/async single-option JSON pricing, all-ten-Greeks analysis, implied volatility, combined analytics and
-regime identification, with a local quickstart and feature notebooks. Other endpoints, package/image publication and hosted
+regime identification, plus explicit ordered batches for the four option operations,
+with a local quickstart and feature notebooks. Other endpoints, package/image publication and hosted
 notebooks remain planned. Keep availability statements precise.

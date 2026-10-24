@@ -21,6 +21,8 @@ python examples/implied_volatility.py
 python examples/implied_volatility_async.py
 python examples/analytics.py
 python examples/analytics_async.py
+python examples/batch_price.py
+python examples/batch_price_async.py
 ```
 
 Each connects to `https://api.morphiqlabs.com` and reads `MORPHIQ_API_KEY`, or
@@ -52,3 +54,7 @@ fallback usage and provenance. See [the IV guide](../docs/IMPLIED_VOLATILITY.md)
 The analytics examples submit one `AnalyticsRequest` to `client.analytics()` to
 solve IV and evaluate price and Greeks at that solved volatility. They report the
 combined response's commercial charge once. See [combined analytics](../docs/ANALYTICS.md).
+
+The batch examples submit two explicit pricing requests in one call, preserve
+ordered item outcomes, and count the response charge once. See
+[batch operations and 429 handling](../docs/BATCH.md).

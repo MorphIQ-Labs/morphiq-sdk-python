@@ -176,3 +176,31 @@ def test_native_regime_sync_async_and_wire_response(regime_cases):
             response.metadata.consumed_price_range.model_dump()
             == raw["metadata"]["consumed_price_range"]
         )
+
+
+@pytest.mark.parametrize("index", range(4))
+def test_native_batches_preserve_order_errors_and_metadata(batch_cases, index):
+    from test_batch import OPERATIONS
+
+    provenance = json.loads((Path(__file__).parents[1] / "contracts/provenance.json").read_text())
+    assert (
+        hashlib.sha256(httpx.get(f"{ENDPOINT}/openapi.json").content).hexdigest()
+        == provenance["sha256"]
+    )
+    method, cls, _, _ = OPERATIONS[index]
+    case = batch_cases[index]
+    request = cls(**case["request"])
+
+    async def run():
+        async with AsyncMorphIQ(base_url=ENDPOINT, allow_unauthenticated=True) as client:
+            return await getattr(client, method)(request)
+
+    with MorphIQ(base_url=ENDPOINT, allow_unauthenticated=True) as client:
+        sync = getattr(client, method)(request)
+    asynchronous = asyncio.run(run())
+    raw = httpx.post(f"{ENDPOINT}{case['path']}", json=request.to_wire()).json()
+    assert [item.model_dump(exclude_unset=True) for item in sync.results] == raw["results"]
+    assert [item.model_dump(exclude_unset=True) for item in asynchronous.results] == raw["results"]
+    assert raw["results"] == case["response"]["results"]
+    assert [item.status for item in sync.results] == ["success", "error", "success"]
+    assert sync.metadata.fcu_charged is None

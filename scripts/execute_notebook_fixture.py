@@ -17,6 +17,7 @@ from nbclient import NotebookClient
 NOTEBOOK_CASES = {
     "start-here.ipynb": (),
     "pricing/options.ipynb": (
+        "batch-price-sweep",
         "european",
         "greeks-european",
         "iv-european",
@@ -36,6 +37,8 @@ def workspace_exercise(filename: str, prices: list[float]) -> str:
         return """
 assert price_history == []
 assert sweep_results == []
+sweep_button.click()
+assert len(sweep_results) == 9 and len(charge_history) == 1
 spot.value = 120
 use_yahoo_close(pd.DataFrame({'Close': [100.0]}, index=pd.to_datetime(['2026-01-02'])), 'SPY')
 assert spot.value == 100.0 and 'SPY' in spot_source
@@ -91,9 +94,9 @@ volatility.value = 35
 analytics_button.click()
 assert last_analytics_response.result.implied_volatility.used_fallback is True
 assert analytics_snapshot['Requested model'] == 'auto'
-assert len(charge_history) == 8 and 'total incomplete' in usage_summary.value
+assert len(charge_history) == 9 and 'total incomplete' in usage_summary.value
 show_usage()
-assert len(charge_history) == 8
+assert len(charge_history) == 9
 strike.value = 110
 assert analytics_snapshot['strike'] == 105
 assert iv_snapshot['strike'] == 105  # Later input edits must not relabel a solved result.
