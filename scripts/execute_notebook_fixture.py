@@ -20,9 +20,11 @@ NOTEBOOK_CASES = {
         "european",
         "greeks-european",
         "iv-european",
+        "analytics-european-premium",
         "american",
         "greeks-american",
         "iv-american",
+        "analytics-american-premium",
     ),
     "regime/identification.ipynb": ("regime",),
 }
@@ -56,6 +58,12 @@ assert iv_snapshot['Requested model'] == 'auto'
 assert iv_snapshot['pricing_model'] == 'black_scholes_merton'
 assert 'volatility' not in iv_snapshot and volatility.value == 0
 assert sum('text/html' in o.get('data', {}) for o in iv_output.outputs) == 1
+volatility.value = 35
+analytics_button.click()
+assert last_analytics_response is not None and len(analytics_table) == 10
+assert abs(last_analytics_response.result.implied_volatility.implied_volatility - .2) < 1e-12
+assert analytics_snapshot['volatility'] == .35 and volatility.value == 35
+assert sum('text/html' in o.get('data', {}) for o in analytics_output.outputs) == 2
 volatility.value = 20
 exercise.value = 'american'
 assert 'black_scholes_merton' not in model.options
@@ -79,7 +87,15 @@ assert last_iv_response.metadata.request_id == 'fixture-iv-american'
 assert last_iv_response.result.used_fallback is True
 assert iv_snapshot['residual_basis'] == 'option_price'
 assert iv_snapshot['market_price'] == market_price.value
+volatility.value = 35
+analytics_button.click()
+assert last_analytics_response.result.implied_volatility.used_fallback is True
+assert analytics_snapshot['Requested model'] == 'auto'
+assert len(charge_history) == 8 and 'total incomplete' in usage_summary.value
+show_usage()
+assert len(charge_history) == 8
 strike.value = 110
+assert analytics_snapshot['strike'] == 105
 assert iv_snapshot['strike'] == 105  # Later input edits must not relabel a solved result.
 market_price.value = -1
 iv_button.click()

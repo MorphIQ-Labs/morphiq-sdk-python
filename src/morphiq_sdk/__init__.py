@@ -6,6 +6,9 @@ from .client import AsyncMorphIQ, MorphIQ
 from .errors import APIError, MorphIQError, RequestTimeout, ResponseError, TransportError
 from .market_data import PriceAdjustment, PriceBar, PriceHistory, PriceInterval, PriceProvider
 from .models import (
+    AnalyticsRequest,
+    AnalyticsResponse,
+    AnalyticsResult,
     DividendEvent,
     Greeks,
     GreeksRequest,
@@ -24,6 +27,9 @@ __version__ = version("morphiq-sdk")
 
 __all__ = [
     "APIError",
+    "AnalyticsRequest",
+    "AnalyticsResponse",
+    "AnalyticsResult",
     "AsyncMorphIQ",
     "DividendEvent",
     "Greeks",

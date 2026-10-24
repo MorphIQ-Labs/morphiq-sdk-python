@@ -19,6 +19,8 @@ python examples/greeks.py
 python examples/greeks_async.py
 python examples/implied_volatility.py
 python examples/implied_volatility_async.py
+python examples/analytics.py
+python examples/analytics_async.py
 ```
 
 Each connects to `https://api.morphiqlabs.com` and reads `MORPHIQ_API_KEY`, or
@@ -46,3 +48,7 @@ handling. Values use annual time units and unit volatility/rate bases. See
 The implied-volatility examples pass an explicit option premium to
 `client.implied_volatility()` and print IV, residual with its basis, iterations,
 fallback usage and provenance. See [the IV guide](../docs/IMPLIED_VOLATILITY.md).
+
+The analytics examples submit one `AnalyticsRequest` to `client.analytics()` to
+solve IV and evaluate price and Greeks at that solved volatility. They report the
+combined response's commercial charge once. See [combined analytics](../docs/ANALYTICS.md).

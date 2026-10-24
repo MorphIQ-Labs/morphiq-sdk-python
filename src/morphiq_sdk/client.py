@@ -12,6 +12,8 @@ from pydantic import ValidationError
 
 from .errors import APIError, RequestTimeout, ResponseError, TransportError
 from .models import (
+    AnalyticsRequest,
+    AnalyticsResponse,
     ErrorEnvelope,
     GreeksRequest,
     GreeksResponse,
@@ -21,10 +23,16 @@ from .models import (
     PriceResponse,
     RegimeRequest,
     RegimeResponse,
+    ResponseMetadata,
 )
 
 _ResponseType = TypeVar(
-    "_ResponseType", PriceResponse, RegimeResponse, GreeksResponse, ImpliedVolatilityResponse
+    "_ResponseType",
+    PriceResponse,
+    RegimeResponse,
+    GreeksResponse,
+    ImpliedVolatilityResponse,
+    AnalyticsResponse,
 )
 
 
@@ -117,7 +125,17 @@ class _Configuration:
         try:
             result = model.model_validate_json(body)
         except ValidationError:
-            raise ResponseError(request_id=request_id, body=body, headers=headers) from None
+            # A malformed numerical result does not erase valid billing evidence.
+            metadata = None
+            try:
+                payload = json.loads(body)
+                if isinstance(payload, dict):
+                    metadata = ResponseMetadata.model_validate(payload.get("metadata"))
+            except (ValueError, UnicodeDecodeError):
+                pass
+            raise ResponseError(
+                request_id=request_id, body=body, headers=headers, metadata=metadata
+            ) from None
         result._raw_body = body
         result._headers = headers
         return result
@@ -168,6 +186,10 @@ class MorphIQ:
     def implied_volatility(self, request: ImpliedVolatilityRequest) -> ImpliedVolatilityResponse:
         """Solve IV from an option premium; preserve residual basis and charge evidence."""
         return self._post("v1/implied-volatility", request.to_wire(), ImpliedVolatilityResponse)
+
+    def analytics(self, request: AnalyticsRequest) -> AnalyticsResponse:
+        """Return combined analytics and one server-reported commercial charge."""
+        return self._post("v1/analytics", request.to_wire(), AnalyticsResponse)
 
     def _post(
         self, path: str, payload: dict[str, Any], model: type[_ResponseType]
@@ -245,6 +267,10 @@ class AsyncMorphIQ:
         return await self._post(
             "v1/implied-volatility", request.to_wire(), ImpliedVolatilityResponse
         )
+
+    async def analytics(self, request: AnalyticsRequest) -> AnalyticsResponse:
+        """Return combined analytics and one server-reported commercial charge."""
+        return await self._post("v1/analytics", request.to_wire(), AnalyticsResponse)
 
     async def _post(
         self, path: str, payload: dict[str, Any], model: type[_ResponseType]
