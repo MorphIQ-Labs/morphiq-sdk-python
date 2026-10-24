@@ -28,7 +28,8 @@ def test_examples_import_without_credentials_or_requests():
             "import examples.price_european, examples.price_american, "
             "examples.price_async, examples.quickstart, "
             "examples.identify_regime, examples.identify_regime_async, "
-            "examples.greeks, examples.greeks_async",
+            "examples.greeks, examples.greeks_async, "
+            "examples.implied_volatility, examples.implied_volatility_async",
         ],
         cwd=ROOT,
         env=environment,
@@ -113,6 +114,8 @@ def test_scripts_report_failures_without_retry(failing_api, tmp_path):
         "quickstart",
         "greeks",
         "greeks_async",
+        "implied_volatility",
+        "implied_volatility_async",
     ):
         result = subprocess.run(
             [sys.executable, str(ROOT / "examples" / (module + ".py"))],
@@ -130,12 +133,12 @@ def test_scripts_report_failures_without_retry(failing_api, tmp_path):
         assert expected in result.stderr
         assert "error-test-key" not in result.stdout + result.stderr
         assert "Price:" not in result.stdout
-    assert len(received) == 6
+    assert len(received) == 8
 
 
 @pytest.mark.parametrize("filename", NOTEBOOK_CASES)
 def test_generated_notebook_executes_without_source_tree(
-    fixture_api, cases, regime_cases, greeks_cases, tmp_path, filename
+    fixture_api, cases, regime_cases, greeks_cases, iv_cases, tmp_path, filename
 ):
     endpoint, received = fixture_api
     subprocess.run(
@@ -169,7 +172,7 @@ def test_generated_notebook_executes_without_source_tree(
             "MORPHIQ_API_KEY": "notebook-fixture-key",
         }
     )
-    by_name = {case["name"]: case for case in cases + regime_cases + greeks_cases}
+    by_name = {case["name"]: case for case in cases + regime_cases + greeks_cases + iv_cases}
     assert [item[2] for item in received] == [
         by_name[name]["request"] for name in NOTEBOOK_CASES[filename]
     ]

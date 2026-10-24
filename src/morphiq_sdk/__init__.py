@@ -1,4 +1,4 @@
-"""Typed sync/async pricing, Greeks and regime clients for the MorphIQ Labs API."""
+"""Typed sync/async clients for the MorphIQ Labs API."""
 
 from importlib.metadata import version
 
@@ -11,6 +11,9 @@ from .models import (
     GreeksRequest,
     GreeksResponse,
     GreeksResult,
+    ImpliedVolatilityRequest,
+    ImpliedVolatilityResponse,
+    ImpliedVolatilityResult,
     PriceRequest,
     PriceResponse,
     RegimeRequest,
@@ -27,6 +30,9 @@ __all__ = [
     "GreeksRequest",
     "GreeksResponse",
     "GreeksResult",
+    "ImpliedVolatilityRequest",
+    "ImpliedVolatilityResponse",
+    "ImpliedVolatilityResult",
     "MorphIQ",
     "MorphIQError",
     "PriceAdjustment",

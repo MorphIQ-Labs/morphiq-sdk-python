@@ -107,6 +107,7 @@ assert price_history == []
     [
         ("pricing/options.ipynb", "price_button.click()"),
         ("pricing/options.ipynb", "greeks_button.click()"),
+        ("pricing/options.ipynb", "iv_button.click()"),
         ("regime/identification.ipynb", "analyze_button.click()"),
     ],
 )
@@ -122,6 +123,8 @@ def test_analysis_errors_keep_charge_evidence_and_reenable_actions(
         )
     code += action + "\nassert last_response is None\n"
     code += "assert not ticker.disabled\n"
+    if action == "iv_button.click()":
+        code += "assert last_iv_response is None and iv_snapshot is None\n"
     output = run_workspace(filename, code, endpoint, tmp_path)
     assert len(received) == 1
     if "charged" in expected:

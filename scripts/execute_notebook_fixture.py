@@ -16,7 +16,14 @@ from nbclient import NotebookClient
 
 NOTEBOOK_CASES = {
     "start-here.ipynb": (),
-    "pricing/options.ipynb": ("european", "greeks-european", "american", "greeks-american"),
+    "pricing/options.ipynb": (
+        "european",
+        "greeks-european",
+        "iv-european",
+        "american",
+        "greeks-american",
+        "iv-american",
+    ),
     "regime/identification.ipynb": ("regime",),
 }
 
@@ -38,6 +45,18 @@ assert len(greeks_table) == 10 and greeks_table.loc['vega', 'Value'] == 37.52403
 assert greeks_table.loc['theta', 'Value'] == -6.4140275464382
 assert sum('text/html' in o.get('data', {}) for o in greeks_output.outputs) == 2
 assert greeks_snapshot['Style'] == 'european' and greeks_snapshot['CU charged'] == 'not reported'
+market_price.value = 10.450583572185538
+volatility.value = 0  # Solving IV must not validate an unused volatility assumption.
+iv_button.click()
+assert last_iv_response.metadata.request_id == 'fixture-iv-european'
+assert abs(last_iv_response.result.implied_volatility - 0.2) < 1e-12
+assert last_iv_response.result.used_fallback is False
+assert iv_snapshot['residual_basis'] == 'forward_normalised_price'
+assert iv_snapshot['Requested model'] == 'auto'
+assert iv_snapshot['pricing_model'] == 'black_scholes_merton'
+assert 'volatility' not in iv_snapshot and volatility.value == 0
+assert sum('text/html' in o.get('data', {}) for o in iv_output.outputs) == 1
+volatility.value = 20
 exercise.value = 'american'
 assert 'black_scholes_merton' not in model.options
 model.value = 'bjerksund_stensland_1993'
@@ -54,6 +73,19 @@ assert len(price_history) == 2
 greeks_button.click()
 assert last_greeks_response.metadata.request_id == 'fixture-greeks-american'
 assert greeks_snapshot['Style'] == 'american'
+market_price.value = 7.584143004464017
+iv_button.click()
+assert last_iv_response.metadata.request_id == 'fixture-iv-american'
+assert last_iv_response.result.used_fallback is True
+assert iv_snapshot['residual_basis'] == 'option_price'
+assert iv_snapshot['market_price'] == market_price.value
+strike.value = 110
+assert iv_snapshot['strike'] == 105  # Later input edits must not relabel a solved result.
+market_price.value = -1
+iv_button.click()
+assert last_iv_response is None and iv_snapshot is None
+assert 'nonnegative' in str(iv_output.outputs)
+assert not any(control.disabled for control in controls)
 assert not greeks_button.disabled
 assert price_history[0]['Style'] == 'european' and price_history[1]['Style'] == 'american'
 assert price_history[0]['Strike'] == 100 and price_history[1]['Strike'] == 105
