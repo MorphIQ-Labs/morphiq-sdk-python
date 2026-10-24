@@ -181,3 +181,12 @@ supported string values. They do not fetch data or call MorphIQ.
 `market-data` extra. Its `history(symbol, *, start, end, interval="1d")` returns
 `PriceHistory`, including `.bars`, `.prices`, `.latest`, symbol/source/interval
 and adjustment identity. See [provider setup and semantics](PRICE_PROVIDERS.md).
+
+## Optional pandas adapter
+
+`morphiq_sdk.pandas` provides `batch_to_frames(response, *, identifiers=None)`
+and `workflow_to_frames(workflow, *, identifiers=None)`. Both return `BatchFrames`
+with separate `results` and `requests` DataFrames, execution `state`,
+`reported_fcu_charged`, `unknown_charge_count` and `total_fcu_charged`.
+The optional `pandas` extra is required only at conversion time. See the
+[table schema, units, missing-value and cost semantics](PANDAS.md).

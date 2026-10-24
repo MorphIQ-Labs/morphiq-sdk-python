@@ -88,3 +88,17 @@ exported key. See [regime interpretation](../docs/REGIME.md) and
 [provider interfaces](../docs/PRICE_PROVIDERS.md). Data stays in memory; no CSV
 intermediate is required. The provider example lets errors propagate; it does not
 retry. These scripts do not make Yahoo a core SDK dependency.
+
+## Optional tabular analysis
+
+The [tabular pricing example](tabular_price.py) sends five synthetic spot scenarios
+in three sequential requests and displays separate result and charge tables:
+
+```sh
+python -m pip install -e '.[pandas]'
+export MORPHIQ_API_KEY="YOUR_API_KEY"
+python examples/tabular_price.py
+```
+
+See [the pandas adapter guide](../docs/PANDAS.md) for partial results, identifiers,
+units and exact charge totals. Pandas is optional and conversion makes no API calls.

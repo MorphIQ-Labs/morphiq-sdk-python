@@ -145,3 +145,9 @@ server's retry guidance and waits for a user action; it never retries itself.
 Timeouts and cancellation can occur after execution or charge commitment.
 Cancellation propagates to the async caller without replay. Unknown charges
 remain unknown; use the request ID and account records to reconcile them.
+
+## Tabular analysis
+
+Use the optional [pandas adapter](PANDAS.md) to convert batch results into ordered
+analysis rows and a separate per-request charge table. Core SDK calls do not
+require pandas.

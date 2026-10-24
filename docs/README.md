@@ -12,6 +12,7 @@ response types, configuration and errors.
 | Solve IV and evaluate price/Greeks together | [Combined analytics and CU accounting](ANALYTICS.md) | [Sync](../examples/analytics.py), [async](../examples/analytics_async.py) |
 | Submit ordered batches | [Batches, per-item failures and 429s](BATCH.md) | [Sync pricing batch](../examples/batch_price.py), [async pricing batch](../examples/batch_price_async.py) |
 | Run explicit sequential chunks | [Batch workflows and exact costs](WORKFLOWS.md) | [Sync](../examples/chunked_price.py), [async](../examples/chunked_price_async.py) |
+| Analyze batches as pandas tables | [Optional DataFrame adapter](PANDAS.md) | [Tabular pricing](../examples/tabular_price.py) |
 | Identify the latest market regime | [Regime inputs and interpretation](REGIME.md) | [Sync](../examples/identify_regime.py), [async](../examples/identify_regime_async.py) |
 | Supply data through an optional provider | [Provider interface and Yahoo adapter](PRICE_PROVIDERS.md) | [Provider to regime](../examples/provider_regime.py) |
 | Use the interactive analysis workspaces | [Notebook controls, Docker and persistence](NOTEBOOKS.md) | [Workspace index](../notebooks/README.md) |
