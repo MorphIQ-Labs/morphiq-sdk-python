@@ -311,7 +311,7 @@ def test_async_cancellation_retains_inflight_unknown_and_prevents_concurrent_run
     asyncio.run(run())
 
 
-@pytest.mark.parametrize("module", ["chunked_price", "chunked_price_async"])
+@pytest.mark.parametrize("module", ["chunked_price", "chunked_price_async", "tabular_price"])
 @pytest.mark.parametrize("failure", [None, "429", "malformed"])
 def test_standalone_workflow_examples_report_partial_results_and_charges(
     module, failure, batch_cases, tmp_path
@@ -380,15 +380,23 @@ def test_standalone_workflow_examples_report_partial_results_and_charges(
         assert result.returncode == (1 if failure else 0), result.stderr
         assert len(received) == (2 if failure else 3)
         assert "example-workflow-key" not in result.stdout + result.stderr
-        assert "Item 0: spot=80.0" in result.stdout
-        assert "Item 1: spot=85.0" in result.stdout
+        if module == "tabular_price":
+            assert "spot-80" in result.stdout and "spot-100" in result.stdout
+            assert "request_index" in result.stdout
+        else:
+            assert "Item 0: spot=80.0" in result.stdout
+            assert "Item 1: spot=85.0" in result.stdout
         assert f"Reported CU subtotal: {2**53 + (8 if failure else 15)}" in result.stdout
         assert "Attempts with unknown CU: 0" in result.stdout
         if failure:
-            assert "Unattempted input ranges: ((4, 5),)" in result.stdout
+            if module == "tabular_price":
+                assert "unattempted" in result.stdout and "request_error" in result.stdout
+            else:
+                assert "Unattempted input ranges: ((4, 5),)" in result.stdout
             assert "Whole-workflow CU: unknown or incomplete" in result.stdout
         else:
-            assert "Item 4: spot=100.0" in result.stdout
+            if module != "tabular_price":
+                assert "Item 4: spot=100.0" in result.stdout
             assert f"Whole-workflow CU: {2**53 + 15}" in result.stdout
     finally:
         server.shutdown()

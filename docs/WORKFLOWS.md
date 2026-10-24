@@ -134,3 +134,7 @@ For later work, explicitly construct a new workflow from the original inputs at
 This does not include completed or failed chunks. New workflow indices start at
 zero; keep the original range offset when correlating its results. Nothing is
 resumed automatically, and progress is in memory, not a durable checkpoint.
+
+For ordered tables including failed and unattempted rows, use the optional
+[pandas adapter](PANDAS.md). Its separate request table retains one charge per
+HTTP attempt. Conversion never runs or resumes a workflow.
