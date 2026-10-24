@@ -60,6 +60,39 @@ class _Response(BaseModel):
     model_config = ConfigDict(extra="allow", strict=True, allow_inf_nan=False)
 
 
+class GreeksRequest(PriceRequest):
+    """Price and all ten Greeks at a supplied volatility, using the pricing inputs.
+
+    Cash-dividend schedules are forwarded unchanged. The service owns model
+    selection, schedule support and numerical-domain validation.
+    """
+
+
+class Greeks(_Response):
+    """Unscaled API values: time derivatives per year; volatility/rates per unit.
+
+    No calendar-day, percentage-point or contract-multiplier conversion occurs.
+    """
+
+    delta: FiniteFloat
+    gamma: FiniteFloat
+    theta: FiniteFloat
+    vega: FiniteFloat
+    rho: FiniteFloat
+    vanna: FiniteFloat
+    volga: FiniteFloat
+    charm: FiniteFloat
+    veta: FiniteFloat
+    color: FiniteFloat
+
+
+class GreeksResult(_Response):
+    price: FiniteFloat
+    greeks: Greeks
+    pricing_model: str
+    model_version: str
+
+
 class EngineIdentity(_Response):
     name: str
     version: str
@@ -130,6 +163,11 @@ class _EvidenceResponse(_Response):
 
 class PriceResponse(_EvidenceResponse):
     result: PriceResult
+    metadata: ResponseMetadata
+
+
+class GreeksResponse(_EvidenceResponse):
+    result: GreeksResult
     metadata: ResponseMetadata
 
 

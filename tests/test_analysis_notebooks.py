@@ -106,6 +106,7 @@ assert price_history == []
     "filename,action",
     [
         ("pricing/options.ipynb", "price_button.click()"),
+        ("pricing/options.ipynb", "greeks_button.click()"),
         ("regime/identification.ipynb", "analyze_button.click()"),
     ],
 )

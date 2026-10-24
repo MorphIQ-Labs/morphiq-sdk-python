@@ -1,0 +1,104 @@
+{
+  "source_commit": "b2cb8d72b049d61c062f787724c1c02c15dd12be",
+  "contract_sha256": "09527006497b4f23bbf174f4a5b8bd9d02f75d02554b3d489eaba953ec5a18f1",
+  "admission": "open",
+  "note": "Synthetic inputs evaluated by the native API built with --locked from the pinned source commit. Served OpenAPI digest verified. Request IDs normalized; open mode does not report commercial CU. No Python numerical implementation.",
+  "cases": [
+    {
+      "name": "greeks-european",
+      "path": "/v1/greeks",
+      "request": {
+        "exercise_style": "european",
+        "pricing_model": "auto",
+        "option_type": "call",
+        "spot": 100.0,
+        "strike": 100.0,
+        "time_to_expiry_years": 1,
+        "risk_free_rate": 0.05,
+        "dividend_yield": 0,
+        "volatility": 0.2
+      },
+      "response": {
+        "metadata": {
+          "request_id": "fixture-greeks-european",
+          "api_version": "v1",
+          "engine_version": "0.39.1",
+          "engines": [
+            {
+              "name": "morphiq-risk",
+              "version": "0.39.1",
+              "revision": "b4c29d492ff96dddf9b25f745d2be4d253202164"
+            }
+          ],
+          "units_charged": 6,
+          "compute_schedule_version": "2026-09-11"
+        },
+        "result": {
+          "price": 10.450583572185538,
+          "greeks": {
+            "delta": 0.6368306511756191,
+            "gamma": 0.018762017345846895,
+            "theta": -6.4140275464382,
+            "vega": 37.52403469169381,
+            "rho": 53.23248154537637,
+            "vanna": -0.28143026018770334,
+            "volga": 9.850059106569617,
+            "charm": -0.06566706071046415,
+            "veta": -16.46367022098066,
+            "color": 0.01053018223535657
+          },
+          "pricing_model": "black_scholes_merton",
+          "model_version": "black_scholes_merton/1"
+        }
+      }
+    },
+    {
+      "name": "greeks-american",
+      "path": "/v1/greeks",
+      "request": {
+        "exercise_style": "american",
+        "pricing_model": "auto",
+        "option_type": "put",
+        "spot": 100.0,
+        "strike": 105.0,
+        "time_to_expiry_years": 0.5,
+        "risk_free_rate": 0.05,
+        "dividend_yield": 0.01,
+        "volatility": 0.2
+      },
+      "response": {
+        "metadata": {
+          "request_id": "fixture-greeks-american",
+          "api_version": "v1",
+          "engine_version": "0.39.1",
+          "engines": [
+            {
+              "name": "morphiq-risk",
+              "version": "0.39.1",
+              "revision": "b4c29d492ff96dddf9b25f745d2be4d253202164"
+            }
+          ],
+          "units_charged": 400,
+          "compute_schedule_version": "2026-09-11"
+        },
+        "result": {
+          "price": 7.584143004464017,
+          "greeks": {
+            "delta": -0.5897928172087801,
+            "gamma": 0.03222261065667377,
+            "theta": -3.6051933523200046,
+            "vega": 26.684513084217365,
+            "rho": -21.188538179070036,
+            "vanna": 0.8767139435075082,
+            "volga": 22.095184006704915,
+            "charm": -0.18487751813050776,
+            "veta": -28.54236738380589,
+            "color": 0.02499731184924664
+          },
+          "pricing_model": "bjerksund_stensland_2002",
+          "model_version": "bjerksund_stensland_2002/1"
+        }
+      }
+    }
+  ]
+}

@@ -7,6 +7,7 @@
   "import_method": "Reviewed main snapshot copied byte-for-byte from the immutable Git commit; automated artifact publication remains SDK #2.",
   "covered_operations": [
     "POST /v1/price",
-    "POST /v1/regime"
+    "POST /v1/regime",
+    "POST /v1/greeks"
   ]
 }

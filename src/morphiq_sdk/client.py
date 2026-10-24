@@ -11,9 +11,17 @@ import httpx
 from pydantic import ValidationError
 
 from .errors import APIError, RequestTimeout, ResponseError, TransportError
-from .models import ErrorEnvelope, PriceRequest, PriceResponse, RegimeRequest, RegimeResponse
+from .models import (
+    ErrorEnvelope,
+    GreeksRequest,
+    GreeksResponse,
+    PriceRequest,
+    PriceResponse,
+    RegimeRequest,
+    RegimeResponse,
+)
 
-_ResponseType = TypeVar("_ResponseType", PriceResponse, RegimeResponse)
+_ResponseType = TypeVar("_ResponseType", PriceResponse, RegimeResponse, GreeksResponse)
 
 
 def _redact_body(body: bytes, key: str) -> bytes:
@@ -149,6 +157,10 @@ class MorphIQ:
         """Identify regime heads; preserve scores, applicability and provenance."""
         return self._post("v1/regime", request.to_wire(), RegimeResponse)
 
+    def greeks(self, request: GreeksRequest) -> GreeksResponse:
+        """Return the option price and all ten Greeks, preserving the API's units."""
+        return self._post("v1/greeks", request.to_wire(), GreeksResponse)
+
     def _post(
         self, path: str, payload: dict[str, Any], model: type[_ResponseType]
     ) -> _ResponseType:
@@ -213,6 +225,10 @@ class AsyncMorphIQ:
     async def regime(self, request: RegimeRequest) -> RegimeResponse:
         """Identify regime heads; preserve scores, applicability and provenance."""
         return await self._post("v1/regime", request.to_wire(), RegimeResponse)
+
+    async def greeks(self, request: GreeksRequest) -> GreeksResponse:
+        """Return the option price and all ten Greeks, preserving the API's units."""
+        return await self._post("v1/greeks", request.to_wire(), GreeksResponse)
 
     async def _post(
         self, path: str, payload: dict[str, Any], model: type[_ResponseType]
