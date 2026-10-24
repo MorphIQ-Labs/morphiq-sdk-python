@@ -11,7 +11,7 @@ from test_analysis_notebooks import run_workspace
 
 
 def test_session_costs_include_errors_unknowns_and_partial_sweeps(
-    cases, greeks_cases, iv_cases, analytics_cases, tmp_path
+    cases, greeks_cases, iv_cases, analytics_cases, batch_cases, tmp_path
 ):
     large = 2**53 + 1
     steps = [
@@ -24,9 +24,7 @@ def test_session_costs_include_errors_unknowns_and_partial_sweeps(
         (analytics_cases[1], 7, 500),
         (analytics_cases[1], 11, "malformed"),
         (analytics_cases[1], None, "disconnect"),
-        (cases[0], 13, 200),
-        (cases[0], 17, 200),
-        (cases[0], 19, 500),
+        (batch_cases[4], 49, 200),
     ]
     received = []
 
@@ -92,11 +90,11 @@ assert charge_history[-1]['CU charged'] == 11
 assert last_analytics_response is None
 analytics_button.click()  # Connection loss: cannot assume a zero charge.
 assert charge_history[-1]['CU charged'] is None
-sweep_button.click()  # Two successes plus a charged failure.
-assert len(sweep_results) == 2 and len(charge_history) == 12
+sweep_button.click()  # Nine scenarios, one batch-level charge.
+assert len(sweep_results) == 9 and len(charge_history) == 10
 assert usage_summary.value == ('Kernel session: {large + 76} CU reported; '
-                              'total incomplete (2 unknown charges). Requests: 12.')
-assert [r['CU charged'] for r in charge_history[-3:]] == [13, 17, 19]
+                              'total incomplete (2 unknown charges). Requests: 10.')
+assert charge_history[-1]['CU charged'] == 49
 assert not any(control.disabled for control in controls)
 """
         # Re-execute the real setup cell: the kernel-session ledger must survive Run All.
@@ -104,12 +102,24 @@ assert not any(control.disabled for control in controls)
             Path(__file__).parents[1] / "notebooks/pricing/options.ipynb", as_version=4
         )
         setup = next(cell.source for cell in notebook.cells if cell.id == "workspace")
-        code += f"\nexec({setup!r})\nassert len(charge_history) == 12\n"
+        code += f"\nexec({setup!r})\nassert len(charge_history) == 10\n"
+        code += """
+def interrupted_request(_):
+    raise KeyboardInterrupt()
+try:
+    tracked_request('Interrupted request', interrupted_request, current_request())
+except KeyboardInterrupt:
+    pass
+else:
+    raise AssertionError('User interruption was swallowed')
+assert len(charge_history) == 11 and charge_history[-1]['CU charged'] is None
+assert 'total incomplete (3 unknown charges)' in usage_summary.value
+"""
         output = run_workspace(
             "pricing/options.ipynb", code, f"http://127.0.0.1:{server.server_port}", tmp_path
         )
-        assert len(received) == 12
-        assert "cost-12" in output and str(large + 76) in output
+        assert len(received) == 10
+        assert "cost-10" in output and str(large + 76) in output
     finally:
         server.shutdown()
         server.server_close()

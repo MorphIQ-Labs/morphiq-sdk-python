@@ -1,6 +1,5 @@
 """Exercise analysis controls through Jupyter, without patching SDK or Yahoo functions."""
 
-import copy
 import json
 import os
 import threading
@@ -33,33 +32,43 @@ def run_workspace(filename, code, endpoint, tmp_path):
 
 @pytest.fixture(params=[None, 3])
 def scenario_api(request, cases):
-    """Synthetic response values exercise plotting/partial completion, not engine accuracy."""
+    """One synthetic batch with optional item failure, not an engine accuracy test."""
     received = []
-    fail_after = request.param
+    failed_index = request.param
     values = [2.0, 2.8, 3.9, 5.0, 6.1, 7.5, 9.0, 11.0, 14.0]
 
     class Handler(BaseHTTPRequestHandler):
         def do_POST(self):
             body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
             received.append(body)
-            assert self.path == "/v1/price"
-            if fail_after is not None and len(received) > fail_after:
-                status = 503
-                payload = {
-                    "error": {"code": "unavailable", "message": "Synthetic failure"},
-                    "metadata": {
-                        "request_id": "scenario-error",
-                        "api_version": "v1",
-                        "service_version": "fixture",
-                        "fcu_charged": 0,
-                    },
-                }
-            else:
-                status = 200
-                payload = copy.deepcopy(cases[0]["response"])
-                payload["result"]["price"] = values[len(received) - 1]
-                payload["metadata"].update(request_id=f"scenario-{len(received)}", fcu_charged=1)
-            self.send_response(status)
+            assert self.path == "/v1/price:batch"
+            results = []
+            for index, value in enumerate(values):
+                if index == failed_index:
+                    results.append(
+                        {
+                            "index": index,
+                            "status": "error",
+                            "error": {"code": "pricing_failed", "message": "Synthetic failure"},
+                        }
+                    )
+                else:
+                    results.append(
+                        {
+                            "index": index,
+                            "status": "success",
+                            "result": {**cases[0]["response"]["result"], "price": value},
+                        }
+                    )
+            payload = {
+                "results": results,
+                "metadata": {
+                    **cases[0]["response"]["metadata"],
+                    "request_id": "scenario-batch",
+                    "fcu_charged": 7,
+                },
+            }
+            self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.end_headers()
             self.wfile.write(json.dumps(payload).encode())
@@ -71,35 +80,34 @@ def scenario_api(request, cases):
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     try:
-        yield f"http://127.0.0.1:{server.server_port}", received, fail_after, values
+        yield f"http://127.0.0.1:{server.server_port}", received, failed_index, values
     finally:
         server.shutdown()
         server.server_close()
         thread.join()
 
 
-def test_spot_sweep_prices_each_point_and_stops_on_failure(scenario_api, tmp_path):
-    endpoint, received, fail_after, values = scenario_api
-    count = fail_after if fail_after is not None else 9
-    expected_spots = [100 * (1 + i * 0.05) for i in range(-4, -4 + count)]
+def test_spot_sweep_preserves_failed_rows_and_counts_batch_once(scenario_api, tmp_path):
+    endpoint, received, failed_index, values = scenario_api
+    expected = [None if i == failed_index else v for i, v in enumerate(values)]
+    expected_spots = [100 * (1 + i * 0.05) for i in range(-4, 5)]
     code = f"""
-assert price_history == [] and sweep_results == []
 sweep_button.click()
-assert [row['Price'] for row in sweep_results] == {values[:count]!r}
+assert len(sweep_results) == 9
+assert [row['Price'] for row in sweep_results] == {expected!r}
 assert [row['Spot'] for row in sweep_results] == {expected_spots!r}
-assert all(row['CU charged'] == 1 for row in sweep_results)
+assert all('CU charged' not in row for row in sweep_results)
+assert len(charge_history) == 1 and charge_history[0]['CU charged'] == 7
+assert usage_summary.value == 'Kernel session total: 7 CU. Requests: 1.'
+assert sum('image/png' in o.get('data', {{}}) for o in sweep_output.outputs) == 1
 assert not any(control.disabled for control in controls)
 assert price_history == []
 """
     output = run_workspace("pricing/options.ipynb", code, endpoint, tmp_path)
-    assert len(received) == count + (fail_after is not None)
-    assert [body["spot"] for body in received] == [
-        100 * (1 + i * 0.05) for i in range(-4, -4 + len(received))
-    ]
-    assert all(body["volatility"] == 0.2 and body["strike"] == 100 for body in received)
-    if fail_after is not None:
-        assert "Stopped after 3 completed scenarios" in output
-        assert "scenario-error" in output
+    assert len(received) == 1
+    assert [body["spot"] for body in received[0]["requests"]] == expected_spots
+    if failed_index is not None:
+        assert "pricing_failed" in output
 
 
 @pytest.mark.parametrize(
@@ -108,6 +116,7 @@ assert price_history == []
         ("pricing/options.ipynb", "price_button.click()"),
         ("pricing/options.ipynb", "greeks_button.click()"),
         ("pricing/options.ipynb", "iv_button.click()"),
+        ("pricing/options.ipynb", "sweep_button.click()"),
         ("regime/identification.ipynb", "analyze_button.click()"),
     ],
 )

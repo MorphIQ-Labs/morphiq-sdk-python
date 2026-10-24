@@ -10,10 +10,18 @@ from typing import Any, TypeVar
 import httpx
 from pydantic import ValidationError
 
-from .errors import APIError, RequestTimeout, ResponseError, TransportError
+from .errors import APIError, RateLimitError, RequestTimeout, ResponseError, TransportError
 from .models import (
     AnalyticsRequest,
     AnalyticsResponse,
+    BatchAnalyticsRequest,
+    BatchAnalyticsResponse,
+    BatchGreeksRequest,
+    BatchGreeksResponse,
+    BatchImpliedVolatilityRequest,
+    BatchImpliedVolatilityResponse,
+    BatchPriceRequest,
+    BatchPriceResponse,
     ErrorEnvelope,
     GreeksRequest,
     GreeksResponse,
@@ -24,16 +32,36 @@ from .models import (
     RegimeRequest,
     RegimeResponse,
     ResponseMetadata,
+    _BatchResponse,
 )
 
 _ResponseType = TypeVar(
     "_ResponseType",
+    BatchPriceResponse,
+    BatchGreeksResponse,
+    BatchImpliedVolatilityResponse,
+    BatchAnalyticsResponse,
     PriceResponse,
     RegimeResponse,
     GreeksResponse,
     ImpliedVolatilityResponse,
     AnalyticsResponse,
 )
+
+
+_BatchResponseType = TypeVar("_BatchResponseType", bound=_BatchResponse[Any])
+
+
+def _check_batch(response: _BatchResponseType, expected: int) -> _BatchResponseType:
+    # Never silently sort, drop or misassociate outcomes with submitted options.
+    if [item.index for item in response.results] != list(range(expected)):
+        raise ResponseError(
+            request_id=response.metadata.request_id,
+            body=response.raw_body,
+            headers=response.headers,
+            metadata=response.metadata,
+        )
+    return response
 
 
 def _redact_body(body: bytes, key: str) -> bytes:
@@ -115,7 +143,8 @@ class _Configuration:
                 envelope = ErrorEnvelope.model_validate_json(body)
             except ValidationError:
                 envelope = None
-            raise APIError(
+            error_type = RateLimitError if response.status_code == 429 else APIError
+            raise error_type(
                 status_code=response.status_code,
                 envelope=envelope,
                 request_id=request_id,
@@ -190,6 +219,34 @@ class MorphIQ:
     def analytics(self, request: AnalyticsRequest) -> AnalyticsResponse:
         """Return combined analytics and one server-reported commercial charge."""
         return self._post("v1/analytics", request.to_wire(), AnalyticsResponse)
+
+    def price_batch(self, request: BatchPriceRequest) -> BatchPriceResponse:
+        """Submit one batch; preserve ordered outcomes and count its charge once."""
+        payload = request.to_wire()
+        response = self._post("v1/price:batch", payload, BatchPriceResponse)
+        return _check_batch(response, len(payload["requests"]))
+
+    def greeks_batch(self, request: BatchGreeksRequest) -> BatchGreeksResponse:
+        """Submit one batch; preserve ordered outcomes and count its charge once."""
+        payload = request.to_wire()
+        response = self._post("v1/greeks:batch", payload, BatchGreeksResponse)
+        return _check_batch(response, len(payload["requests"]))
+
+    def implied_volatility_batch(
+        self, request: BatchImpliedVolatilityRequest
+    ) -> BatchImpliedVolatilityResponse:
+        """Submit one batch; preserve ordered outcomes and count its charge once."""
+        payload = request.to_wire()
+        response = self._post(
+            "v1/implied-volatility:batch", payload, BatchImpliedVolatilityResponse
+        )
+        return _check_batch(response, len(payload["requests"]))
+
+    def analytics_batch(self, request: BatchAnalyticsRequest) -> BatchAnalyticsResponse:
+        """Submit one batch; preserve ordered outcomes and count its charge once."""
+        payload = request.to_wire()
+        response = self._post("v1/analytics:batch", payload, BatchAnalyticsResponse)
+        return _check_batch(response, len(payload["requests"]))
 
     def _post(
         self, path: str, payload: dict[str, Any], model: type[_ResponseType]
@@ -271,6 +328,34 @@ class AsyncMorphIQ:
     async def analytics(self, request: AnalyticsRequest) -> AnalyticsResponse:
         """Return combined analytics and one server-reported commercial charge."""
         return await self._post("v1/analytics", request.to_wire(), AnalyticsResponse)
+
+    async def price_batch(self, request: BatchPriceRequest) -> BatchPriceResponse:
+        """Submit one batch; preserve ordered outcomes and count its charge once."""
+        payload = request.to_wire()
+        response = await self._post("v1/price:batch", payload, BatchPriceResponse)
+        return _check_batch(response, len(payload["requests"]))
+
+    async def greeks_batch(self, request: BatchGreeksRequest) -> BatchGreeksResponse:
+        """Submit one batch; preserve ordered outcomes and count its charge once."""
+        payload = request.to_wire()
+        response = await self._post("v1/greeks:batch", payload, BatchGreeksResponse)
+        return _check_batch(response, len(payload["requests"]))
+
+    async def implied_volatility_batch(
+        self, request: BatchImpliedVolatilityRequest
+    ) -> BatchImpliedVolatilityResponse:
+        """Submit one batch; preserve ordered outcomes and count its charge once."""
+        payload = request.to_wire()
+        response = await self._post(
+            "v1/implied-volatility:batch", payload, BatchImpliedVolatilityResponse
+        )
+        return _check_batch(response, len(payload["requests"]))
+
+    async def analytics_batch(self, request: BatchAnalyticsRequest) -> BatchAnalyticsResponse:
+        """Submit one batch; preserve ordered outcomes and count its charge once."""
+        payload = request.to_wire()
+        response = await self._post("v1/analytics:batch", payload, BatchAnalyticsResponse)
+        return _check_batch(response, len(payload["requests"]))
 
     async def _post(
         self, path: str, payload: dict[str, Any], model: type[_ResponseType]

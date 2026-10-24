@@ -14,7 +14,7 @@ artifact delivery remains #2. SDK tests and builds use the offline snapshot
 without private repository or numerical engine access.
 
 The SDK covers POST /v1/price, POST /v1/greeks, POST /v1/implied-volatility,
-POST /v1/analytics and POST /v1/regime. Hand-written model field sets and serialized
+POST /v1/analytics, their four `:batch` routes, and POST /v1/regime. Hand-written model field sets and serialized
 requests/responses are checked against the pinned schema. Digest/version
 checks detect accidental snapshot changes. Intentional upgrades need reviewed
 provenance and tests; this is not a complete future-operation compatibility generator.

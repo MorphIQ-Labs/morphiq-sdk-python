@@ -1,0 +1,724 @@
+{
+  "source_commit": "b2cb8d72b049d61c062f787724c1c02c15dd12be",
+  "contract_sha256": "09527006497b4f23bbf174f4a5b8bd9d02f75d02554b3d489eaba953ec5a18f1",
+  "admission": "open",
+  "note": "Synthetic inputs evaluated by the native API built with --locked from the pinned source commit. Served OpenAPI digest verified. Request IDs normalized; open mode does not report commercial CU. No Python numerical implementation.",
+  "cases": [
+    {
+      "name": "batch-price",
+      "path": "/v1/price:batch",
+      "request": {
+        "requests": [
+          {
+            "exercise_style": "european",
+            "pricing_model": "auto",
+            "option_type": "call",
+            "spot": 100.0,
+            "strike": 100.0,
+            "time_to_expiry_years": 1,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0,
+            "volatility": 0.2
+          },
+          {
+            "exercise_style": "american",
+            "pricing_model": "auto",
+            "option_type": "put",
+            "spot": -1,
+            "strike": 105.0,
+            "time_to_expiry_years": 0.5,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0.01,
+            "volatility": 0.2
+          },
+          {
+            "exercise_style": "american",
+            "pricing_model": "auto",
+            "option_type": "put",
+            "spot": 100.0,
+            "strike": 105.0,
+            "time_to_expiry_years": 0.5,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0.01,
+            "volatility": 0.2
+          }
+        ]
+      },
+      "response": {
+        "metadata": {
+          "request_id": "fixture-batch-price",
+          "api_version": "v1",
+          "engine_version": "0.39.1",
+          "engines": [
+            {
+              "name": "morphiq-risk",
+              "version": "0.39.1",
+              "revision": "b4c29d492ff96dddf9b25f745d2be4d253202164"
+            }
+          ],
+          "units_charged": 101,
+          "compute_schedule_version": "2026-09-11"
+        },
+        "results": [
+          {
+            "index": 0,
+            "status": "success",
+            "result": {
+              "price": 10.450583572185538,
+              "exercise_style": "european",
+              "option_type": "call",
+              "pricing_model": "black_scholes_merton",
+              "model_version": "black_scholes_merton/1"
+            }
+          },
+          {
+            "index": 1,
+            "status": "error",
+            "error": {
+              "code": "invalid_field",
+              "message": "invalid input: spot = -1",
+              "field": "spot"
+            }
+          },
+          {
+            "index": 2,
+            "status": "success",
+            "result": {
+              "price": 7.584143004464017,
+              "exercise_style": "american",
+              "option_type": "put",
+              "pricing_model": "bjerksund_stensland_2002",
+              "model_version": "bjerksund_stensland_2002/1"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "batch-greeks",
+      "path": "/v1/greeks:batch",
+      "request": {
+        "requests": [
+          {
+            "exercise_style": "european",
+            "pricing_model": "auto",
+            "option_type": "call",
+            "spot": 100.0,
+            "strike": 100.0,
+            "time_to_expiry_years": 1,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0,
+            "volatility": 0.2
+          },
+          {
+            "exercise_style": "american",
+            "pricing_model": "auto",
+            "option_type": "put",
+            "spot": 100.0,
+            "strike": 105.0,
+            "time_to_expiry_years": 0.5,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0.01,
+            "volatility": 1e+308
+          },
+          {
+            "exercise_style": "american",
+            "pricing_model": "auto",
+            "option_type": "put",
+            "spot": 100.0,
+            "strike": 105.0,
+            "time_to_expiry_years": 0.5,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0.01,
+            "volatility": 0.2
+          }
+        ]
+      },
+      "response": {
+        "metadata": {
+          "request_id": "fixture-batch-greeks",
+          "api_version": "v1",
+          "engine_version": "0.39.1",
+          "engines": [
+            {
+              "name": "morphiq-risk",
+              "version": "0.39.1",
+              "revision": "b4c29d492ff96dddf9b25f745d2be4d253202164"
+            }
+          ],
+          "units_charged": 806,
+          "compute_schedule_version": "2026-09-11"
+        },
+        "results": [
+          {
+            "index": 0,
+            "status": "success",
+            "result": {
+              "price": 10.450583572185538,
+              "greeks": {
+                "delta": 0.6368306511756191,
+                "gamma": 0.018762017345846895,
+                "theta": -6.4140275464382,
+                "vega": 37.52403469169381,
+                "rho": 53.23248154537637,
+                "vanna": -0.28143026018770334,
+                "volga": 9.850059106569617,
+                "charm": -0.06566706071046415,
+                "veta": -16.46367022098066,
+                "color": 0.01053018223535657
+              },
+              "pricing_model": "black_scholes_merton",
+              "model_version": "black_scholes_merton/1"
+            }
+          },
+          {
+            "index": 1,
+            "status": "error",
+            "error": {
+              "code": "pricing_failed",
+              "message": "the pricing engine could not produce a result"
+            }
+          },
+          {
+            "index": 2,
+            "status": "success",
+            "result": {
+              "price": 7.584143004464017,
+              "greeks": {
+                "delta": -0.5897928172087801,
+                "gamma": 0.03222261065667377,
+                "theta": -3.6051933523200046,
+                "vega": 26.684513084217365,
+                "rho": -21.188538179070036,
+                "vanna": 0.8767139435075082,
+                "volga": 22.095184006704915,
+                "charm": -0.18487751813050776,
+                "veta": -28.54236738380589,
+                "color": 0.02499731184924664
+              },
+              "pricing_model": "bjerksund_stensland_2002",
+              "model_version": "bjerksund_stensland_2002/1"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "batch-implied-volatility",
+      "path": "/v1/implied-volatility:batch",
+      "request": {
+        "requests": [
+          {
+            "exercise_style": "european",
+            "pricing_model": "auto",
+            "option_type": "call",
+            "spot": 100.0,
+            "strike": 100.0,
+            "time_to_expiry_years": 1,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0,
+            "market_price": 10.450583572185538
+          },
+          {
+            "exercise_style": "american",
+            "pricing_model": "auto",
+            "option_type": "put",
+            "spot": 100.0,
+            "strike": 105.0,
+            "time_to_expiry_years": 0.5,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0.01,
+            "market_price": 1000
+          },
+          {
+            "exercise_style": "american",
+            "pricing_model": "auto",
+            "option_type": "put",
+            "spot": 100.0,
+            "strike": 105.0,
+            "time_to_expiry_years": 0.5,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0.01,
+            "market_price": 7.584143004464017
+          }
+        ]
+      },
+      "response": {
+        "metadata": {
+          "request_id": "fixture-batch-implied-volatility",
+          "api_version": "v1",
+          "engine_version": "0.39.1",
+          "engines": [
+            {
+              "name": "morphiq-risk",
+              "version": "0.39.1",
+              "revision": "b4c29d492ff96dddf9b25f745d2be4d253202164"
+            }
+          ],
+          "units_charged": 10004,
+          "compute_schedule_version": "2026-09-11"
+        },
+        "results": [
+          {
+            "index": 0,
+            "status": "success",
+            "result": {
+              "implied_volatility": 0.20000000000000007,
+              "iterations": 2,
+              "used_fallback": false,
+              "residual": 1.3877787807814457e-17,
+              "residual_basis": "forward_normalised_price",
+              "pricing_model": "black_scholes_merton",
+              "model_version": "black_scholes_merton/1"
+            }
+          },
+          {
+            "index": 1,
+            "status": "error",
+            "error": {
+              "code": "pricing_failed",
+              "message": "the pricing engine could not produce a result"
+            }
+          },
+          {
+            "index": 2,
+            "status": "success",
+            "result": {
+              "implied_volatility": 0.19999999999999996,
+              "iterations": 9,
+              "used_fallback": true,
+              "residual": 5.329070518200751e-15,
+              "residual_basis": "option_price",
+              "pricing_model": "bjerksund_stensland_2002",
+              "model_version": "bjerksund_stensland_2002/1"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "batch-analytics",
+      "path": "/v1/analytics:batch",
+      "request": {
+        "requests": [
+          {
+            "exercise_style": "european",
+            "pricing_model": "auto",
+            "option_type": "call",
+            "spot": 100.0,
+            "strike": 100.0,
+            "time_to_expiry_years": 1,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0,
+            "volatility": 0.35,
+            "market_price": 10.450583572185538
+          },
+          {
+            "exercise_style": "american",
+            "pricing_model": "auto",
+            "option_type": "put",
+            "spot": 100.0,
+            "strike": 105.0,
+            "time_to_expiry_years": 0.5,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0.01,
+            "volatility": 0.35,
+            "market_price": 1000
+          },
+          {
+            "exercise_style": "american",
+            "pricing_model": "auto",
+            "option_type": "put",
+            "spot": 100.0,
+            "strike": 105.0,
+            "time_to_expiry_years": 0.5,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0.01,
+            "volatility": 0.35,
+            "market_price": 7.584143004464017
+          }
+        ]
+      },
+      "response": {
+        "metadata": {
+          "request_id": "fixture-batch-analytics",
+          "api_version": "v1",
+          "engine_version": "0.39.1",
+          "engines": [
+            {
+              "name": "morphiq-risk",
+              "version": "0.39.1",
+              "revision": "b4c29d492ff96dddf9b25f745d2be4d253202164"
+            }
+          ],
+          "units_charged": 10810,
+          "compute_schedule_version": "2026-09-11"
+        },
+        "results": [
+          {
+            "index": 0,
+            "status": "success",
+            "result": {
+              "price": 10.450583572185543,
+              "greeks": {
+                "delta": 0.6368306511756191,
+                "gamma": 0.018762017345846888,
+                "theta": -6.414027546438201,
+                "vega": 37.52403469169381,
+                "rho": 53.23248154537637,
+                "vanna": -0.2814302601877032,
+                "volga": 9.850059106569608,
+                "charm": -0.06566706071046412,
+                "veta": -16.46367022098066,
+                "color": 0.010530182235356567
+              },
+              "implied_volatility": {
+                "implied_volatility": 0.20000000000000007,
+                "iterations": 2,
+                "used_fallback": false,
+                "residual": 1.3877787807814457e-17,
+                "residual_basis": "forward_normalised_price",
+                "pricing_model": "black_scholes_merton",
+                "model_version": "black_scholes_merton/1"
+              },
+              "pricing_model": "black_scholes_merton",
+              "model_version": "black_scholes_merton/1"
+            }
+          },
+          {
+            "index": 1,
+            "status": "error",
+            "error": {
+              "code": "pricing_failed",
+              "message": "the pricing engine could not produce a result"
+            }
+          },
+          {
+            "index": 2,
+            "status": "success",
+            "result": {
+              "price": 7.584143004464022,
+              "greeks": {
+                "delta": -0.5897928172087792,
+                "gamma": 0.03222261065667396,
+                "theta": -3.6051933523200215,
+                "vega": 26.6845130842174,
+                "rho": -21.188538179070036,
+                "vanna": 0.8767139435075141,
+                "volga": 22.095184006705093,
+                "charm": -0.18487751813050896,
+                "veta": -28.542367383805793,
+                "color": 0.0249973118491495
+              },
+              "implied_volatility": {
+                "implied_volatility": 0.19999999999999996,
+                "iterations": 9,
+                "used_fallback": true,
+                "residual": 5.329070518200751e-15,
+                "residual_basis": "option_price",
+                "pricing_model": "bjerksund_stensland_2002",
+                "model_version": "bjerksund_stensland_2002/1"
+              },
+              "pricing_model": "bjerksund_stensland_2002",
+              "model_version": "bjerksund_stensland_2002/1"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "batch-price-sweep",
+      "path": "/v1/price:batch",
+      "request": {
+        "requests": [
+          {
+            "exercise_style": "european",
+            "pricing_model": "auto",
+            "option_type": "call",
+            "spot": 80.0,
+            "strike": 100.0,
+            "time_to_expiry_years": 1,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0,
+            "volatility": 0.2
+          },
+          {
+            "exercise_style": "european",
+            "pricing_model": "auto",
+            "option_type": "call",
+            "spot": 85.0,
+            "strike": 100.0,
+            "time_to_expiry_years": 1,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0,
+            "volatility": 0.2
+          },
+          {
+            "exercise_style": "european",
+            "pricing_model": "auto",
+            "option_type": "call",
+            "spot": 90.0,
+            "strike": 100.0,
+            "time_to_expiry_years": 1,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0,
+            "volatility": 0.2
+          },
+          {
+            "exercise_style": "european",
+            "pricing_model": "auto",
+            "option_type": "call",
+            "spot": 95.0,
+            "strike": 100.0,
+            "time_to_expiry_years": 1,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0,
+            "volatility": 0.2
+          },
+          {
+            "exercise_style": "european",
+            "pricing_model": "auto",
+            "option_type": "call",
+            "spot": 100.0,
+            "strike": 100.0,
+            "time_to_expiry_years": 1,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0,
+            "volatility": 0.2
+          },
+          {
+            "exercise_style": "european",
+            "pricing_model": "auto",
+            "option_type": "call",
+            "spot": 105.0,
+            "strike": 100.0,
+            "time_to_expiry_years": 1,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0,
+            "volatility": 0.2
+          },
+          {
+            "exercise_style": "european",
+            "pricing_model": "auto",
+            "option_type": "call",
+            "spot": 110.00000000000001,
+            "strike": 100.0,
+            "time_to_expiry_years": 1,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0,
+            "volatility": 0.2
+          },
+          {
+            "exercise_style": "european",
+            "pricing_model": "auto",
+            "option_type": "call",
+            "spot": 114.99999999999999,
+            "strike": 100.0,
+            "time_to_expiry_years": 1,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0,
+            "volatility": 0.2
+          },
+          {
+            "exercise_style": "european",
+            "pricing_model": "auto",
+            "option_type": "call",
+            "spot": 120.0,
+            "strike": 100.0,
+            "time_to_expiry_years": 1,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0,
+            "volatility": 0.2
+          }
+        ]
+      },
+      "response": {
+        "metadata": {
+          "request_id": "fixture-batch-price-sweep",
+          "api_version": "v1",
+          "engine_version": "0.39.1",
+          "engines": [
+            {
+              "name": "morphiq-risk",
+              "version": "0.39.1",
+              "revision": "b4c29d492ff96dddf9b25f745d2be4d253202164"
+            }
+          ],
+          "units_charged": 9,
+          "compute_schedule_version": "2026-09-11"
+        },
+        "results": [
+          {
+            "index": 0,
+            "status": "success",
+            "result": {
+              "price": 1.8594195728121798,
+              "exercise_style": "european",
+              "option_type": "call",
+              "pricing_model": "black_scholes_merton",
+              "model_version": "black_scholes_merton/1"
+            }
+          },
+          {
+            "index": 1,
+            "status": "success",
+            "result": {
+              "price": 3.2135985531478717,
+              "exercise_style": "european",
+              "option_type": "call",
+              "pricing_model": "black_scholes_merton",
+              "model_version": "black_scholes_merton/1"
+            }
+          },
+          {
+            "index": 2,
+            "status": "success",
+            "result": {
+              "price": 5.091222078817525,
+              "exercise_style": "european",
+              "option_type": "call",
+              "pricing_model": "black_scholes_merton",
+              "model_version": "black_scholes_merton/1"
+            }
+          },
+          {
+            "index": 3,
+            "status": "success",
+            "result": {
+              "price": 7.510872178352632,
+              "exercise_style": "european",
+              "option_type": "call",
+              "pricing_model": "black_scholes_merton",
+              "model_version": "black_scholes_merton/1"
+            }
+          },
+          {
+            "index": 4,
+            "status": "success",
+            "result": {
+              "price": 10.450583572185538,
+              "exercise_style": "european",
+              "option_type": "call",
+              "pricing_model": "black_scholes_merton",
+              "model_version": "black_scholes_merton/1"
+            }
+          },
+          {
+            "index": 5,
+            "status": "success",
+            "result": {
+              "price": 13.857906267073098,
+              "exercise_style": "european",
+              "option_type": "call",
+              "pricing_model": "black_scholes_merton",
+              "model_version": "black_scholes_merton/1"
+            }
+          },
+          {
+            "index": 6,
+            "status": "success",
+            "result": {
+              "price": 17.66295374059046,
+              "exercise_style": "european",
+              "option_type": "call",
+              "pricing_model": "black_scholes_merton",
+              "model_version": "black_scholes_merton/1"
+            }
+          },
+          {
+            "index": 7,
+            "status": "success",
+            "result": {
+              "price": 21.79051252803113,
+              "exercise_style": "european",
+              "option_type": "call",
+              "pricing_model": "black_scholes_merton",
+              "model_version": "black_scholes_merton/1"
+            }
+          },
+          {
+            "index": 8,
+            "status": "success",
+            "result": {
+              "price": 26.169043946847314,
+              "exercise_style": "european",
+              "option_type": "call",
+              "pricing_model": "black_scholes_merton",
+              "model_version": "black_scholes_merton/1"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "batch-price-example",
+      "path": "/v1/price:batch",
+      "request": {
+        "requests": [
+          {
+            "exercise_style": "european",
+            "pricing_model": "auto",
+            "option_type": "call",
+            "spot": 100.0,
+            "strike": 100.0,
+            "time_to_expiry_years": 1,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0,
+            "volatility": 0.2
+          },
+          {
+            "exercise_style": "american",
+            "pricing_model": "auto",
+            "option_type": "put",
+            "spot": 100.0,
+            "strike": 105.0,
+            "time_to_expiry_years": 0.5,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0.01,
+            "volatility": 0.2
+          }
+        ]
+      },
+      "response": {
+        "metadata": {
+          "request_id": "fixture-batch-price-example",
+          "api_version": "v1",
+          "engine_version": "0.39.1",
+          "engines": [
+            {
+              "name": "morphiq-risk",
+              "version": "0.39.1",
+              "revision": "b4c29d492ff96dddf9b25f745d2be4d253202164"
+            }
+          ],
+          "units_charged": 51,
+          "compute_schedule_version": "2026-09-11"
+        },
+        "results": [
+          {
+            "index": 0,
+            "status": "success",
+            "result": {
+              "price": 10.450583572185538,
+              "exercise_style": "european",
+              "option_type": "call",
+              "pricing_model": "black_scholes_merton",
+              "model_version": "black_scholes_merton/1"
+            }
+          },
+          {
+            "index": 1,
+            "status": "success",
+            "result": {
+              "price": 7.584143004464017,
+              "exercise_style": "american",
+              "option_type": "put",
+              "pricing_model": "bjerksund_stensland_2002",
+              "model_version": "bjerksund_stensland_2002/1"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

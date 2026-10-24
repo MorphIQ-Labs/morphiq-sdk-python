@@ -30,7 +30,8 @@ def test_examples_import_without_credentials_or_requests():
             "examples.identify_regime, examples.identify_regime_async, "
             "examples.greeks, examples.greeks_async, "
             "examples.implied_volatility, examples.implied_volatility_async, "
-            "examples.analytics, examples.analytics_async",
+            "examples.analytics, examples.analytics_async, "
+            "examples.batch_price, examples.batch_price_async",
         ],
         cwd=ROOT,
         env=environment,
@@ -119,6 +120,8 @@ def test_scripts_report_failures_without_retry(failing_api, tmp_path):
         "implied_volatility_async",
         "analytics",
         "analytics_async",
+        "batch_price",
+        "batch_price_async",
     ):
         result = subprocess.run(
             [sys.executable, str(ROOT / "examples" / (module + ".py"))],
@@ -136,12 +139,20 @@ def test_scripts_report_failures_without_retry(failing_api, tmp_path):
         assert expected in result.stderr
         assert "error-test-key" not in result.stdout + result.stderr
         assert "Price:" not in result.stdout
-    assert len(received) == 10
+    assert len(received) == 12
 
 
 @pytest.mark.parametrize("filename", NOTEBOOK_CASES)
 def test_generated_notebook_executes_without_source_tree(
-    fixture_api, cases, regime_cases, greeks_cases, iv_cases, analytics_cases, tmp_path, filename
+    fixture_api,
+    cases,
+    regime_cases,
+    greeks_cases,
+    iv_cases,
+    analytics_cases,
+    batch_cases,
+    tmp_path,
+    filename,
 ):
     endpoint, received = fixture_api
     subprocess.run(
@@ -177,7 +188,7 @@ def test_generated_notebook_executes_without_source_tree(
     )
     by_name = {
         case["name"]: case
-        for case in cases + regime_cases + greeks_cases + iv_cases + analytics_cases
+        for case in cases + regime_cases + greeks_cases + iv_cases + analytics_cases + batch_cases
     }
     assert [item[2] for item in received] == [
         by_name[name]["request"] for name in NOTEBOOK_CASES[filename]
@@ -186,3 +197,25 @@ def test_generated_notebook_executes_without_source_tree(
     assert "notebook-fixture-key" not in json.dumps(executed)
     if NOTEBOOK_CASES[filename]:
         assert "not reported" in json.dumps(executed)
+
+
+@pytest.mark.parametrize("script", ["batch_price", "batch_price_async"])
+def test_batch_examples_are_standalone_and_count_one_request(
+    fixture_api, batch_cases, tmp_path, script
+):
+    endpoint, received = fixture_api
+    path = tmp_path / (script + ".py")
+    shutil.copyfile(ROOT / "examples" / path.name, path)
+    result = subprocess.run(
+        [sys.executable, str(path)],
+        cwd=tmp_path,
+        env={**os.environ, "MORPHIQ_API_BASE_URL": endpoint, "MORPHIQ_API_KEY": "batch-example"},
+        stdin=subprocess.DEVNULL,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    assert received == [("/v1/price:batch", "Bearer batch-example", batch_cases[-1]["request"])]
+    assert result.stdout.count("Commercial CU charged:") == 1
+    assert "Item 0:" in result.stdout and "Item 1:" in result.stdout
+    assert "batch-example" not in result.stdout + result.stderr

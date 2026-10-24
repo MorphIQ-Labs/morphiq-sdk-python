@@ -5,7 +5,7 @@ Use the controls to load data and run an analysis; no code edits are required.
 
 | Workspace | Tools | API requests per action |
 | --- | --- | --- |
-| [Option pricing](pricing/options.ipynb) | European/American and model selectors, call/put, option inputs, automatic Yahoo daily/intraday underlying prices, comparison table, all-ten-Greeks panel, implied-volatility solver, combined premium analysis, session CU ledger, spot-sensitivity chart | Price: 1; price + Greeks: 1; solve IV: 1; analyze premium: 1; sensitivity: 9 sequential |
+| [Option pricing](pricing/options.ipynb) | European/American and model selectors, call/put, option inputs, automatic Yahoo daily/intraday underlying prices, comparison table, all-ten-Greeks panel, implied-volatility solver, combined premium analysis, session CU ledger, spot-sensitivity chart | Price: 1; price + Greeks: 1; solve IV: 1; analyze premium: 1; sensitivity: 1 batch of 9 items |
 | [Regime analysis](regime/identification.ipynb) | Ticker and interval selection, one-click Yahoo history download and analysis, price-history chart, latest regime assessment, score charts, provenance | Analyze: 1 |
 
 Setup, control changes and Yahoo downloads make no MorphIQ requests. Data stays

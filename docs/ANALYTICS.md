@@ -60,7 +60,8 @@ from Price option, Price + Greeks, Solve IV, Analyze premium and Spot sensitivit
 
 - Reported charges are summed with exact integer arithmetic, including zero.
 - API failures with reported charges count toward the sum, including failures
-  that stop a sweep. Successful and failed attempts each appear once.
+  that reject a sweep. The nine-item sensitivity batch counts once, including
+  mixed per-item outcomes. Successful and failed attempts each appear once.
 - A malformed numerical response can still carry valid metadata. The SDK exposes
   independently validated metadata on `ResponseError.metadata`, and its reported
   charge is included. Invalid metadata is not trusted.

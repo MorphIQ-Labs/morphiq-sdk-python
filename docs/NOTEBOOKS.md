@@ -30,8 +30,8 @@ to obtain 512 prices. Its **Analyze regime** button downloads and validates hist
 then submits the request and displays results in one click. If Yahoo returns too few
 valid prices, no MorphIQ request is sent. No separate data-loading cell is required.
 In pricing, **Price option** sends one
-request; **Spot sensitivity** sends nine sequential requests and stops on the first
-failure, preserving completed results. In regime, **Analyze regime** sends one
+request; **Spot sensitivity** sends nine scenarios in one batch, preserving each
+success or failure and counting the batch charge once. In regime, **Analyze regime** sends one
 API request. Each API action may
 consume your allowance. Changing a widget never submits a MorphIQ request.
 

@@ -2,6 +2,8 @@
 
 Python access to the MorphIQ Labs API, with runnable examples and notebooks for
 European and American option pricing, all-ten-Greeks analysis, implied volatility, combined analytics and regime identification.
+Pricing, Greeks, IV and combined analytics also support ordered batches.
+See [batch operations and rate limits](docs/BATCH.md).
 
 ## Quickstart
 
@@ -117,7 +119,7 @@ for it. Setup and control changes make no MorphIQ requests. Pricing loads Yahoo 
 on setup and when the ticker or interval changes. In regime, **Analyze regime** loads
 Yahoo history and displays the complete assessment in one click. Click **Price option**
 or **Price + Greeks**, **Solve IV**, **Analyze premium** or **Analyze regime** for one
-request. **Spot sensitivity** makes nine sequential requests. Yahoo data remains in memory.
+request. **Spot sensitivity** submits nine scenarios in one batch request. Yahoo data remains in memory.
 Dependencies are installed at build time, and notebook edits persist in a named volume.
 
 Stop with Ctrl-C, then `docker compose down`; the workspace is retained. If port

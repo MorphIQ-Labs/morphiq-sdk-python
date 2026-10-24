@@ -1,5 +1,8 @@
 """Errors without retained HTTP requests or credential-bearing trace messages."""
 
+from datetime import UTC, datetime
+from email.utils import parsedate_to_datetime
+
 from .models import ErrorEnvelope, ResponseMetadata, ServiceErrorMetadata
 
 
@@ -70,3 +73,30 @@ class APIError(MorphIQError):
         detail = f" ({self.code})" if self.code else ""
         support = f"; request_id={self.request_id}" if self.request_id else ""
         super().__init__(f"HTTP {status_code}{detail}: {self.message}{support}")
+
+
+class RateLimitError(APIError):
+    """HTTP 429, including gateway responses. No automatic wait, split or retry.
+
+    ``retry_after`` retains the raw server header; ``retry_delay`` interprets
+    delta-seconds or an HTTP date for callers choosing when to try again.
+    Absence or an invalid value returns None, never an invented zero delay.
+    """
+
+    def retry_delay(self, *, now: datetime | None = None) -> float | None:
+        value = self.retry_after
+        if value is None:
+            return None
+        value = value.strip()
+        try:
+            if value.isascii() and value.isdigit():
+                return float(int(value))
+            retry_at = parsedate_to_datetime(value)
+            if retry_at.tzinfo is None:
+                retry_at = retry_at.replace(tzinfo=UTC)
+            current = now if now is not None else datetime.now(UTC)
+            if current.tzinfo is None:
+                raise ValueError("now must include a timezone")
+            return max(0.0, (retry_at - current).total_seconds())
+        except (ValueError, TypeError, OverflowError):
+            return None
