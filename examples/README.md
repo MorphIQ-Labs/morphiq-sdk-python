@@ -29,18 +29,20 @@ Each connects to `https://api.morphiqlabs.com` and reads `MORPHIQ_API_KEY`, or
 prompts for the key with masked input. Set `MORPHIQ_API_BASE_URL` only to use a
 local or controlled test service.
 Run `unset MORPHIQ_API_KEY` when finished.
-Each file is self-contained: it constructs `PriceRequest` with the option inputs,
-calls the SDK, reads the price and model identity, and prints request/engine
+Each option example is self-contained: it constructs the appropriate typed request,
+calls the SDK and reads the operation-specific result, model identity, request/engine
 provenance and reported commercial CU charges. The error handlers show API failure
 details and distinguish unknown charges after transport failures. Scripts exit
-with a nonzero status on failure and do not retry.
+with a nonzero status on request-level failure and do not retry. An accepted
+batch can contain per-item errors, which its example prints alongside successes.
 
 The quickstart uses one sync client for two explicit option requests; the async
 script awaits them sequentially. Imports make no requests. You can copy a script
 outside this repository and run it with the SDK installed.
 
-See [the quickstart](../docs/QUICKSTART.md). Start Here includes the complete code
-from these tested scripts.
+See [the quickstart](../docs/QUICKSTART.md) and [all feature guides](../docs/README.md).
+Start Here links to the interactive workspaces; the standalone scripts remain the
+SDK usage demonstrations.
 
 The Greeks examples submit `GreeksRequest` to `client.greeks()` and display the
 price plus all ten derivatives, with the same model/charge evidence and error
@@ -58,3 +60,22 @@ combined response's commercial charge once. See [combined analytics](../docs/ANA
 The batch examples submit two explicit pricing requests in one call, preserve
 ordered item outcomes, and count the response charge once. See
 [batch operations and 429 handling](../docs/BATCH.md).
+
+## Regime and optional price data
+
+These examples download Yahoo history; they require the optional data extra:
+
+```sh
+python -m pip install -e '.[market-data]'
+export MORPHIQ_API_KEY="YOUR_API_KEY"
+python examples/identify_regime.py
+python examples/identify_regime_async.py
+python examples/provider_regime.py
+```
+
+Each script submits one regime request. The first two prompt for a ticker and
+support a masked key prompt; the provider example uses SPY and requires the
+exported key. See [regime interpretation](../docs/REGIME.md) and
+[provider interfaces](../docs/PRICE_PROVIDERS.md). Data stays in memory; no CSV
+intermediate is required. The provider example lets errors propagate; it does not
+retry. These scripts do not make Yahoo a core SDK dependency.

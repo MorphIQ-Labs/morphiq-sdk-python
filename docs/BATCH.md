@@ -26,6 +26,79 @@ These scripts construct two complete option requests, send one batch, handle
 individual results, and print its request ID, provenance and charge once.
 For async calls, use `async with AsyncMorphIQ()` and await the same method name.
 
+## Constructing each batch type
+
+This builds all four envelope types without sending requests, then submits **one
+analytics batch**. The single item is a synthetic European call. Add explicitly
+constructed items to each list to send more contracts in that batch.
+
+```python
+from morphiq_sdk import (
+    AnalyticsRequest,
+    BatchAnalyticsRequest,
+    BatchGreeksRequest,
+    BatchImpliedVolatilityRequest,
+    BatchPriceRequest,
+    GreeksRequest,
+    ImpliedVolatilityRequest,
+    MorphIQ,
+    PriceRequest,
+)
+
+option = {
+    "exercise_style": "european",
+    "option_type": "call",
+    "spot": 100.0,
+    "strike": 100.0,
+    "time_to_expiry_years": 1.0,
+    "risk_free_rate": 0.05,
+    "dividend_yield": 0.0,
+    "pricing_model": "auto",
+}
+price_batch = BatchPriceRequest(requests=[PriceRequest(**option, volatility=0.20)])
+greeks_batch = BatchGreeksRequest(requests=[GreeksRequest(**option, volatility=0.20)])
+iv_batch = BatchImpliedVolatilityRequest(
+    requests=[ImpliedVolatilityRequest(**option, market_price=10.450583572185538)]
+)
+analytics_batch = BatchAnalyticsRequest(
+    requests=[AnalyticsRequest(**option, volatility=0.35, market_price=10.450583572185538)]
+)
+
+with MorphIQ() as client:
+    response = client.analytics_batch(analytics_batch)
+
+for item in response.results:
+    if item.status == "success":
+        print(item.index, item.result.model_dump(exclude_unset=True))
+    else:
+        print(item.index, item.error.code, item.error.message)
+charged = response.metadata.fcu_charged
+print("Batch CU:", charged if charged is not None else "not reported")
+print("Request ID:", response.metadata.request_id)
+```
+
+The other calls are `client.price_batch(price_batch)`,
+`client.greeks_batch(greeks_batch)` and `client.implied_volatility_batch(iv_batch)`.
+Each sends a separate request if executed. Each operation keeps the corresponding
+[single-request fields and units](API.md#option-request-fields).
+
+For async execution, reuse the constructed envelope with this replacement for
+the synchronous call; this sends one analytics batch when run:
+
+```python
+import asyncio
+
+from morphiq_sdk import AsyncMorphIQ
+
+
+async def analyze():
+    async with AsyncMorphIQ() as client:
+        return await client.analytics_batch(analytics_batch)
+
+
+response = asyncio.run(analyze())  # In Jupyter: response = await analyze()
+```
+
 ## Outcomes and costs
 
 `response.results` retains submission order and explicit zero-based `index`.

@@ -61,3 +61,6 @@ Keep `metadata.request_id` for support. Commercial charges are
 `metadata.fcu_charged`; absent means unreported, not zero. Service failures raise
 `APIError` with server evidence. Transport failures and malformed responses can
 leave execution and charges unknown. Neither client retries automatically.
+
+See the [client/model reference](API.md) for shared configuration and errors,
+and the [documentation index](README.md) for related features.

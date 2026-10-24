@@ -80,3 +80,6 @@ alongside the input snapshot, model, engine identity, request ID and charge.
 The premium is entered manually; Yahoo supplies only the underlying price.
 Solving does not read or change the pricing volatility assumption. Editing inputs
 makes no MorphIQ request and does not relabel a saved result.
+
+See the [client/model reference](API.md) for shared configuration and errors,
+and the [documentation index](README.md) for related features.

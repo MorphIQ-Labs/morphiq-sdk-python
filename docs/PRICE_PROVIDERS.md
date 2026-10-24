@@ -83,3 +83,6 @@ Offline tests use the adapter's optional `downloader` constructor argument to re
 synthetic frames. Production callers normally use `YahooPriceProvider()` directly.
 The isolated package check verifies that the base SDK and adapter import without
 Yahoo or pandas installed, and that downloading explains the missing optional extra.
+
+See the [client/model reference](API.md) for shared configuration and errors,
+and the [documentation index](README.md) for related features.
