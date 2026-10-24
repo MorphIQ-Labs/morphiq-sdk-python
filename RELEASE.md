@@ -52,3 +52,13 @@ trusted publishing, public support and package recovery/yanking policy.
 [Issue #14](https://github.com/MorphIQ-Labs/morphiq-sdk-python/issues/14) tracks
 versioned notebook image publication. No package upload or deployment follows
 from running these builds or creating a GitHub release.
+
+## Candidate acceptance
+
+Before public release, record acceptance against the exact generated release PR
+artifact, not an editable checkout. The [readiness audit](docs/RELEASE_READINESS.md)
+contains the current verified scope, remaining distribution gates and commands
+for `scripts/check_release_candidate.py`. It checks a built wheel in a fresh
+interpreter against a digest-verified loopback service, including optional extras
+and notebook tests. Repeat when the implementation candidate changes. This check
+does not replace fresh-evaluator signup, public install or published-image acceptance.

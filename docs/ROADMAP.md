@@ -5,9 +5,14 @@
 The SDK backlog and implementation live in this GitHub repository. Contract
 publication and website integration are implemented in the API repository and
 linked from their SDK dependency issues. Link PRs/MRs and evidence back to the
-issues. The first preview implements sync/async single-option pricing, introductory
-European/American examples, Start Here and a local Docker launcher. The broader
-issue acceptance below remains open until its full scope is demonstrated.
+issues. The merged SDK implements sync/async pricing, Greeks, implied volatility,
+combined analytics, regime, ordered batches, explicit sequential workflows,
+optional pandas tables and local pricing/regime analysis workspaces. Issue
+acceptance remains open where publication, integration or broader recipe scope
+has not been demonstrated.
+
+See the [2026-10-24 first-release readiness audit](RELEASE_READINESS.md) for exact
+candidate identities, installed-wheel/Docker evidence and remaining gates.
 
 | Work item | Owner | Dependencies |
 | --- | --- | --- |
