@@ -204,3 +204,39 @@ def test_native_batches_preserve_order_errors_and_metadata(batch_cases, index):
     assert raw["results"] == case["response"]["results"]
     assert [item.status for item in sync.results] == ["success", "error", "success"]
     assert sync.metadata.fcu_charged is None
+
+
+@pytest.mark.parametrize("index", range(4))
+def test_native_workflows_keep_chunk_metadata_and_order(batch_cases, index):
+    from test_workflows import OPERATIONS
+
+    provenance = json.loads((Path(__file__).parents[1] / "contracts/provenance.json").read_text())
+    assert (
+        hashlib.sha256(httpx.get(f"{ENDPOINT}/openapi.json").content).hexdigest()
+        == provenance["sha256"]
+    )
+    factory, cls = OPERATIONS[index]
+    case = batch_cases[index]
+    requests = cls(**case["request"]).requests * 2
+
+    async def run():
+        async with AsyncMorphIQ(base_url=ENDPOINT, allow_unauthenticated=True) as client:
+            workflow = getattr(client, factory)(requests, chunk_size=3)
+            await workflow.run()
+            return workflow
+
+    with MorphIQ(base_url=ENDPOINT, allow_unauthenticated=True) as client:
+        sync = getattr(client, factory)(requests, chunk_size=3)
+        sync.run()
+    for workflow in (sync, asyncio.run(run())):
+        assert workflow.state == "completed"
+        assert len(workflow.attempts) == 2
+        assert workflow.unknown_charge_count == 2
+        assert workflow.total_fcu_charged is None
+        assert workflow.reported_fcu_charged == 0
+        assert [(a.start, a.stop) for a in workflow.attempts] == [(0, 3), (3, 6)]
+        assert workflow.attempts[0].request_id != workflow.attempts[1].request_id
+        for attempt in workflow.attempts:
+            assert [item.model_dump(exclude_unset=True) for item in attempt.response.results] == (
+                case["response"]["results"]
+            )

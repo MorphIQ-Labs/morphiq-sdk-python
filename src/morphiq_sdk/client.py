@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+from collections.abc import Sequence
 from types import TracebackType
 from typing import Any, TypeVar
 
@@ -34,6 +35,7 @@ from .models import (
     ResponseMetadata,
     _BatchResponse,
 )
+from .workflows import AsyncBatchWorkflow, BatchWorkflow, _prepare_chunks
 
 _ResponseType = TypeVar(
     "_ResponseType",
@@ -248,6 +250,39 @@ class MorphIQ:
         response = self._post("v1/analytics:batch", payload, BatchAnalyticsResponse)
         return _check_batch(response, len(payload["requests"]))
 
+    def price_workflow(
+        self, requests: Sequence[PriceRequest], *, chunk_size: int
+    ) -> BatchWorkflow[BatchPriceRequest, BatchPriceResponse]:
+        """Prepare explicit sequential chunks without sending requests; call run() once."""
+        return BatchWorkflow(
+            _prepare_chunks(requests, BatchPriceRequest, chunk_size), self.price_batch
+        )
+
+    def greeks_workflow(
+        self, requests: Sequence[GreeksRequest], *, chunk_size: int
+    ) -> BatchWorkflow[BatchGreeksRequest, BatchGreeksResponse]:
+        """Prepare explicit sequential chunks without sending requests; call run() once."""
+        return BatchWorkflow(
+            _prepare_chunks(requests, BatchGreeksRequest, chunk_size), self.greeks_batch
+        )
+
+    def implied_volatility_workflow(
+        self, requests: Sequence[ImpliedVolatilityRequest], *, chunk_size: int
+    ) -> BatchWorkflow[BatchImpliedVolatilityRequest, BatchImpliedVolatilityResponse]:
+        """Prepare explicit sequential chunks without sending requests; call run() once."""
+        return BatchWorkflow(
+            _prepare_chunks(requests, BatchImpliedVolatilityRequest, chunk_size),
+            self.implied_volatility_batch,
+        )
+
+    def analytics_workflow(
+        self, requests: Sequence[AnalyticsRequest], *, chunk_size: int
+    ) -> BatchWorkflow[BatchAnalyticsRequest, BatchAnalyticsResponse]:
+        """Prepare explicit sequential chunks without sending requests; call run() once."""
+        return BatchWorkflow(
+            _prepare_chunks(requests, BatchAnalyticsRequest, chunk_size), self.analytics_batch
+        )
+
     def _post(
         self, path: str, payload: dict[str, Any], model: type[_ResponseType]
     ) -> _ResponseType:
@@ -356,6 +391,39 @@ class AsyncMorphIQ:
         payload = request.to_wire()
         response = await self._post("v1/analytics:batch", payload, BatchAnalyticsResponse)
         return _check_batch(response, len(payload["requests"]))
+
+    def price_workflow(
+        self, requests: Sequence[PriceRequest], *, chunk_size: int
+    ) -> AsyncBatchWorkflow[BatchPriceRequest, BatchPriceResponse]:
+        """Prepare explicit sequential chunks without sending requests; call run() once."""
+        return AsyncBatchWorkflow(
+            _prepare_chunks(requests, BatchPriceRequest, chunk_size), self.price_batch
+        )
+
+    def greeks_workflow(
+        self, requests: Sequence[GreeksRequest], *, chunk_size: int
+    ) -> AsyncBatchWorkflow[BatchGreeksRequest, BatchGreeksResponse]:
+        """Prepare explicit sequential chunks without sending requests; call run() once."""
+        return AsyncBatchWorkflow(
+            _prepare_chunks(requests, BatchGreeksRequest, chunk_size), self.greeks_batch
+        )
+
+    def implied_volatility_workflow(
+        self, requests: Sequence[ImpliedVolatilityRequest], *, chunk_size: int
+    ) -> AsyncBatchWorkflow[BatchImpliedVolatilityRequest, BatchImpliedVolatilityResponse]:
+        """Prepare explicit sequential chunks without sending requests; call run() once."""
+        return AsyncBatchWorkflow(
+            _prepare_chunks(requests, BatchImpliedVolatilityRequest, chunk_size),
+            self.implied_volatility_batch,
+        )
+
+    def analytics_workflow(
+        self, requests: Sequence[AnalyticsRequest], *, chunk_size: int
+    ) -> AsyncBatchWorkflow[BatchAnalyticsRequest, BatchAnalyticsResponse]:
+        """Prepare explicit sequential chunks without sending requests; call run() once."""
+        return AsyncBatchWorkflow(
+            _prepare_chunks(requests, BatchAnalyticsRequest, chunk_size), self.analytics_batch
+        )
 
     async def _post(
         self, path: str, payload: dict[str, Any], model: type[_ResponseType]
