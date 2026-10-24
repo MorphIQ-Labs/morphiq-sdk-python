@@ -1,7 +1,7 @@
 # MorphIQ SDK for Python
 
 Python access to the MorphIQ Labs API, with runnable examples and notebooks for
-European and American option pricing and regime identification.
+European and American option pricing, all-ten-Greeks analysis and regime identification.
 
 ## Quickstart
 
@@ -107,7 +107,7 @@ Choose an analysis workspace and run all cells once to display its controls:
 
 - [Option pricing](notebooks/pricing/options.ipynb): European/American and model
   dropdowns, call/put selection, editable assumptions, automatic Yahoo daily/intraday underlying prices,
-  a valuation comparison table and a spot-sensitivity chart.
+  a valuation comparison table, a price-and-Greeks panel and a spot-sensitivity chart.
 - [Regime analysis](notebooks/regime/identification.ipynb): ticker selection,
   Yahoo daily/intraday price history, latest regime assessment, score charts and provenance.
 
@@ -115,7 +115,7 @@ Compose passes your API key into the container; if unset, the workspace prompts
 for it. Setup and control changes make no MorphIQ requests. Pricing loads Yahoo prices automatically
 on setup and when the ticker or interval changes. In regime, **Analyze regime** loads
 Yahoo history and displays the complete assessment in one click. Click **Price option**
-for one request, **Spot sensitivity** for nine sequential requests, or
+or **Price + Greeks** for one request, **Spot sensitivity** for nine sequential requests, or
 **Analyze regime** for one request. Yahoo data remains in memory.
 Dependencies are installed at build time, and notebook edits persist in a named volume.
 

@@ -13,7 +13,7 @@ version. It was copied from immutable reviewed main source; automated published
 artifact delivery remains #2. SDK tests and builds use the offline snapshot
 without private repository or numerical engine access.
 
-The SDK covers POST /v1/price and POST /v1/regime. Hand-written model field sets and serialized
+The SDK covers POST /v1/price, POST /v1/greeks and POST /v1/regime. Hand-written model field sets and serialized
 requests/responses are checked against the pinned schema. Digest/version
 checks detect accidental snapshot changes. Intentional upgrades need reviewed
 provenance and tests; this is not a complete future-operation compatibility generator.
@@ -38,3 +38,7 @@ prediction. They cover the three head statuses, ordered scores, consumed-range
 metadata, model provenance and service errors. The reviewed OpenAPI bytes and
 source identity are unchanged. Optional controlled-service integration checks
 SDK results against native JSON; it does not expect synthetic fixture scores.
+
+Greeks fixtures contain synthetic inputs evaluated by the native service built from
+the pinned API commit. Tests verify all ten unscaled values, model identity,
+metadata, error evidence and sync/async parity against native JSON.

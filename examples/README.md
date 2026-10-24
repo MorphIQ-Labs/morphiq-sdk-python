@@ -15,6 +15,8 @@ The other examples use the same environment settings:
 python examples/price_european.py
 python examples/price_american.py
 python examples/price_async.py
+python examples/greeks.py
+python examples/greeks_async.py
 ```
 
 Each connects to `https://api.morphiqlabs.com` and reads `MORPHIQ_API_KEY`, or
@@ -33,3 +35,8 @@ outside this repository and run it with the SDK installed.
 
 See [the quickstart](../docs/QUICKSTART.md). Start Here includes the complete code
 from these tested scripts.
+
+The Greeks examples submit `GreeksRequest` to `client.greeks()` and display the
+price plus all ten derivatives, with the same model/charge evidence and error
+handling. Values use annual time units and unit volatility/rate bases. See
+[the Greeks guide](../docs/GREEKS.md).

@@ -16,7 +16,7 @@ from nbclient import NotebookClient
 
 NOTEBOOK_CASES = {
     "start-here.ipynb": (),
-    "pricing/options.ipynb": ("european", "american"),
+    "pricing/options.ipynb": ("european", "greeks-european", "american", "greeks-american"),
     "regime/identification.ipynb": ("regime",),
 }
 
@@ -32,6 +32,12 @@ use_yahoo_close(pd.DataFrame({'Close': [100.0]}, index=pd.to_datetime(['2026-01-
 assert spot.value == 100.0 and 'SPY' in spot_source
 price_button.click()
 assert len(price_history) == 1 and last_response.result.price == 10.450583572185538
+greeks_button.click()
+assert last_greeks_response.metadata.request_id == 'fixture-greeks-european'
+assert len(greeks_table) == 10 and greeks_table.loc['vega', 'Value'] == 37.52403469169381
+assert greeks_table.loc['theta', 'Value'] == -6.4140275464382
+assert sum('text/html' in o.get('data', {}) for o in greeks_output.outputs) == 2
+assert greeks_snapshot['Style'] == 'european' and greeks_snapshot['CU charged'] == 'not reported'
 exercise.value = 'american'
 assert 'black_scholes_merton' not in model.options
 model.value = 'bjerksund_stensland_1993'
@@ -45,6 +51,10 @@ assert current_request().dividend_yield == 0.01
 assert current_request().volatility == 0.2
 price_button.click()
 assert len(price_history) == 2
+greeks_button.click()
+assert last_greeks_response.metadata.request_id == 'fixture-greeks-american'
+assert greeks_snapshot['Style'] == 'american'
+assert not greeks_button.disabled
 assert price_history[0]['Style'] == 'european' and price_history[1]['Style'] == 'american'
 assert price_history[0]['Strike'] == 100 and price_history[1]['Strike'] == 105
 assert price_history[0]['CU charged'] == 'not reported'
@@ -95,7 +105,14 @@ def execute(notebook_path: Path, fixture_paths: list[Path], notebook_root: Path)
     class Handler(BaseHTTPRequestHandler):
         def do_POST(self) -> None:
             body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
-            match = next((case for case in cases if case["request"] == body), None)
+            match = next(
+                (
+                    case
+                    for case in cases
+                    if case["request"] == body and case.get("path", "/v1/price") == self.path
+                ),
+                None,
+            )
             if (
                 self.path != (match or {}).get("path", "/v1/price")
                 or self.headers.get("Authorization") != f"Bearer {credential}"
