@@ -61,6 +61,15 @@ The batch examples submit two explicit pricing requests in one call, preserve
 ordered item outcomes, and count the response charge once. See
 [batch operations and 429 handling](../docs/BATCH.md).
 
+The [chunked pricing examples](../docs/WORKFLOWS.md) prepare five synthetic spot
+scenarios and send three sequential batch requests. They retain partial results
+and exact reported CU subtotals if a request fails, without retries:
+
+```sh
+python examples/chunked_price.py
+python examples/chunked_price_async.py
+```
+
 ## Regime and optional price data
 
 These examples download Yahoo history; they require the optional data extra:

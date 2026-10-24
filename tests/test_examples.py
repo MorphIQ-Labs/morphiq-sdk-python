@@ -31,7 +31,8 @@ def test_examples_import_without_credentials_or_requests():
             "examples.greeks, examples.greeks_async, "
             "examples.implied_volatility, examples.implied_volatility_async, "
             "examples.analytics, examples.analytics_async, "
-            "examples.batch_price, examples.batch_price_async",
+            "examples.batch_price, examples.batch_price_async, "
+            "examples.chunked_price, examples.chunked_price_async",
         ],
         cwd=ROOT,
         env=environment,

@@ -50,6 +50,22 @@ All request/response classes below are exported from `morphiq_sdk`.
 price, IV and Greeks requests to reproduce it. Batch methods likewise send one
 batch envelope; they do not split requests or start parallel calls.
 
+## Sequential workflow factories
+
+Both clients expose `price_workflow(requests, *, chunk_size)`,
+`greeks_workflow(requests, *, chunk_size)`,
+`implied_volatility_workflow(requests, *, chunk_size)` and
+`analytics_workflow(requests, *, chunk_size)`. Each takes a sequence of the
+corresponding single-operation request models and validates/snapshots all inputs
+without sending HTTP requests.
+
+Sync factories return `BatchWorkflow`; async factories return
+`AsyncBatchWorkflow`. Call `workflow.run()` or `await workflow.run()` once while
+the client is open. Execution is sequential and stops on request-level failure.
+`ChunkAttempt` records preserve results, errors, original input ranges and each
+request's commercial charge. See [workflow properties, exact CU accounting and
+stopping behavior](WORKFLOWS.md).
+
 ## Option request fields
 
 `PriceRequest`, `GreeksRequest`, `ImpliedVolatilityRequest` and `AnalyticsRequest`

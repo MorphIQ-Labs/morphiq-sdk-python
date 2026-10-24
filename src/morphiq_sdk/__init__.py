@@ -39,10 +39,14 @@ from .models import (
     RegimeRequest,
     RegimeResponse,
 )
+from .workflows import AsyncBatchWorkflow, BatchWorkflow, ChunkAttempt
 
 __version__ = version("morphiq-sdk")
 
 __all__ = [
+    "AsyncBatchWorkflow",
+    "BatchWorkflow",
+    "ChunkAttempt",
     "BatchPriceRequest",
     "BatchPriceResponse",
     "BatchGreeksRequest",
