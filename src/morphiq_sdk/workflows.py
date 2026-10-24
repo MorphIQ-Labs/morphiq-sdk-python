@@ -1,7 +1,8 @@
-"""Explicit sequential batch execution; no retries, numerical work or data dependencies."""
+"""Explicit bounded batch execution; no retries, numerical work or data dependencies."""
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
 from threading import Lock
@@ -102,9 +103,9 @@ class _Workflow(Generic[_RequestT, _ResponseT]):
         self._attempts.append(ChunkAttempt(start=start, stop=stop))
 
     def _finish_attempt(
-        self, *, response: _ResponseT | None = None, error: BaseException | None = None
+        self, index: int, *, response: _ResponseT | None = None, error: BaseException | None = None
     ) -> None:
-        attempt = self._attempts[-1]
+        attempt = self._attempts[index]
         metadata: ResponseMetadata | ServiceErrorMetadata | None = (
             response.metadata if response is not None else None
         )
@@ -112,7 +113,7 @@ class _Workflow(Generic[_RequestT, _ResponseT]):
         if isinstance(error, (APIError, ResponseError)):
             metadata = error.metadata
             request_id = error.request_id
-        self._attempts[-1] = ChunkAttempt(
+        self._attempts[index] = ChunkAttempt(
             start=attempt.start,
             stop=attempt.stop,
             response=response,
@@ -147,9 +148,9 @@ class BatchWorkflow(_Workflow[_RequestT, _ResponseT]):
                     response = self._operation(chunk)
                 except BaseException as error:
                     # Includes interruption: it does not establish a zero charge.
-                    self._finish_attempt(error=error)
+                    self._finish_attempt(index, error=error)
                     raise
-                self._finish_attempt(response=response)
+                self._finish_attempt(index, response=response)
             self._state = "completed"
         finally:
             if self._state == "running":
@@ -157,25 +158,86 @@ class BatchWorkflow(_Workflow[_RequestT, _ResponseT]):
 
 
 class AsyncBatchWorkflow(_Workflow[_RequestT, _ResponseT]):
-    """Async equivalent; sequential awaits, with cancellation retained and propagated."""
+    """Async workflow; sequential by default, with explicit bounded concurrency.
+
+    For max_concurrency > 1, asyncio workers stop taking new chunks after the
+    first observed failure and drain in-flight calls before raising that error.
+    Caller cancellation cancels and awaits all workers. Every started attempt
+    retains its outcome and charge evidence, in original submission order.
+    """
 
     def __init__(
-        self, chunks: Sequence[_RequestT], operation: Callable[[_RequestT], Awaitable[_ResponseT]]
+        self,
+        chunks: Sequence[_RequestT],
+        operation: Callable[[_RequestT], Awaitable[_ResponseT]],
+        *,
+        max_concurrency: int = 1,
     ) -> None:
+        if type(max_concurrency) is not int or max_concurrency < 1:
+            raise ValueError("max_concurrency must be a positive integer.")
         super().__init__(chunks)
         self._operation = operation
+        self._max_concurrency = max_concurrency
+
+    @property
+    def max_concurrency(self) -> int:
+        """Caller-selected upper bound on simultaneous requests, not an account limit."""
+        return self._max_concurrency
+
+    async def _execute(self, index: int) -> BaseException | None:
+        # Record only when a worker actually starts the call, never when merely queued.
+        self._start_attempt(index)
+        try:
+            response = await self._operation(self._chunks[index])
+        except BaseException as error:
+            self._finish_attempt(index, error=error)
+            return error
+        self._finish_attempt(index, response=response)
+        return None
+
+    async def _run_concurrent(self) -> None:
+        next_index = 0
+        first_error: BaseException | None = None
+
+        async def worker() -> None:
+            nonlocal next_index, first_error
+            task = asyncio.current_task()
+            while first_error is None and next_index < len(self._chunks):
+                # No await between selecting a chunk and starting its attempt:
+                # submissions remain an ordered prefix even if completions differ.
+                index = next_index
+                next_index += 1
+                error = await self._execute(index)
+                # A transport may complete with a valid receipt while handling
+                # cancellation. Keep it, but never take another chunk afterward.
+                if error is None and task is not None and task.cancelling():
+                    error = asyncio.CancelledError()
+                if error is not None:
+                    if first_error is None:
+                        first_error = error
+                    if isinstance(error, asyncio.CancelledError):
+                        raise error
+                    return
+
+        # A fixed worker pool bounds both task count and HTTP concurrency. TaskGroup
+        # owns cancellation and joins every worker, including repeated cancellation.
+        async with asyncio.TaskGroup() as group:
+            for _ in range(min(self._max_concurrency, len(self._chunks))):
+                group.create_task(worker())
+        if first_error is not None:
+            # Preserve APIError/RateLimitError handlers; other errors remain in attempts.
+            raise first_error
 
     async def run(self) -> None:
         self._begin()
         try:
-            for index, chunk in enumerate(self._chunks):
-                self._start_attempt(index)
-                try:
-                    response = await self._operation(chunk)
-                except BaseException as error:
-                    self._finish_attempt(error=error)
-                    raise
-                self._finish_attempt(response=response)
+            if self._max_concurrency == 1:
+                for index in range(len(self._chunks)):
+                    error = await self._execute(index)
+                    if error is not None:
+                        raise error
+            else:
+                await self._run_concurrent()
             self._state = "completed"
         finally:
             if self._state == "running":

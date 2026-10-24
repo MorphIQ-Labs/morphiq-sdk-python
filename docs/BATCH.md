@@ -12,7 +12,7 @@ Submit one explicit ordered batch with either `MorphIQ` or `AsyncMorphIQ`:
 Each envelope takes `requests`, a list of the corresponding single-operation
 request models. One call sends one HTTP request. These methods do not split batches,
 create concurrent work, retry rejected requests, or replay failed items.
-For caller-sized sequential chunks and per-request cost accounting, use an
+For caller-sized chunks, optional async concurrency and per-request costs, use an
 explicit [batch workflow](WORKFLOWS.md).
 The reviewed wire schema allows 1–1024 items; the service applies the account's
 actual limit, which may be lower. The SDK does not hardcode plan limits.

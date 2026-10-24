@@ -393,36 +393,47 @@ class AsyncMorphIQ:
         return _check_batch(response, len(payload["requests"]))
 
     def price_workflow(
-        self, requests: Sequence[PriceRequest], *, chunk_size: int
+        self, requests: Sequence[PriceRequest], *, chunk_size: int, max_concurrency: int = 1
     ) -> AsyncBatchWorkflow[BatchPriceRequest, BatchPriceResponse]:
-        """Prepare explicit sequential chunks without sending requests; call run() once."""
+        """Prepare chunks without HTTP; max_concurrency explicitly bounds async execution."""
         return AsyncBatchWorkflow(
-            _prepare_chunks(requests, BatchPriceRequest, chunk_size), self.price_batch
+            _prepare_chunks(requests, BatchPriceRequest, chunk_size),
+            self.price_batch,
+            max_concurrency=max_concurrency,
         )
 
     def greeks_workflow(
-        self, requests: Sequence[GreeksRequest], *, chunk_size: int
+        self, requests: Sequence[GreeksRequest], *, chunk_size: int, max_concurrency: int = 1
     ) -> AsyncBatchWorkflow[BatchGreeksRequest, BatchGreeksResponse]:
-        """Prepare explicit sequential chunks without sending requests; call run() once."""
+        """Prepare chunks without HTTP; max_concurrency explicitly bounds async execution."""
         return AsyncBatchWorkflow(
-            _prepare_chunks(requests, BatchGreeksRequest, chunk_size), self.greeks_batch
+            _prepare_chunks(requests, BatchGreeksRequest, chunk_size),
+            self.greeks_batch,
+            max_concurrency=max_concurrency,
         )
 
     def implied_volatility_workflow(
-        self, requests: Sequence[ImpliedVolatilityRequest], *, chunk_size: int
+        self,
+        requests: Sequence[ImpliedVolatilityRequest],
+        *,
+        chunk_size: int,
+        max_concurrency: int = 1,
     ) -> AsyncBatchWorkflow[BatchImpliedVolatilityRequest, BatchImpliedVolatilityResponse]:
-        """Prepare explicit sequential chunks without sending requests; call run() once."""
+        """Prepare chunks without HTTP; max_concurrency explicitly bounds async execution."""
         return AsyncBatchWorkflow(
             _prepare_chunks(requests, BatchImpliedVolatilityRequest, chunk_size),
             self.implied_volatility_batch,
+            max_concurrency=max_concurrency,
         )
 
     def analytics_workflow(
-        self, requests: Sequence[AnalyticsRequest], *, chunk_size: int
+        self, requests: Sequence[AnalyticsRequest], *, chunk_size: int, max_concurrency: int = 1
     ) -> AsyncBatchWorkflow[BatchAnalyticsRequest, BatchAnalyticsResponse]:
-        """Prepare explicit sequential chunks without sending requests; call run() once."""
+        """Prepare chunks without HTTP; max_concurrency explicitly bounds async execution."""
         return AsyncBatchWorkflow(
-            _prepare_chunks(requests, BatchAnalyticsRequest, chunk_size), self.analytics_batch
+            _prepare_chunks(requests, BatchAnalyticsRequest, chunk_size),
+            self.analytics_batch,
+            max_concurrency=max_concurrency,
         )
 
     async def _post(

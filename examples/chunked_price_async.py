@@ -1,9 +1,10 @@
-"""Price five synthetic spot scenarios in three sequential batch requests.
+"""Price five synthetic spot scenarios in three explicitly bounded batch requests.
 
-Run: python -m examples.chunked_price_async
+Run: python -m examples.chunked_price_async --max-concurrency 2
 Set MORPHIQ_API_KEY first, or enter it at the masked prompt.
 """
 
+import argparse
 import asyncio
 import os
 from getpass import getpass
@@ -11,7 +12,7 @@ from getpass import getpass
 from morphiq_sdk import AsyncMorphIQ, MorphIQError, PriceRequest, RateLimitError
 
 
-async def main() -> None:
+async def main(max_concurrency: int = 1) -> None:
     api_key = os.environ.get("MORPHIQ_API_KEY") or getpass("MorphIQ API key: ")
     requests = [
         PriceRequest(
@@ -29,8 +30,9 @@ async def main() -> None:
 
     async with AsyncMorphIQ(api_key=api_key) as client:
         # Choose a size allowed for your account. Two is illustrative, not a plan limit.
-        workflow = client.price_workflow(requests, chunk_size=2)
+        workflow = client.price_workflow(requests, chunk_size=2, max_concurrency=max_concurrency)
         print("Planned HTTP requests:", workflow.planned_chunk_count)
+        print("Maximum concurrent requests:", workflow.max_concurrency)
         try:
             await workflow.run()
         except RateLimitError as error:
@@ -68,4 +70,11 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--max-concurrency",
+        type=int,
+        default=1,
+        help="Maximum simultaneous requests; defaults to sequential execution.",
+    )
+    asyncio.run(main(parser.parse_args().max_concurrency))

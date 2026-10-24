@@ -207,7 +207,8 @@ def test_native_batches_preserve_order_errors_and_metadata(batch_cases, index):
 
 
 @pytest.mark.parametrize("index", range(4))
-def test_native_workflows_keep_chunk_metadata_and_order(batch_cases, index):
+@pytest.mark.parametrize("max_concurrency", [1, 2])
+def test_native_workflows_keep_chunk_metadata_and_order(batch_cases, index, max_concurrency):
     from test_workflows import OPERATIONS
 
     provenance = json.loads((Path(__file__).parents[1] / "contracts/provenance.json").read_text())
@@ -221,7 +222,9 @@ def test_native_workflows_keep_chunk_metadata_and_order(batch_cases, index):
 
     async def run():
         async with AsyncMorphIQ(base_url=ENDPOINT, allow_unauthenticated=True) as client:
-            workflow = getattr(client, factory)(requests, chunk_size=3)
+            workflow = getattr(client, factory)(
+                requests, chunk_size=3, max_concurrency=max_concurrency
+            )
             await workflow.run()
             return workflow
 

@@ -1,4 +1,4 @@
-# Sequential batch workflows
+# Batch workflows
 
 Use a workflow when you explicitly want to divide an ordered list into multiple
 HTTP batch requests. The existing `*_batch()` methods still send exactly one
@@ -16,7 +16,9 @@ Both `MorphIQ` and `AsyncMorphIQ` provide these factories:
 Every factory requires `chunk_size=`. Choose a positive integer allowed by your
 account; the SDK checks the reviewed wire ceiling of 1024, not customer plan
 limits. A smaller final chunk is allowed. Empty input completes without HTTP
-requests and has total cost zero. No concurrency, waiting or retries are added.
+requests and has total cost zero. Execution is sequential by default. Async
+workflows accept an explicit
+`max_concurrency`; no automatic waiting, retries or plan-limit discovery is added.
 
 ## Prepare, execute and inspect
 
@@ -72,7 +74,8 @@ sequences, not streaming input. Keep the client open while running the workflow.
 
 Async factories are also synchronous preparation methods. Use
 `workflow = client.price_workflow(requests, chunk_size=2)` inside
-`async with AsyncMorphIQ()`, then **`await workflow.run()`**. Each chunk completes
+`async with AsyncMorphIQ()`, then **`await workflow.run()`**. With the default
+`max_concurrency=1`, each chunk completes
 before the next starts. The returned types are `BatchWorkflow` and
 `AsyncBatchWorkflow`; `run()` returns `None`, with progress retained on the object.
 
@@ -114,13 +117,59 @@ internal `units_charged`, and item counts do not contribute to the charge total.
 An error can stop execution with every attempted charge known, while the
 whole-workflow total remains `None` because the work is incomplete.
 
+## Opt-in async concurrency
+
+All four async factories accept `max_concurrency=1`. Pass a positive integer to
+bound simultaneous batch requests, for example:
+
+```python
+# Inside async with AsyncMorphIQ() as client:
+workflow = client.price_workflow(requests, chunk_size=2, max_concurrency=2)
+await workflow.run()
+```
+
+Five inputs still create three total HTTP requests, with at most two in flight.
+`chunk_size` bounds items per request; `max_concurrency` bounds requests in flight.
+Choose both for your account. The SDK does not infer plan limits or increase
+HTTP connection limits. The setting applies to this workflow, not all clients
+or workflows in the process. Sync factories remain sequential.
+
+For `max_concurrency > 1`, execution uses Python's standard `asyncio.TaskGroup`
+and a fixed worker pool. Workers take chunks in input order; a free worker can
+take the next chunk without waiting for a slower earlier request. Only calls
+that start receive attempt records. There is no task created for every input.
+`workflow.max_concurrency` exposes the configured bound.
+
+Completions may arrive out of order, but `attempts`, original input ranges and
+per-chunk result indices retain submission order. Each receipt's CU is counted
+once, including errors; never infer charges from completion order or item count.
+
+Run the async example with explicit concurrency:
+
+```sh
+python -m examples.chunked_price_async --max-concurrency 2
+```
+
 ## Stopping and subsequent work
 
 An accepted response containing item-level failures is retained and processing
 continues. HTTP errors (including 429), timeouts, transport failures and invalid
-responses stop immediately and propagate the original exception. Keyboard
-interrupts and async cancellation also propagate after retaining the interrupted
-attempt with unknown charge. There is no automatic retry or chunk-size reduction.
+responses stop new submissions as soon as the failure is observed. With
+concurrency enabled, already-running calls finish and retain their results and
+charges before the **first observed exception** is raised. A slow in-flight call
+can therefore delay the error until it finishes or reaches its client timeout.
+Other in-flight failures remain accessible in their attempts. Item-level failures
+inside accepted responses do not trigger this stop behavior.
+
+On caller cancellation, concurrent workers are cancelled and awaited before
+`run()` propagates `CancelledError`; no owned client worker tasks remain in the
+background. Client cancellation does not establish that server execution or
+billing stopped. Interrupted requests without validated receipts have unknown charges.
+If a valid response arrives during cancellation, its receipt and charge are kept
+without starting another chunk. Repeated cancellation does not skip worker
+cleanup. An operation-level interrupt also stops new submissions; other in-flight
+calls drain before that interrupt is propagated. There is no automatic retry,
+backoff, chunk-size reduction or concurrency adjustment.
 
 A workflow is single-use. Calling `run()` twice, including while it is running or
 after failure, raises `RuntimeError` without another submission. Inspect the
