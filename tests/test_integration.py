@@ -9,7 +9,14 @@ from pathlib import Path
 import httpx
 import pytest
 
-from morphiq_sdk import APIError, AsyncMorphIQ, GreeksRequest, MorphIQ, PriceRequest
+from morphiq_sdk import (
+    APIError,
+    AsyncMorphIQ,
+    GreeksRequest,
+    ImpliedVolatilityRequest,
+    MorphIQ,
+    PriceRequest,
+)
 
 ENDPOINT = os.environ.get("MORPHIQ_TEST_API_URL")
 pytestmark = [
@@ -71,6 +78,40 @@ def test_native_greeks_sync_async_and_validation(greeks_cases):
         with pytest.raises(APIError) as error:
             client.greeks(request)
         assert error.value.status_code == 422 and error.value.request_id
+
+
+def test_native_implied_volatility_sync_async_and_validation(iv_cases):
+    provenance = json.loads((Path(__file__).parents[1] / "contracts/provenance.json").read_text())
+    assert (
+        hashlib.sha256(httpx.get(f"{ENDPOINT}/openapi.json").content).hexdigest()
+        == provenance["sha256"]
+    )
+
+    async def run_async(request):
+        async with AsyncMorphIQ(base_url=ENDPOINT, allow_unauthenticated=True) as client:
+            return await client.implied_volatility(request)
+
+    with MorphIQ(base_url=ENDPOINT, allow_unauthenticated=True) as client:
+        for case in iv_cases:
+            request = ImpliedVolatilityRequest(**case["request"])
+            sync = client.implied_volatility(request)
+            asynchronous = asyncio.run(run_async(request))
+            raw = httpx.post(f"{ENDPOINT}/v1/implied-volatility", json=request.to_wire()).json()
+            assert sync.result.model_dump() == asynchronous.result.model_dump() == raw["result"]
+            assert sync.result.model_dump() == case["response"]["result"]
+            assert sync.result.implied_volatility == pytest.approx(0.2, abs=1e-10)
+            assert sync.result.residual_basis in ("forward_normalised_price", "option_price")
+            assert sync.metadata.fcu_charged is None
+        for premium, status in [(-1, 422), (1000, 500)]:
+            request = ImpliedVolatilityRequest(
+                **{**iv_cases[1]["request"], "market_price": premium}
+            )
+            with pytest.raises(APIError) as error:
+                client.implied_volatility(request)
+            assert error.value.status_code == status and error.value.request_id
+            if premium == 1000:
+                # The pinned service reports an unbracketable American solve as an engine error.
+                assert error.value.code == "pricing_failed"
 
 
 def test_native_regime_sync_async_and_wire_response(regime_cases):

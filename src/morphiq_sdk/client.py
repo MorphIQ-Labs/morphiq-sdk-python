@@ -15,13 +15,17 @@ from .models import (
     ErrorEnvelope,
     GreeksRequest,
     GreeksResponse,
+    ImpliedVolatilityRequest,
+    ImpliedVolatilityResponse,
     PriceRequest,
     PriceResponse,
     RegimeRequest,
     RegimeResponse,
 )
 
-_ResponseType = TypeVar("_ResponseType", PriceResponse, RegimeResponse, GreeksResponse)
+_ResponseType = TypeVar(
+    "_ResponseType", PriceResponse, RegimeResponse, GreeksResponse, ImpliedVolatilityResponse
+)
 
 
 def _redact_body(body: bytes, key: str) -> bytes:
@@ -161,6 +165,10 @@ class MorphIQ:
         """Return the option price and all ten Greeks, preserving the API's units."""
         return self._post("v1/greeks", request.to_wire(), GreeksResponse)
 
+    def implied_volatility(self, request: ImpliedVolatilityRequest) -> ImpliedVolatilityResponse:
+        """Solve IV from an option premium; preserve residual basis and charge evidence."""
+        return self._post("v1/implied-volatility", request.to_wire(), ImpliedVolatilityResponse)
+
     def _post(
         self, path: str, payload: dict[str, Any], model: type[_ResponseType]
     ) -> _ResponseType:
@@ -229,6 +237,14 @@ class AsyncMorphIQ:
     async def greeks(self, request: GreeksRequest) -> GreeksResponse:
         """Return the option price and all ten Greeks, preserving the API's units."""
         return await self._post("v1/greeks", request.to_wire(), GreeksResponse)
+
+    async def implied_volatility(
+        self, request: ImpliedVolatilityRequest
+    ) -> ImpliedVolatilityResponse:
+        """Solve IV from an option premium; preserve residual basis and charge evidence."""
+        return await self._post(
+            "v1/implied-volatility", request.to_wire(), ImpliedVolatilityResponse
+        )
 
     async def _post(
         self, path: str, payload: dict[str, Any], model: type[_ResponseType]

@@ -17,6 +17,8 @@ python examples/price_american.py
 python examples/price_async.py
 python examples/greeks.py
 python examples/greeks_async.py
+python examples/implied_volatility.py
+python examples/implied_volatility_async.py
 ```
 
 Each connects to `https://api.morphiqlabs.com` and reads `MORPHIQ_API_KEY`, or
@@ -40,3 +42,7 @@ The Greeks examples submit `GreeksRequest` to `client.greeks()` and display the
 price plus all ten derivatives, with the same model/charge evidence and error
 handling. Values use annual time units and unit volatility/rate bases. See
 [the Greeks guide](../docs/GREEKS.md).
+
+The implied-volatility examples pass an explicit option premium to
+`client.implied_volatility()` and print IV, residual with its basis, iterations,
+fallback usage and provenance. See [the IV guide](../docs/IMPLIED_VOLATILITY.md).

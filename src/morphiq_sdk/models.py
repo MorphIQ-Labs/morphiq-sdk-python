@@ -22,8 +22,8 @@ class DividendEvent(_Request):
     cash_amount: FiniteFloat
 
 
-class PriceRequest(_Request):
-    """Option inputs. Rates, yield and volatility are decimals; time is in years.
+class _OptionRequest(_Request):
+    """Common option inputs. Rates and yield are decimals; time is in years.
 
     Numeric/model-domain validation belongs to the service. The SDK rejects
     malformed wire types and non-finite values without clamping or repricing.
@@ -36,7 +36,6 @@ class PriceRequest(_Request):
     time_to_expiry_years: FiniteFloat
     risk_free_rate: FiniteFloat
     dividend_yield: FiniteFloat
-    volatility: FiniteFloat
     pricing_model: PricingModel = "auto"
     model_version: str | None = None
     dividend_schedule: list[DividendEvent] = Field(default_factory=list, max_length=16)
@@ -53,6 +52,22 @@ class PriceRequest(_Request):
         # This required wire field has a convenience default in Python.
         result["pricing_model"] = self.pricing_model
         return result
+
+
+class PriceRequest(_OptionRequest):
+    """Price an option at a supplied annual volatility, expressed as a decimal."""
+
+    volatility: FiniteFloat
+
+
+class ImpliedVolatilityRequest(_OptionRequest):
+    """Solve volatility from a per-share market price in the spot/strike currency.
+
+    Volatility is an output, not a request field. The service validates premiums
+    and numerical domains without SDK-side clamping or local solving.
+    """
+
+    market_price: FiniteFloat
 
 
 class _Response(BaseModel):
@@ -89,6 +104,23 @@ class Greeks(_Response):
 class GreeksResult(_Response):
     price: FiniteFloat
     greeks: Greeks
+    pricing_model: str
+    model_version: str
+
+
+class ImpliedVolatilityResult(_Response):
+    """Unmodified solver diagnostics. Volatility is a decimal fraction.
+
+    Known residual bases are ``forward_normalised_price`` and ``option_price``;
+    retain future basis names without interpreting or converting their values.
+    ``used_fallback`` describes the algorithm, not solution quality.
+    """
+
+    implied_volatility: FiniteFloat
+    iterations: int = Field(ge=0)
+    used_fallback: bool
+    residual: FiniteFloat
+    residual_basis: str
     pricing_model: str
     model_version: str
 
@@ -168,6 +200,11 @@ class PriceResponse(_EvidenceResponse):
 
 class GreeksResponse(_EvidenceResponse):
     result: GreeksResult
+    metadata: ResponseMetadata
+
+
+class ImpliedVolatilityResponse(_EvidenceResponse):
+    result: ImpliedVolatilityResult
     metadata: ResponseMetadata
 
 
