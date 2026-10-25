@@ -17,25 +17,23 @@ to get your API key, then set it in your terminal:
 export MORPHIQ_API_KEY="YOUR_API_KEY"
 ```
 
-The SDK connects to `https://api.morphiqlabs.com` automatically.
+`MorphIQ()` reads `MORPHIQ_API_KEY` automatically and connects to
+`https://api.morphiqlabs.com`.
 
 ### 2. Install the SDK
 
 With Python 3.11 or newer:
 
 ```sh
-git clone https://github.com/MorphIQ-Labs/morphiq-sdk-python.git
-cd morphiq-sdk-python
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install -e .
+python -m pip install morphiq-sdk
 ```
 
 ### 3. Make your first API request
 
-Run this to price a European call with spot and strike of 100, one year to expiry,
-20% volatility, and a 5% interest rate. It sends one authenticated
-`POST https://api.morphiqlabs.com/v1/price` request and prints the JSON response:
+Save the following as `price_option.py`. It prices a European call with spot and
+strike of 100, one year to expiry, 20% volatility, and a 5% interest rate:
 
 ```python
 from morphiq_sdk import MorphIQ, PriceRequest
@@ -56,7 +54,14 @@ with MorphIQ() as client:
     print(response.model_dump_json(indent=2, exclude_unset=True))
 ```
 
-Example response from the recorded synthetic fixture:
+Run it in the same terminal where you set your API key:
+
+```sh
+python price_option.py
+```
+
+This sends one authenticated `POST https://api.morphiqlabs.com/v1/price` request
+and prints the JSON response. Example response from the recorded synthetic fixture:
 
 ```json
 {
@@ -87,15 +92,36 @@ Example response from the recorded synthetic fixture:
 Your request ID and engine metadata will reflect the live service. This fixture
 was recorded in open development mode; authenticated responses may also report
 commercial charges in `metadata.fcu_charged`. Keep the request ID for support.
-Run `unset MORPHIQ_API_KEY` when finished.
+See [the quickstart guide](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/docs/QUICKSTART.md)
+for input units, async usage, configuration and errors.
 
-Run `python -m examples.quickstart` for European and American pricing, or
-`python -m examples.price_async` for sequential async requests. Individual scripts
-are `examples.price_european` and `examples.price_american`.
-See [the quickstart guide](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/docs/QUICKSTART.md) for input units, reference results,
-configuration and errors.
+## Repository examples and notebooks
 
-## Start a notebook with Docker
+The executable examples and Docker notebooks live in the repository. Clone it
+to use either:
+
+```sh
+git clone https://github.com/MorphIQ-Labs/morphiq-sdk-python.git
+cd morphiq-sdk-python
+```
+
+### Run the examples
+
+From the repository root, with your Python environment active and API key set:
+
+```sh
+python -m pip install -e .
+python -m examples.quickstart
+```
+
+This sends two requests, for European and American pricing. Run
+`python -m examples.price_async` for the async version, or
+`python -m examples.price_european` and `python -m examples.price_american`
+individually. See the
+[executable cookbook](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/examples/README.md)
+for all examples.
+
+### Start a notebook with Docker
 
 With Docker running, from the repository root, set your API key and start
 the notebook:
@@ -129,7 +155,7 @@ See [notebook instructions](https://github.com/MorphIQ-Labs/morphiq-sdk-python/b
 
 ## Development
 
-Use Python 3.11 or newer. CI checks Python 3.11 and 3.14.
+From a repository checkout, use Python 3.11 or newer. CI checks Python 3.11 and 3.14.
 
 ```sh
 python3 -m venv .venv

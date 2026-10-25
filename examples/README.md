@@ -2,9 +2,13 @@
 
 Get your API key from the
 [MorphIQ Labs developer portal](https://developers.morphiqlabs.com). After
-[installing the SDK](../docs/QUICKSTART.md), replace the placeholders and run:
+[installing the SDK](../docs/QUICKSTART.md), clone the repository to get these
+scripts and run them from its root:
 
 ```sh
+git clone https://github.com/MorphIQ-Labs/morphiq-sdk-python.git
+cd morphiq-sdk-python
+python -m pip install -e .
 export MORPHIQ_API_KEY="YOUR_API_KEY"
 python examples/quickstart.py
 ```
