@@ -1,0 +1,198 @@
+{
+  "observed_at_utc": "2026-10-24T16:07:23.681983+00:00",
+  "scope": "Release PR #17 candidate; no publication or production numerical calls",
+  "main_commit": "1041b018ab949b3e91fa6bf7da632ce6eeea9915",
+  "candidate_commit": "fb7880414db064d80b08f4e797e8136de460a782",
+  "pending_concurrency_pr": 33,
+  "artifacts": [
+    {
+      "artifact": "morphiq_sdk-0.1.0-py3-none-any.whl",
+      "bytes": 23270,
+      "sha256": "47665799a9d96da61b4b12a2dae46a3847333a23fb7aa212287220e978ecee11",
+      "files": 13,
+      "metadata": [
+        "Name: morphiq-sdk",
+        "Version: 0.1.0",
+        "Classifier: Private :: Do Not Upload",
+        "Classifier: Development Status :: 3 - Alpha",
+        "Classifier: Programming Language :: Python :: 3",
+        "Classifier: Typing :: Typed",
+        "Requires-Python: >=3.11",
+        "Requires-Dist: httpx<0.29,>=0.28.1",
+        "Requires-Dist: pydantic<3,>=2.10",
+        "Provides-Extra: market-data",
+        "Requires-Dist: pandas<3.1,>=2.2; extra == 'market-data'",
+        "Requires-Dist: yfinance<2,>=1.7; extra == 'market-data'",
+        "Provides-Extra: notebooks",
+        "Requires-Dist: ipykernel<8,>=7.4; extra == 'notebooks'",
+        "Requires-Dist: ipywidgets<9,>=8.1; extra == 'notebooks'",
+        "Requires-Dist: jupyterlab<5,>=4.6; extra == 'notebooks'",
+        "Requires-Dist: matplotlib<4,>=3.10; extra == 'notebooks'",
+        "Requires-Dist: pandas<3.1,>=2.2; extra == 'notebooks'",
+        "Requires-Dist: yfinance<2,>=1.7; extra == 'notebooks'",
+        "Provides-Extra: pandas",
+        "Requires-Dist: pandas<4,>=2.2; extra == 'pandas'"
+      ],
+      "has_docs": false,
+      "has_contract": false,
+      "has_examples": false,
+      "has_notebooks": false
+    },
+    {
+      "artifact": "morphiq_sdk-0.1.0.tar.gz",
+      "bytes": 41431,
+      "sha256": "5def0c2550e95a71bdc54ff37c08fc8687576d1c59ccde0882b1ee042a205fa0",
+      "files": 38,
+      "metadata": [],
+      "has_docs": false,
+      "has_contract": false,
+      "has_examples": true,
+      "has_notebooks": true
+    }
+  ],
+  "python": [
+    {
+      "source_commit": "fb7880414db064d80b08f4e797e8136de460a782",
+      "wheel": "morphiq_sdk-0.1.0-py3-none-any.whl",
+      "wheel_sha256": "47665799a9d96da61b4b12a2dae46a3847333a23fb7aa212287220e978ecee11",
+      "contract_sha256": "09527006497b4f23bbf174f4a5b8bd9d02f75d02554b3d489eaba953ec5a18f1",
+      "api_source_commit": "b2cb8d72b049d61c062f787724c1c02c15dd12be",
+      "steps_seconds": {
+        "create_venv": 2.25,
+        "install_core_wheel": 1.65,
+        "verify_core_isolation": 0.2,
+        "readme_first_request_fixture": 0.15,
+        "install_optional_extras_and_test_tools": 17.97,
+        "register_isolated_kernel": 0.33,
+        "verify_extras": 1.59,
+        "installed_wheel_acceptance": 121.33
+      },
+      "status": "passed",
+      "production_calls": 0,
+      "core": {
+        "python": "3.11.17",
+        "sdk": "0.1.0",
+        "module": "lib/python3.11/site-packages/morphiq_sdk/__init__.py"
+      },
+      "extras": {
+        "pandas": "3.0.6",
+        "jupyterlab": "4.6.4",
+        "ipykernel": "7.4.0",
+        "yfinance": "1.7.0",
+        "ipywidgets": "8.1.9",
+        "matplotlib": "3.11.2"
+      },
+      "tests": "418 passed in 120.83s (0:02:00)"
+    },
+    {
+      "source_commit": "fb7880414db064d80b08f4e797e8136de460a782",
+      "wheel": "morphiq_sdk-0.1.0-py3-none-any.whl",
+      "wheel_sha256": "47665799a9d96da61b4b12a2dae46a3847333a23fb7aa212287220e978ecee11",
+      "contract_sha256": "09527006497b4f23bbf174f4a5b8bd9d02f75d02554b3d489eaba953ec5a18f1",
+      "api_source_commit": "b2cb8d72b049d61c062f787724c1c02c15dd12be",
+      "steps_seconds": {
+        "create_venv": 1.94,
+        "install_core_wheel": 1.88,
+        "verify_core_isolation": 0.3,
+        "readme_first_request_fixture": 0.2,
+        "install_optional_extras_and_test_tools": 19.04,
+        "register_isolated_kernel": 0.36,
+        "verify_extras": 1.65,
+        "installed_wheel_acceptance": 131.79
+      },
+      "status": "passed",
+      "production_calls": 0,
+      "core": {
+        "python": "3.14.8",
+        "sdk": "0.1.0",
+        "module": "lib/python3.14/site-packages/morphiq_sdk/__init__.py"
+      },
+      "extras": {
+        "pandas": "3.0.6",
+        "jupyterlab": "4.6.4",
+        "ipykernel": "7.4.0",
+        "yfinance": "1.7.0",
+        "ipywidgets": "8.1.9",
+        "matplotlib": "3.11.2"
+      },
+      "tests": "418 passed in 131.14s (0:02:11)"
+    }
+  ],
+  "docker": {
+    "image": "morphiq-sdk-audit:fb78804",
+    "candidate_commit": "fb7880414db064d80b08f4e797e8136de460a782",
+    "image_id": "sha256:4acee1795eeb13f9845f887ea612bd506e34fa467f77156b49d8c681efe819cd",
+    "os": "linux",
+    "architecture": "arm64",
+    "registry_digests": [
+      "morphiq-sdk-audit@sha256:4acee1795eeb13f9845f887ea612bd506e34fa467f77156b49d8c681efe819cd"
+    ],
+    "initial_readiness_seconds": 2.68,
+    "exit_code": 0,
+    "total_check_seconds": 78.7
+  },
+  "public_endpoints": [
+    {
+      "url": "https://pypi.org/pypi/morphiq-sdk/json",
+      "status": 404
+    },
+    {
+      "url": "https://test.pypi.org/pypi/morphiq-sdk/json",
+      "status": 404
+    },
+    {
+      "url": "https://github.com/MorphIQ-Labs/morphiq-sdk-python",
+      "status": 404
+    },
+    {
+      "url": "https://developers.morphiqlabs.com",
+      "status": 200,
+      "final_url": "https://developers.morphiqlabs.com",
+      "seconds": 1.19,
+      "title": [
+        "MorphIQ Labs API | Institutional-grade market analytics"
+      ],
+      "sdk_links": [
+        "/docs",
+        "/docs#fusedAnalytics",
+        "/docs#greeksAllTen",
+        "/docs#impliedVolatility",
+        "/docs#priceOption",
+        "/docs#priceOptionBatch",
+        "/docs/quickstart",
+        "/docs/regime"
+      ]
+    },
+    {
+      "url": "https://api.morphiqlabs.com/openapi.json",
+      "status": 200,
+      "final_url": "https://api.morphiqlabs.com/openapi.json",
+      "seconds": 0.22,
+      "sha256": "09527006497b4f23bbf174f4a5b8bd9d02f75d02554b3d489eaba953ec5a18f1"
+    }
+  ],
+  "public_documentation": {
+    "/docs/quickstart": {
+      "status": 200,
+      "sdk_mentions": 0,
+      "sdk_links": [],
+      "install_mentions": []
+    },
+    "/docs": {
+      "status": 200,
+      "sdk_mentions": 0,
+      "sdk_links": [],
+      "install_mentions": []
+    },
+    "/sitemap.xml": {
+      "status": 200,
+      "sdk_mentions": 0,
+      "sdk_links": [],
+      "install_mentions": []
+    }
+  },
+  "repository_visibility": "PRIVATE",
+  "license": null,
+  "github_release_count_observed": 0,
+  "github_environments_observed": []
+}
