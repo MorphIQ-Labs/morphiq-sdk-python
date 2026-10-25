@@ -1,8 +1,13 @@
-# MorphIQ SDK for Python
+# Option pricing, Greeks, volatility and market regimes in Python
 
-Python access to the MorphIQ Labs API, with runnable examples and notebooks for
-European and American option pricing, all-ten-Greeks analysis, implied volatility, combined analytics and regime identification.
-Pricing, Greeks, IV and combined analytics also support ordered batches.
+Price European and American options, calculate ten Greeks, solve implied
+volatility, and identify market regimes from price histories.
+
+`morphiq-sdk` is a typed Python client for the MorphIQ API, with synchronous and
+asynchronous calls. Pricing, Greeks, implied volatility and combined analytics
+support ordered batches. Runnable examples and interactive notebooks cover option
+valuation, sensitivity analysis and market-regime identification.
+
 See the [documentation index](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/docs/README.md) for all feature guides and the
 [Python API reference](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/docs/API.md) for methods, models and errors.
 

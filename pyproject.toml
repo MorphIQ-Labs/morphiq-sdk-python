@@ -6,20 +6,39 @@ build-backend = "hatchling.build"
 name = "morphiq-sdk"
 # Release Please manages this version through reviewed release PRs.
 version = "0.1.0.dev0"
-description = "Python SDK for the MorphIQ Labs API"
+description = "Option pricing, Greeks, implied volatility and market regime identification through a Python API client"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [{ name = "MorphIQ Labs" }]
+keywords = [
+  "option-pricing",
+  "american-options",
+  "european-options",
+  "greeks",
+  "implied-volatility",
+  "volatility",
+  "market-regimes",
+  "regime-identification",
+  "quantitative",
+  "finance",
+  "quantitative-finance",
+  "derivatives",
+]
 dependencies = ["httpx>=0.28.1,<0.29", "pydantic>=2.10,<3"]
 classifiers = [
   "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Financial and Insurance Industry",
+  "Intended Audience :: Science/Research",
+  "Topic :: Office/Business :: Financial :: Investment",
   "Programming Language :: Python :: 3",
   "Typing :: Typed",
 ]
 
 [project.urls]
+Homepage = "https://developers.morphiqlabs.com"
 Documentation = "https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/docs/README.md"
 Issues = "https://github.com/MorphIQ-Labs/morphiq-sdk-python/issues"
 Repository = "https://github.com/MorphIQ-Labs/morphiq-sdk-python"
