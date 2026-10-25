@@ -24,3 +24,4 @@ no Yahoo or pandas dependency.
 
 For development, see [contributing](../CONTRIBUTING.md),
 [contract ownership and provenance](CONTRACT.md) and [release procedures](../RELEASE.md).
+Maintainers preparing public distribution should follow the [package publishing runbook](PUBLISHING.md).

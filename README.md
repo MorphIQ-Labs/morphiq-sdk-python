@@ -1,10 +1,15 @@
-# MorphIQ SDK for Python
+# Option pricing, Greeks, volatility and market regimes in Python
 
-Python access to the MorphIQ Labs API, with runnable examples and notebooks for
-European and American option pricing, all-ten-Greeks analysis, implied volatility, combined analytics and regime identification.
-Pricing, Greeks, IV and combined analytics also support ordered batches.
-See the [documentation index](docs/README.md) for all feature guides and the
-[Python API reference](docs/API.md) for methods, models and errors.
+Price European and American options, calculate ten Greeks, solve implied
+volatility, and identify market regimes from price histories.
+
+`morphiq-sdk` is a typed Python client for the MorphIQ API, with synchronous and
+asynchronous calls. Pricing, Greeks, implied volatility and combined analytics
+support ordered batches. Runnable examples and interactive notebooks cover option
+valuation, sensitivity analysis and market-regime identification.
+
+See the [documentation index](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/docs/README.md) for all feature guides and the
+[Python API reference](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/docs/API.md) for methods, models and errors.
 
 ## Quickstart
 
@@ -17,25 +22,23 @@ to get your API key, then set it in your terminal:
 export MORPHIQ_API_KEY="YOUR_API_KEY"
 ```
 
-The SDK connects to `https://api.morphiqlabs.com` automatically.
+`MorphIQ()` reads `MORPHIQ_API_KEY` automatically and connects to
+`https://api.morphiqlabs.com`.
 
 ### 2. Install the SDK
 
 With Python 3.11 or newer:
 
 ```sh
-git clone https://github.com/MorphIQ-Labs/morphiq-sdk-python.git
-cd morphiq-sdk-python
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install -e .
+python -m pip install morphiq-sdk
 ```
 
 ### 3. Make your first API request
 
-Run this to price a European call with spot and strike of 100, one year to expiry,
-20% volatility, and a 5% interest rate. It sends one authenticated
-`POST https://api.morphiqlabs.com/v1/price` request and prints the JSON response:
+Save the following as `price_option.py`. It prices a European call with spot and
+strike of 100, one year to expiry, 20% volatility, and a 5% interest rate:
 
 ```python
 from morphiq_sdk import MorphIQ, PriceRequest
@@ -56,7 +59,14 @@ with MorphIQ() as client:
     print(response.model_dump_json(indent=2, exclude_unset=True))
 ```
 
-Example response from the recorded synthetic fixture:
+Run it in the same terminal where you set your API key:
+
+```sh
+python price_option.py
+```
+
+This sends one authenticated `POST https://api.morphiqlabs.com/v1/price` request
+and prints the JSON response. Example response from the recorded synthetic fixture:
 
 ```json
 {
@@ -87,15 +97,36 @@ Example response from the recorded synthetic fixture:
 Your request ID and engine metadata will reflect the live service. This fixture
 was recorded in open development mode; authenticated responses may also report
 commercial charges in `metadata.fcu_charged`. Keep the request ID for support.
-Run `unset MORPHIQ_API_KEY` when finished.
+See [the quickstart guide](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/docs/QUICKSTART.md)
+for input units, async usage, configuration and errors.
 
-Run `python -m examples.quickstart` for European and American pricing, or
-`python -m examples.price_async` for sequential async requests. Individual scripts
-are `examples.price_european` and `examples.price_american`.
-See [the quickstart guide](docs/QUICKSTART.md) for input units, reference results,
-configuration and errors.
+## Repository examples and notebooks
 
-## Start a notebook with Docker
+The executable examples and Docker notebooks live in the repository. Clone it
+to use either:
+
+```sh
+git clone https://github.com/MorphIQ-Labs/morphiq-sdk-python.git
+cd morphiq-sdk-python
+```
+
+### Run the examples
+
+From the repository root, with your Python environment active and API key set:
+
+```sh
+python -m pip install -e .
+python -m examples.quickstart
+```
+
+This sends two requests, for European and American pricing. Run
+`python -m examples.price_async` for the async version, or
+`python -m examples.price_european` and `python -m examples.price_american`
+individually. See the
+[executable cookbook](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/examples/README.md)
+for all examples.
+
+### Start a notebook with Docker
 
 With Docker running, from the repository root, set your API key and start
 the notebook:
@@ -108,11 +139,11 @@ docker compose up --build
 Open the local token-authenticated URL printed by Jupyter to reach Start Here.
 Choose an analysis workspace and run all cells once to display its controls:
 
-- [Option pricing](notebooks/pricing/options.ipynb): European/American and model
+- [Option pricing](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/notebooks/pricing/options.ipynb): European/American and model
   dropdowns, call/put selection, editable assumptions, automatic Yahoo daily/intraday underlying prices,
   a valuation comparison table, a price-and-Greeks panel, an implied-volatility solver,
   combined premium analysis, a session CU total and a spot-sensitivity chart.
-- [Regime analysis](notebooks/regime/identification.ipynb): ticker selection,
+- [Regime analysis](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/notebooks/regime/identification.ipynb): ticker selection,
   Yahoo daily/intraday price history, latest regime assessment, score charts and provenance.
 
 Compose passes your API key into the container; if unset, the workspace prompts
@@ -125,11 +156,11 @@ Dependencies are installed at build time, and notebook edits persist in a named 
 
 Stop with Ctrl-C, then `docker compose down`; the workspace is retained. If port
 8888 is occupied, use `MORPHIQ_NOTEBOOK_PORT=8889 docker compose up --build`.
-See [notebook instructions](docs/NOTEBOOKS.md) for networking and persistence.
+See [notebook instructions](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/docs/NOTEBOOKS.md) for networking and persistence.
 
 ## Development
 
-Use Python 3.11 or newer. CI checks Python 3.11 and 3.14.
+From a repository checkout, use Python 3.11 or newer. CI checks Python 3.11 and 3.14.
 
 ```sh
 python3 -m venv .venv
@@ -148,7 +179,7 @@ Versions are managed through reviewed release PRs; no version environment variab
 is needed. `check_package.py` builds an sdist and a wheel from that sdist, then
 installs the wheel in a fresh environment outside the checkout. Routine tests use local fixture replay and need
 no real credentials; native API integration is opt-in. See
-[CONTRIBUTING.md](CONTRIBUTING.md) and [RELEASE.md](RELEASE.md).
+[CONTRIBUTING.md](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/CONTRIBUTING.md) and [RELEASE.md](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/RELEASE.md).
 
 Clients make no automatic retries and do not follow redirects. A timeout
 may leave work charged. Missing `fcu_charged` means unreported, not zero; internal
@@ -171,3 +202,8 @@ docker/            Non-root notebook startup and workspace seeding
 docs/              Usage guides and contract documentation
 .github/           CI and pull request template
 ```
+
+## License
+
+The SDK, examples and notebooks are licensed under the
+[MIT License](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/LICENSE).

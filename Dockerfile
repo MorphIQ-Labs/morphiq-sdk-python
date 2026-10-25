@@ -2,7 +2,7 @@ FROM python:3.14-slim-bookworm@sha256:945c2676dc2b18e0c1f16879244122c57c0ffede60
 WORKDIR /build
 COPY requirements-build.txt ./
 RUN python -m pip install --no-cache-dir --require-hashes -r requirements-build.txt
-COPY pyproject.toml README.md ./
+COPY pyproject.toml README.md LICENSE ./
 COPY src ./src
 RUN python -m pip wheel \
     --no-deps --no-build-isolation --wheel-dir /wheels .

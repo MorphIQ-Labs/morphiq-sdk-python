@@ -18,20 +18,14 @@ export MORPHIQ_API_KEY="YOUR_API_KEY"
 ## 2. Install the SDK
 
 ```sh
-git clone https://github.com/MorphIQ-Labs/morphiq-sdk-python.git
-cd morphiq-sdk-python
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install -e .
+python -m pip install morphiq-sdk
 ```
-
-The repository is currently private and requires access. This development build
-has not been released; `pip install morphiq-sdk` is not yet a supported path.
 
 ## 3. Make your first API request
 
-This sends one authenticated `POST https://api.morphiqlabs.com/v1/price` request
-using the key you exported, then prints the JSON response:
+Save this as `price_option.py`. `MorphIQ()` reads `MORPHIQ_API_KEY` automatically:
 
 ```python
 from morphiq_sdk import MorphIQ, PriceRequest
@@ -52,10 +46,33 @@ with MorphIQ() as client:
     print(response.model_dump_json(indent=2, exclude_unset=True))
 ```
 
+Run it in the terminal where you exported your key:
+
+```sh
+python price_option.py
+```
+
+This sends one authenticated `POST https://api.morphiqlabs.com/v1/price` request
+and prints the JSON response.
+
 See the [example JSON response](../README.md#3-make-your-first-api-request) for
-the recorded price, model identity and metadata. Run `unset MORPHIQ_API_KEY` when
-finished. The executable examples also support a masked key prompt when the
-environment variable is unset.
+the recorded price, model identity and metadata.
+
+## Run the repository examples
+
+The `examples` scripts and Docker notebooks are provided in the repository.
+To use them, clone it and install the checked-out SDK in your active environment:
+
+```sh
+git clone https://github.com/MorphIQ-Labs/morphiq-sdk-python.git
+cd morphiq-sdk-python
+python -m pip install -e .
+python -m examples.quickstart
+```
+
+The quickstart script sends two requests, pricing one European call and one
+American put. The executable examples also support a masked key prompt when
+`MORPHIQ_API_KEY` is unset. See [the cookbook](../examples/README.md) for all scripts.
 
 ## Inputs and results
 
@@ -180,7 +197,8 @@ without retaining the credential-bearing HTTP request.
 
 ## Notebook and controlled local service
 
-Use `docker compose up --build`, or install the notebook extra:
+From the repository checkout, use `docker compose up --build`, or install the
+notebook extra and open the included notebooks:
 
 ```sh
 python -m pip install -e '.[notebooks]'
