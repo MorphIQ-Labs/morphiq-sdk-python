@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "morphiq-sdk"
 # Release Please manages this version through reviewed release PRs.
-version = "0.1.0.dev0"
+version = "0.1.0"
 description = "Option pricing, Greeks, implied volatility and market regime identification through a Python API client"
 readme = "README.md"
 requires-python = ">=3.11"
