@@ -45,9 +45,10 @@ If an already released version needs correction, merge a fix and release a new
 version. Never overwrite an existing release's identity.
 
 Package publication is prepared in `.github/workflows/publish.yml` and remains
-disabled until `PYPI_PUBLISHING_ENABLED=true` is configured. The repository still
-has `Private :: Do Not Upload` and no selected license, so preflight also rejects
-the current metadata. Follow the [publishing runbook](docs/PUBLISHING.md) for
+disabled until `PYPI_PUBLISHING_ENABLED=true` is configured. The SDK, examples and
+notebooks use MIT. The repository remains private until the visibility change;
+PyPI ownership and reviewer configuration are still pending. Follow the
+[publishing runbook](docs/PUBLISHING.md) for
 ownership, licensing, public documentation, protected environments and trusted
 publisher setup before activation. Once enabled, a published Release Please
 release builds once, verifies TestPyPI installations, and promotes the same files

@@ -5,10 +5,13 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
+import tarfile
 import tempfile
 import textwrap
 import tomllib
 import venv
+import zipfile
+from email.parser import BytesParser
 from pathlib import Path
 
 
@@ -27,6 +30,24 @@ def main() -> None:
         sources = list(artifacts.glob("*.tar.gz"))
         if len(wheels) != 1 or len(sources) != 1:
             raise RuntimeError("Expected exactly one wheel and one source distribution")
+
+        project = tomllib.loads((root / "pyproject.toml").read_text())["project"]
+        license_text = (root / "LICENSE").read_bytes()
+        dist_info = f"morphiq_sdk-{expected_version}.dist-info"
+        with zipfile.ZipFile(wheels[0]) as wheel:
+            metadata = BytesParser().parsebytes(wheel.read(f"{dist_info}/METADATA"))
+            assert metadata["License-Expression"] == project["license"]
+            assert metadata.get_all("License-File") == ["LICENSE"]
+            assert wheel.read(f"{dist_info}/licenses/LICENSE") == license_text
+        with tarfile.open(sources[0]) as source:
+            source_license = source.extractfile(f"morphiq_sdk-{expected_version}/LICENSE")
+            assert source_license is not None and source_license.read() == license_text
+            source_metadata = source.extractfile(f"morphiq_sdk-{expected_version}/PKG-INFO")
+            assert source_metadata is not None
+            metadata = BytesParser().parsebytes(source_metadata.read())
+            assert metadata["License-Expression"] == project["license"]
+            assert metadata.get_all("License-File") == ["LICENSE"]
+        print("Wheel and sdist contain matching license metadata and text")
 
         installation = temporary / "installed"
         venv.EnvBuilder(with_pip=True).create(installation)

@@ -44,12 +44,11 @@ def check_environments(environments: list[dict[str, Any]]) -> None:
             ),
             {},
         )
-        if (
-            not reviewers.get("reviewers")
-            or reviewers.get("prevent_self_review") is not True
-            or not (environment.get("deployment_branch_policy") or {}).get("custom_branch_policies")
-        ):
-            raise ValueError(f"{name} must have reviewers, no self-review and selected refs")
+        # Self-review is allowed for the current sole maintainer; approval is still required.
+        if not reviewers.get("reviewers") or not (
+            environment.get("deployment_branch_policy") or {}
+        ).get("custom_branch_policies"):
+            raise ValueError(f"{name} must have reviewers and selected refs")
 
 
 def check_project(project: dict[str, Any], manifest: dict[str, str], tag: str) -> None:

@@ -3,8 +3,8 @@
 Python access to the MorphIQ Labs API, with runnable examples and notebooks for
 European and American option pricing, all-ten-Greeks analysis, implied volatility, combined analytics and regime identification.
 Pricing, Greeks, IV and combined analytics also support ordered batches.
-See the [documentation index](docs/README.md) for all feature guides and the
-[Python API reference](docs/API.md) for methods, models and errors.
+See the [documentation index](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/docs/README.md) for all feature guides and the
+[Python API reference](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/docs/API.md) for methods, models and errors.
 
 ## Quickstart
 
@@ -92,7 +92,7 @@ Run `unset MORPHIQ_API_KEY` when finished.
 Run `python -m examples.quickstart` for European and American pricing, or
 `python -m examples.price_async` for sequential async requests. Individual scripts
 are `examples.price_european` and `examples.price_american`.
-See [the quickstart guide](docs/QUICKSTART.md) for input units, reference results,
+See [the quickstart guide](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/docs/QUICKSTART.md) for input units, reference results,
 configuration and errors.
 
 ## Start a notebook with Docker
@@ -108,11 +108,11 @@ docker compose up --build
 Open the local token-authenticated URL printed by Jupyter to reach Start Here.
 Choose an analysis workspace and run all cells once to display its controls:
 
-- [Option pricing](notebooks/pricing/options.ipynb): European/American and model
+- [Option pricing](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/notebooks/pricing/options.ipynb): European/American and model
   dropdowns, call/put selection, editable assumptions, automatic Yahoo daily/intraday underlying prices,
   a valuation comparison table, a price-and-Greeks panel, an implied-volatility solver,
   combined premium analysis, a session CU total and a spot-sensitivity chart.
-- [Regime analysis](notebooks/regime/identification.ipynb): ticker selection,
+- [Regime analysis](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/notebooks/regime/identification.ipynb): ticker selection,
   Yahoo daily/intraday price history, latest regime assessment, score charts and provenance.
 
 Compose passes your API key into the container; if unset, the workspace prompts
@@ -125,7 +125,7 @@ Dependencies are installed at build time, and notebook edits persist in a named 
 
 Stop with Ctrl-C, then `docker compose down`; the workspace is retained. If port
 8888 is occupied, use `MORPHIQ_NOTEBOOK_PORT=8889 docker compose up --build`.
-See [notebook instructions](docs/NOTEBOOKS.md) for networking and persistence.
+See [notebook instructions](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/docs/NOTEBOOKS.md) for networking and persistence.
 
 ## Development
 
@@ -148,7 +148,7 @@ Versions are managed through reviewed release PRs; no version environment variab
 is needed. `check_package.py` builds an sdist and a wheel from that sdist, then
 installs the wheel in a fresh environment outside the checkout. Routine tests use local fixture replay and need
 no real credentials; native API integration is opt-in. See
-[CONTRIBUTING.md](CONTRIBUTING.md) and [RELEASE.md](RELEASE.md).
+[CONTRIBUTING.md](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/CONTRIBUTING.md) and [RELEASE.md](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/RELEASE.md).
 
 Clients make no automatic retries and do not follow redirects. A timeout
 may leave work charged. Missing `fcu_charged` means unreported, not zero; internal
@@ -171,3 +171,8 @@ docker/            Non-root notebook startup and workspace seeding
 docs/              Usage guides and contract documentation
 .github/           CI and pull request template
 ```
+
+## License
+
+The SDK, examples and notebooks are licensed under the
+[MIT License](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/LICENSE).

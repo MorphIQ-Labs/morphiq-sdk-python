@@ -10,15 +10,18 @@ releases; this workflow never creates or moves them.
 
 Complete these steps before setting the enablement variable:
 
-1. Confirm organizational ownership of `morphiq-sdk` on both PyPI and TestPyPI.
-   A 404 response does not establish availability or ownership. Use organization
-   accounts, maintain more than one responsible owner, enable account 2FA and
-   store recovery codes through the organization's credential process.
-2. Decide the SDK/examples license and repository visibility. Review the release
-   tree and history for redistributability. In a reviewed PR, select an SPDX
-   `project.license` expression, add its actual license text, configure
-   `project.license-files`, and remove `Private :: Do Not Upload`. Both artifacts
-   must contain the declared license files. This runbook does not select a license.
+1. Create separate personal maintainer accounts on
+   [PyPI](https://pypi.org/account/register/) and
+   [TestPyPI](https://test.pypi.org/account/register/), verify their email addresses,
+   enable 2FA and store recovery codes in the maintainer's password manager.
+   Register the pending publishers below while signed in to the intended owner
+   accounts. They create the project on first upload; they do not reserve its name.
+   Organization management and a second owner can be added when available.
+2. The SDK, examples and notebooks use the [MIT license](../LICENSE), selected by
+   MorphIQ Labs. Metadata declares `MIT` and includes `LICENSE` in both artifacts.
+   Public repository visibility has been selected for preparation; review the
+   release tree/history before the separate visibility change. The copyright
+   holder is MorphIQ Labs.
 3. Make the installation guide, API reference, compatibility/contract information,
    examples and support route accessible to public users. Choose public repository
    URLs or hosted documentation and replace README-relative links with working
@@ -26,12 +29,14 @@ Complete these steps before setting the enablement variable:
    not include `docs/` or `contracts/`; a private repository link is insufficient.
    Verify the rendered description and project URLs on TestPyPI before promotion.
 4. Create GitHub environments named **`testpypi`** and **`pypi`** before running
-   the workflow. Require a maintainer/team review, prevent self-review, disallow
-   administrator bypass, and select only the branch `main` and tags `v*` as
+   the workflow. Require review from `thestephenromano`, allow self-review for the current sole
+   maintainer, disallow administrator bypass, and select only branch `main` and tags `v*` as
    deployment refs. Keep `main` and release tags protected against unreviewed
-   changes. Preflight checks that both environments exist with reviewers,
-   self-review prevention and selected-ref policies; inspect the exact ref rules
-   and administrator-bypass setting in GitHub's UI as part of activation.
+   changes. Preflight checks that both environments exist with reviewers and selected-ref
+   policies. Self-review is intentional: otherwise the sole maintainer cannot
+   approve manually initiated runs. When another maintainer joins, add that reviewer
+   and enable self-review prevention. Inspect the exact ref rules and administrator
+   bypass setting in GitHub's UI as part of activation.
 5. Configure a GitHub trusted publisher separately on each index:
 
    | Setting | TestPyPI | PyPI |
@@ -42,7 +47,9 @@ Complete these steps before setting the enablement variable:
    | Workflow filename | `publish.yml` | `publish.yml` |
    | Environment | `testpypi` | `pypi` |
 
-   Use a pending publisher if the project does not exist yet. Do not add a PyPI
+   Add pending publishers at [PyPI publishing](https://pypi.org/manage/account/publishing/)
+   and [TestPyPI publishing](https://test.pypi.org/manage/account/publishing/).
+   The GitHub owner field is `MorphIQ-Labs`, not the PyPI account username. Do not add a PyPI
    password or API token to repository secrets. The publishing jobs use OIDC and
    create attestations; build and install jobs have no OIDC permission. Follow the
    [PyPI trusted publisher instructions](https://docs.pypi.org/trusted-publishers/using-a-publisher/).
@@ -54,6 +61,25 @@ GitHub's required-reviewer availability depends on repository visibility and pla
 If the selected repository/plan cannot enforce the required environments, leave
 publishing disabled until that is resolved; naming an environment alone does not
 protect it. See [GitHub environment protections](https://docs.github.com/en/actions/reference/workflows-and-actions/deployments-and-environments).
+
+## Setup recorded on 2026-10-25
+
+- GitHub owner: `MorphIQ-Labs`; sole release maintainer: `thestephenromano`.
+- License decision: MIT; repository prepared for public visibility, still private.
+- Both environments exist with exactly branch `main` and tag `v*` allowed.
+- `PYPI_PUBLISHING_ENABLED=false` is set explicitly. No uploads have occurred.
+- Required reviewers and administrator bypass controls still need configuration
+  after the repository becomes public; the current GitHub Team plan cannot
+  enforce required reviewers on this private repository.
+- PyPI/TestPyPI accounts, 2FA and pending publisher registrations remain to be
+  completed by the maintainer. Package ownership is not yet established.
+- Gitleaks 8.30.1 reviewed all reachable local Git history through publishing
+  preparation commit `f10bb6f`. Its four detections were duplicate references to
+  the pinned API source commit in the historical release audit, not credentials.
+  No credential findings remained after inspecting those matches. This is a
+  scoped scan result, not a guarantee about all possible sensitive information.
+  A separate scan of the 35 issue/PR bodies accessible on that date found no
+  credentials; there were no issue or review comments returned by the API.
 
 ## Release sequence
 
@@ -130,8 +156,8 @@ instructions in the same reviewed change. No fixed deprecation period or LTS win
 is promised. Consumers requiring stability should constrain the minor series
 (for example, `morphiq-sdk>=0.1,<0.2`) and test upgrades against their use cases.
 
-For SDK defects, use the repository issue tracker once it is public; if it remains
-private, an accessible SDK support route must be selected before activation.
+For SDK defects, use the [repository issue tracker](https://github.com/MorphIQ-Labs/morphiq-sdk-python/issues)
+once the public visibility change is complete.
 Account/key/billing requests go through the developer portal. Reports should include
 SDK/Python versions, operation, request ID and a minimal synthetic reproduction.
 Never post keys, private market inputs or account data in public issues.
