@@ -38,19 +38,10 @@ def github(path: str) -> Any:
 def check_environments(environments: list[dict[str, Any]]) -> None:
     for name in ("testpypi", "pypi"):
         environment = next((env for env in environments if env["name"] == name), {})
-        reviewers: dict[str, Any] = next(
-            (
-                r
-                for r in environment.get("protection_rules", [])
-                if r["type"] == "required_reviewers"
-            ),
-            {},
-        )
-        # Self-review is allowed for the current sole maintainer; approval is still required.
-        if not reviewers.get("reviewers") or not (
-            environment.get("deployment_branch_policy") or {}
-        ).get("custom_branch_policies"):
-            raise ValueError(f"{name} must have reviewers and selected refs")
+        # Merging the reviewed release PR authorizes automatic publication.
+        # Keep deployment refs restricted; environment review is optional.
+        if not (environment.get("deployment_branch_policy") or {}).get("custom_branch_policies"):
+            raise ValueError(f"{name} must exist with selected refs")
 
 
 def check_project(project: dict[str, Any], manifest: dict[str, str], tag: str) -> None:

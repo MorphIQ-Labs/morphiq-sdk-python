@@ -98,13 +98,7 @@ def environments():
         {
             "name": name,
             "deployment_branch_policy": {"custom_branch_policies": True},
-            "protection_rules": [
-                {
-                    "type": "required_reviewers",
-                    "reviewers": [{"type": "Team", "id": 1}],
-                    "prevent_self_review": True,
-                }
-            ],
+            "protection_rules": [],
         }
         for name in ("testpypi", "pypi")
     ]
@@ -113,17 +107,12 @@ def environments():
 def test_both_environments_must_be_protected(environments):
     check_environments(environments)
     for envs in ([], environments[:1]):
-        with pytest.raises(ValueError, match="must have reviewers"):
+        with pytest.raises(ValueError, match="must exist with selected refs"):
             check_environments(envs)
     for key, value in (("deployment_branch_policy", None),):
         broken = deepcopy(environments)
         broken[1][key] = value
         with pytest.raises(ValueError, match="pypi"):
-            check_environments(broken)
-    for key, value in (("reviewers", []),):
-        broken = deepcopy(environments)
-        broken[0]["protection_rules"][0][key] = value
-        with pytest.raises(ValueError, match="testpypi"):
             check_environments(broken)
 
 
@@ -370,10 +359,16 @@ def test_new_index_release_stages_both_files_but_server_failure_does_not(
     assert not (tmp_path / "failed").exists()
 
 
-def test_sole_maintainer_can_review_without_removing_approval_gate(environments):
-    for env in environments:
-        env["protection_rules"][0]["prevent_self_review"] = False
+def test_environment_reviews_are_optional(environments):
     check_environments(environments)
-    environments[0]["protection_rules"][0]["reviewers"] = []
-    with pytest.raises(ValueError, match="must have reviewers"):
+    for env in environments:
+        env["protection_rules"] = [
+            {"type": "required_reviewers", "reviewers": [{"type": "User", "id": 1}]}
+        ]
+    check_environments(environments)
+
+
+def test_unrestricted_deployment_refs_are_rejected(environments):
+    environments[0]["deployment_branch_policy"]["custom_branch_policies"] = False
+    with pytest.raises(ValueError, match="testpypi must exist with selected refs"):
         check_environments(environments)
