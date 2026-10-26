@@ -1,10 +1,10 @@
 {
   "repository": "https://gitlab.com/prophetizo/morphiq-labs/sites/morphiq-api",
-  "source_commit": "a2e2f597a3ccb36222d27157cb938aa813a634d2",
+  "source_commit": "d15a738fd13d79671d65b14358795908a9949f1f",
   "source_path": "services/api/openapi.json",
   "contract_version": "0.1.0",
-  "sha256": "d9a746af609cba68d768c4b743061fd3e91cbe04cd4242c954e48c01f286031d",
-  "import_method": "Exact immutable API commit from MR !183 copied byte-for-byte; candidate pin pending producer review and merge before SDK merge.",
+  "sha256": "57ff021f7eb7d3932ac0ef2612c0221b86f30c3612baed4c9d0ec134ee6cc0cf",
+  "import_method": "Exact immutable API beta-limits candidate copied byte-for-byte. Producer review/merge and coordinated deployment remain pending before SDK release.",
   "covered_operations": [
     "POST /v1/price",
     "POST /v1/regime",

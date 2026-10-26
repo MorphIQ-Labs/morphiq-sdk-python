@@ -384,7 +384,7 @@ _OptionResultType = TypeVar("_OptionResultType", bound=_Response)
 
 class _BatchRequest(_Request, Generic[_OptionRequestType]):
     # This is the reviewed wire limit, not an account/plan limit.
-    requests: list[_OptionRequestType] = Field(min_length=1, max_length=1024)
+    requests: list[_OptionRequestType] = Field(min_length=1, max_length=100)
 
     def to_wire(self) -> dict[str, Any]:
         validated = type(self).model_validate({"requests": self.requests})

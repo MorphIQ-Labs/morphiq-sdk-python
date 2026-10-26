@@ -3033,7 +3033,8 @@
             "items": {
               "$ref": "#/components/schemas/FusedAnalyticsRequest"
             },
-            "maxItems": 1024,
+            "description": "One to 100 contracts; a lower account limit still applies.",
+            "maxItems": 100,
             "minItems": 1
           }
         },
@@ -3131,7 +3132,8 @@
             "items": {
               "$ref": "#/components/schemas/GreeksAllTenRequest"
             },
-            "maxItems": 1024,
+            "description": "One to 100 contracts; a lower account limit still applies.",
+            "maxItems": 100,
             "minItems": 1
           }
         },
@@ -3229,7 +3231,8 @@
             "items": {
               "$ref": "#/components/schemas/ImpliedVolatilityRequest"
             },
-            "maxItems": 1024,
+            "description": "One to 100 contracts; a lower account limit still applies.",
+            "maxItems": 100,
             "minItems": 1
           }
         },
@@ -3328,7 +3331,8 @@
             "items": {
               "$ref": "#/components/schemas/PriceRequest"
             },
-            "maxItems": 1024,
+            "description": "One to 100 contracts; a lower account limit still applies.",
+            "maxItems": 100,
             "minItems": 1
           }
         },
