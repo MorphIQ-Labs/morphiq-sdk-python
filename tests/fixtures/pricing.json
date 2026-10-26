@@ -1,5 +1,5 @@
 {
-  "source_commit": "a2e2f597a3ccb36222d27157cb938aa813a634d2",
+  "source_commit": "d2eb8d4d05d9c84dc8e9ac4d7b3016d1133d8d4f",
   "contract_sha256": "d9a746af609cba68d768c4b743061fd3e91cbe04cd4242c954e48c01f286031d",
   "admission": "open",
   "note": "Synthetic inputs evaluated by the pinned native API. Request IDs normalized. Commercial CU metadata is absent in open mode.",
