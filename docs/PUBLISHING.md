@@ -1,6 +1,6 @@
 # Package publishing runbook
 
-The **Publish SDK package** workflow (`.github/workflows/publish.yml`) prepares
+The **Publish SDK package** workflow (`.github/workflows/publish.yml`) performs
 TestPyPI verification and PyPI promotion. It is disabled unless the repository
 variable `PYPI_PUBLISHING_ENABLED` is exactly `true`. Merging the workflow does
 not enable uploads. Release Please continues to own versions, tags and GitHub
@@ -19,9 +19,8 @@ Complete these steps before setting the enablement variable:
    Organization management and a second owner can be added when available.
 2. The SDK, examples and notebooks use the [MIT license](../LICENSE), selected by
    MorphIQ Labs. Metadata declares `MIT` and includes `LICENSE` in both artifacts.
-   Public repository visibility has been selected for preparation; review the
-   release tree/history before the separate visibility change. The copyright
-   holder is MorphIQ Labs.
+   The repository is public; the initial release tree/history review is recorded
+   below. The copyright holder is MorphIQ Labs.
 3. Make the installation guide, API reference, compatibility/contract information,
    examples and support route accessible to public users. Choose public repository
    URLs or hosted documentation and replace README-relative links with working
@@ -65,14 +64,32 @@ protect it. See [GitHub environment protections](https://docs.github.com/en/acti
 ## Setup recorded on 2026-10-25
 
 - GitHub owner: `MorphIQ-Labs`; sole release maintainer: `thestephenromano`.
-- License decision: MIT; repository prepared for public visibility, still private.
-- Both environments exist with exactly branch `main` and tag `v*` allowed.
-- `PYPI_PUBLISHING_ENABLED=false` is set explicitly. No uploads have occurred.
-- Required reviewers and administrator bypass controls still need configuration
-  after the repository becomes public; the current GitHub Team plan cannot
-  enforce required reviewers on this private repository.
-- PyPI/TestPyPI accounts, 2FA and pending publisher registrations remain to be
-  completed by the maintainer. Package ownership is not yet established.
+- License: MIT; repository public.
+- Both environments allow exactly branch `main` and tag `v*`, require
+  `thestephenromano` as reviewer, allow sole-maintainer self-review and disable
+  administrator bypass.
+- `PYPI_PUBLISHING_ENABLED=true`. Both maintainer accounts have verified email
+  and 2FA; their registered GitHub publishers successfully created the projects.
+- Release `v0.1.0`, commit `9eac6da027aa3f3f30beee8fb6f03175358a47d6`, is public on
+  [PyPI](https://pypi.org/project/morphiq-sdk/0.1.0/) and
+  [TestPyPI](https://test.pypi.org/project/morphiq-sdk/0.1.0/).
+- [Publishing run](https://github.com/MorphIQ-Labs/morphiq-sdk-python/actions/runs/40243831112)
+  completed successfully: exact-file verification and clean core/all-extra installs
+  passed on Python 3.11 and 3.14 on both indexes. A separate fresh installation
+  using `pip install morphiq-sdk==0.1.0` from PyPI also passed sync/async imports.
+- Both initial index verification jobs saw temporary 404 responses after successful
+  uploads. Rerunning only failed verification jobs succeeded with the retained
+  artifacts; no rebuild or repeated upload was needed. New verification runs allow
+  a five-minute index-read window. The immutable `v0.1.0` workflow retains its
+  original 50-second wait and may require the same recovery when rerun.
+- Published SHA-256 values (identical on both indexes):
+  - Wheel: `d8b9c4d91df6110f0430b1d1beae13bdf762f28aea9c9a31bdd9bab31ed37734`
+  - Sdist: `819a129c63114fd7eeeaf20396334fbc27282822dd0e2ff8569e21d2ee5e79fb`
+- Published metadata includes the MIT license, quantitative/finance discovery
+  terms, API-key signup, installation and a complete first request. Documentation,
+  repository, support and developer-portal links returned HTTP 200. Automated
+  retrieval of the rendered index page encountered its browser challenge; visual
+  page acceptance and fresh-customer signup remain separate checks.
 - Gitleaks 8.30.1 reviewed all reachable local Git history through publishing
   preparation commit `f10bb6f`. Its four detections were duplicate references to
   the pinned API source commit in the historical release audit, not credentials.
@@ -157,7 +174,7 @@ is promised. Consumers requiring stability should constrain the minor series
 (for example, `morphiq-sdk>=0.1,<0.2`) and test upgrades against their use cases.
 
 For SDK defects, use the [repository issue tracker](https://github.com/MorphIQ-Labs/morphiq-sdk-python/issues)
-once the public visibility change is complete.
+for released versions.
 Account/key/billing requests go through the developer portal. Reports should include
 SDK/Python versions, operation, request ID and a minimal synthetic reproduction.
 Never post keys, private market inputs or account data in public issues.
@@ -167,8 +184,10 @@ Never post keys, private market inputs or account data in public issues.
 - **Build/check failure before upload:** fix through review. If the tagged code
   needs correction, Release Please must generate a new version. For an external
   transient failure, rerun the failed jobs against the existing release.
-- **Index propagation:** verification retries an index 404 up to six reads with
-  ten-second intervals. Other errors and digest mismatches fail immediately.
+- **Index propagation:** verification polls an index 404 every ten seconds for up to
+  five minutes, plus any in-flight read timeout (30 seconds). It logs its wait and
+  reports how to resume if the deadline expires. Other errors and digest mismatches
+  fail immediately.
   These are package-index reads, not SDK API request retries.
 - **Interrupted/partial upload:** use **Re-run failed jobs** to reuse the retained
   build artifact. Each publishing job checks existing index files first. Files

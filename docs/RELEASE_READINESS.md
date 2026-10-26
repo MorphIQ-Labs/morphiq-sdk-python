@@ -5,6 +5,17 @@ acceptance is not complete.** Public installation, distribution, website
 onboarding and published notebook-image gates remain open. This report does not
 authorize publication or mark the five-minute adoption journey complete.
 
+## Publication update — 2026-10-25
+
+Version `0.1.0` is now published on PyPI and TestPyPI from commit
+`9eac6da027aa3f3f30beee8fb6f03175358a47d6`. The repository is public and MIT-licensed;
+protected OIDC publication, matching artifact hashes and clean installs on Python
+3.11/3.14 passed. See the [publishing record](PUBLISHING.md#setup-recorded-on-2026-10-25)
+for the workflow and exact hashes. This supersedes the historical distribution,
+license, visibility and package-link observations below. It does not extend the
+older native-service audit to the new release, establish fresh-customer onboarding,
+or claim that notebook images or SDK website integration have shipped.
+
 ## Exact scope
 
 | Identity | Audited value |
