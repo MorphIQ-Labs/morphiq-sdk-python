@@ -3,7 +3,7 @@
   "info": {
     "title": "MorphIQ API",
     "description": "Native HTTP API for MorphIQ Labs pricing, risk and regime analysis",
-    "version": "3.0.0"
+    "version": "0.1.0"
   },
   "paths": {
     "/health": {
