@@ -109,7 +109,7 @@ updates do not themselves validate changed values.
 ## Batch and regime requests
 
 Every batch envelope requires `requests`, a list of the corresponding single
-request type. The reviewed wire schema accepts 1–1024 items; service/account
+request type. The reviewed wire schema accepts 1–100 items; service/account
 limits can be lower. Empty/oversized lists and invalid list edits fail locally.
 The SDK preserves item order and single-request omission/null semantics.
 See [all four batch construction examples](BATCH.md#constructing-each-batch-type).

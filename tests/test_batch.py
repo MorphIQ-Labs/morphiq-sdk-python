@@ -102,8 +102,11 @@ def test_batch_inputs_revalidate_edits_without_plan_assumptions(index, batch_cas
     with pytest.raises(ValidationError):
         cls(requests=[])
     with pytest.raises(ValidationError):
-        cls(requests=[values[0]] * 1025)
-    assert len(cls(requests=[values[0]] * 1024).to_wire()["requests"]) == 1024
+        cls(requests=[values[0]] * 101)
+    schema = json.loads((ROOT / "contracts/openapi.json").read_text())
+    wire_name = OPERATIONS[index][3] + "Request"
+    assert schema["components"]["schemas"][wire_name]["properties"]["requests"]["maxItems"] == 100
+    assert len(cls(requests=[values[0]] * 100).to_wire()["requests"]) == 100
     request = cls(requests=values)
     request.requests[0].dividend_schedule.append(
         {"ex_time_years": float("nan"), "cash_amount": 1.0}

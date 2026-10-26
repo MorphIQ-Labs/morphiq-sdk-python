@@ -14,7 +14,7 @@ request models. One call sends one HTTP request. These methods do not split batc
 create concurrent work, retry rejected requests, or replay failed items.
 For caller-sized chunks, optional async concurrency and per-request costs, use an
 explicit [batch workflow](WORKFLOWS.md).
-The reviewed wire schema allows 1–1024 items; the service applies the account's
+The reviewed wire schema allows 1–100 items; the service applies the account's
 actual limit, which may be lower. The SDK does not hardcode plan limits.
 
 Set `MORPHIQ_API_KEY`, then run a self-contained example:
@@ -151,3 +151,8 @@ remain unknown; use the request ID and account records to reconcile them.
 Use the optional [pandas adapter](PANDAS.md) to convert batch results into ordered
 analysis rows and a separate per-request charge table. Core SDK calls do not
 require pandas.
+
+The beta service's default compute deadline is 10 seconds, including time waiting
+for a worker. The SDK's default timeout remains 30 seconds to allow for transport.
+A valid batch size does not guarantee completion before the deadline. A timeout
+after execution starts can retain the full CU charge; workflows do not retry it.

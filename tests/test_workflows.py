@@ -239,10 +239,10 @@ def test_validate_entire_plan_before_network_and_snapshot_inputs(operation, batc
     factory, request_type = OPERATIONS[operation]
     requests = request_type(**batch_cases[operation]["request"]).requests
     with MorphIQ(api_key="workflow-test") as client:
-        for size in [0, -1, True, 1.5, 1025]:
+        for size in [0, -1, True, 1.5, 101]:
             with pytest.raises(ValueError):
                 getattr(client, factory)(requests, chunk_size=size)
-        assert getattr(client, factory)(requests, chunk_size=1024).planned_chunk_count == 1
+        assert getattr(client, factory)(requests, chunk_size=100).planned_chunk_count == 1
         # Invalid later chunk fails preparation; no earlier request has been made.
         requests[-1].dividend_schedule.append({"ex_time_years": float("nan"), "cash_amount": 1})
         with pytest.raises(ValidationError):

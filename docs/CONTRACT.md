@@ -9,8 +9,9 @@ coordinates the producer/import workflow with
 [API #106](https://gitlab.com/prophetizo/morphiq-labs/sites/morphiq-api/-/work_items/106).
 contracts/openapi.json now contains the reviewed snapshot byte-for-byte.
 contracts/provenance.json records its digest, API source commit and contract
-version. It was copied from immutable reviewed main source; automated published
-artifact delivery remains #2. SDK tests and builds use the offline snapshot
+version. This branch pins immutable API candidate `d15a738fd13d79671d65b14358795908a9949f1f`
+for the 100-item beta limit; producer review and merge remain pending. Automated
+published artifact delivery remains #2. SDK tests and builds use the offline snapshot
 without private repository or numerical engine access.
 
 The SDK covers POST /v1/price, POST /v1/greeks, POST /v1/implied-volatility,
@@ -44,3 +45,9 @@ Greeks, implied-volatility and analytics fixtures contain synthetic inputs evalu
 native service built from the pinned API commit. Tests verify all ten unscaled
 Greeks, IV solver diagnostics and residual bases, model identity, metadata, error
 evidence and sync/async parity against native JSON.
+
+The source-generated schema caps every option batch at 100 items. Fixture
+numerical values retain their original provenance in `original_source_commit`
+and are replayed against the candidate; no numerical engine or CU price changes
+are introduced by this SDK update. The service compute deadline is ten seconds;
+the client timeout stays at 30 seconds.

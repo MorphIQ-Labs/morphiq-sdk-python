@@ -14,7 +14,7 @@ Both `MorphIQ` and `AsyncMorphIQ` provide these factories:
 | `analytics_workflow()` | `AnalyticsRequest` | `BatchAnalyticsResponse` |
 
 Every factory requires `chunk_size=`. Choose a positive integer allowed by your
-account; the SDK checks the reviewed wire ceiling of 1024, not customer plan
+account; the SDK checks the reviewed wire ceiling of 100, not customer plan
 limits. A smaller final chunk is allowed. Empty input completes without HTTP
 requests and has total cost zero. Execution is sequential by default. Async
 workflows accept an explicit
