@@ -28,14 +28,13 @@ Complete these steps before setting the enablement variable:
    not include `docs/` or `contracts/`; a private repository link is insufficient.
    Verify the rendered description and project URLs on TestPyPI before promotion.
 4. Create GitHub environments named **`testpypi`** and **`pypi`** before running
-   the workflow. Require review from `thestephenromano`, allow self-review for the current sole
-   maintainer, disallow administrator bypass, and select only branch `main` and tags `v*` as
-   deployment refs. Keep `main` and release tags protected against unreviewed
-   changes. Preflight checks that both environments exist with reviewers and selected-ref
-   policies. Self-review is intentional: otherwise the sole maintainer cannot
-   approve manually initiated runs. When another maintainer joins, add that reviewer
-   and enable self-review prevention. Inspect the exact ref rules and administrator
-   bypass setting in GitHub's UI as part of activation.
+   the workflow. Select only branch `main` and tags `v*` as deployment refs,
+   disallow administrator bypass, and leave required reviewers and wait timers
+   unset. Merging the reviewed release PR authorizes automatic publication.
+   Keep `main` and release tags protected against unreviewed changes and require
+   verified commit signatures on all branches. Preflight requires both
+   environments to exist with selected-ref policies. Inspect the exact ref
+   rules and administrator bypass setting when configuring the environments.
 5. Configure a GitHub trusted publisher separately on each index:
 
    | Setting | TestPyPI | PyPI |
@@ -55,11 +54,6 @@ Complete these steps before setting the enablement variable:
 6. Record candidate acceptance in the [release readiness checklist](RELEASE_READINESS.md).
    Set `PYPI_PUBLISHING_ENABLED=true` only when the preceding decisions and setup
    are complete. Review the generated Release Please PR and its CI before merging.
-
-GitHub's required-reviewer availability depends on repository visibility and plan.
-If the selected repository/plan cannot enforce the required environments, leave
-publishing disabled until that is resolved; naming an environment alone does not
-protect it. See [GitHub environment protections](https://docs.github.com/en/actions/reference/workflows-and-actions/deployments-and-environments).
 
 ## Setup recorded on 2026-10-25
 
@@ -98,6 +92,19 @@ protect it. See [GitHub environment protections](https://docs.github.com/en/acti
   A separate scan of the 35 issue/PR bodies accessible on that date found no
   credentials; there were no issue or review comments returned by the API.
 
+## Automatic publication enabled on 2026-10-26
+
+Required reviewers were removed from both environments. The `main` branch and
+`v*` tag restrictions, disabled administrator bypass, trusted publishers and
+TestPyPI-before-PyPI verification remain in place. Release PR review and merge
+are the approval point; publishing jobs no longer pause for a second approval.
+
+Historical tags retain their original preflight code. A full rerun from a tag
+that required environment reviewers will fail that old preflight after this
+change. Use the updated workflow from `main` with the existing tag once this
+change is merged; do not restore approval gates or move release tags. Rerunning
+only failed downstream jobs retains the completed preflight and build artifacts.
+
 ## Release sequence
 
 A published GitHub release starts the workflow. To publish an existing release,
@@ -119,13 +126,13 @@ Do not create a new tag just to retry a failed upload.
    and an empty workflow. Install all extras and check dependency consistency and
    exact batch charges using synthetic fixtures. No market-data or numerical API
    requests occur.
-5. A reviewer approves **testpypi**. Upload the files using trusted publishing.
+5. Automatically upload the files to **TestPyPI** using trusted publishing.
 6. Download both files from TestPyPI, compare their advertised and actual SHA-256
    hashes to the build manifest, and repeat clean wheel installs on both Python
    versions. Dependencies resolve exclusively against PyPI, never TestPyPI. There
    is no mixed-index `--extra-index-url` installation.
-7. Inspect TestPyPI metadata, attestations, rendered documentation links and the
-   successful install checks. Approve **pypi** to upload the **same built bytes**.
+7. After every TestPyPI verification job succeeds, automatically upload the
+   **same built bytes** to **PyPI** using trusted publishing.
 8. Download and verify both production files and repeat the clean install matrix.
    Record the successful workflow URL and manifest alongside release acceptance.
 
@@ -210,7 +217,7 @@ Never post keys, private market inputs or account data in public issues.
 - **Publisher/account incident:** disable publishing, cancel active runs, remove
   the affected trusted publisher on the index and follow the organization's
   account recovery process. OIDC does not eliminate the need to secure GitHub,
-  environment reviewers and PyPI owners.
+  release maintainers and PyPI owners.
 
 Neither this workflow nor Release Please publishes notebook container images;
 image publication has a separate release path.

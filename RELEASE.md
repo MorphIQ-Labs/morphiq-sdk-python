@@ -46,11 +46,13 @@ version. Never overwrite an existing release's identity.
 
 Package publication is enabled in `.github/workflows/publish.yml`. The public
 SDK, examples and notebooks use MIT. Version `0.1.0` was published to TestPyPI
-and PyPI through trusted publishing on 2026-10-25. Both environments require the
-sole maintainer's approval and disallow administrator bypass.
+and PyPI through trusted publishing on 2026-10-25. Both environments restrict
+deployment refs to `main` and `v*` tags and disallow administrator bypass.
+Merging the reviewed release PR authorizes publication; no separate environment
+approval is required.
 
 A published Release Please release builds once, verifies TestPyPI installations,
-and promotes the same files to PyPI after environment review. Follow the
+and automatically promotes the same files to PyPI after TestPyPI checks pass. Follow the
 [publishing runbook](docs/PUBLISHING.md) for the recorded release evidence,
 compatibility, support, interrupted uploads and yanking/recovery.
 
