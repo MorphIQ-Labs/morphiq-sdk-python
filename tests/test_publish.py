@@ -226,6 +226,59 @@ def test_index_download_recovers_from_initial_404(tmp_path, report, index, monke
     assert pauses == [10]
 
 
+@pytest.mark.parametrize("ready_after", [90, None])
+def test_index_waits_for_propagation_with_a_deadline(
+    tmp_path, report, index, monkeypatch, ready_after
+):
+    elapsed = 0
+    calls = []
+
+    def pause(seconds):
+        nonlocal elapsed
+        elapsed += seconds
+
+    def fetch(url, **kwargs):
+        calls.append(url)
+        if url.endswith("/json"):
+            if ready_after is None or elapsed < ready_after:
+                raise urllib.error.HTTPError(url, 404, "pending", {}, None)
+            return io.BytesIO(json.dumps(index).encode())
+        return io.BytesIO(b"wheel" if url.endswith(".whl") else b"sdist")
+
+    monkeypatch.setattr("urllib.request.urlopen", fetch)
+    monkeypatch.setattr("time.monotonic", lambda: elapsed)
+    monkeypatch.setattr("time.sleep", pause)
+    destination = tmp_path / "downloads"
+    if ready_after is None:
+        with pytest.raises(TimeoutError, match="rerun failed verification jobs") as failure:
+            verify_index("pypi", report, destination)
+        assert isinstance(failure.value.__cause__, urllib.error.HTTPError)
+        assert elapsed == 300
+        assert not destination.exists()
+        assert all(url.endswith("/json") for url in calls)
+    else:
+        verify_index("pypi", report, destination)
+        check_local(destination, report)
+        assert elapsed == ready_after
+        assert len([url for url in calls if not url.endswith("/json")]) == 2
+
+
+@pytest.mark.parametrize("status", [401, 403, 429, 500, 503])
+def test_index_does_not_retry_other_errors(tmp_path, report, monkeypatch, status):
+    calls = []
+
+    def fetch(url, **kwargs):
+        calls.append(url)
+        raise urllib.error.HTTPError(url, status, "failed", {}, None)
+
+    monkeypatch.setattr("urllib.request.urlopen", fetch)
+    monkeypatch.setattr("time.sleep", lambda _: pytest.fail("Unexpected retry"))
+    with pytest.raises(urllib.error.HTTPError) as failure:
+        verify_index("pypi", report, tmp_path / "downloads")
+    assert failure.value.code == status
+    assert len(calls) == 1
+
+
 def test_record_checks_both_distribution_metadata_and_license_files(tmp_path, monkeypatch):
     (tmp_path / "pyproject.toml").write_text(
         '[project]\nname="morphiq-sdk"\nversion="0.1.0"\nlicense="MIT"\nlicense-files=["LICENSE"]\n'

@@ -23,6 +23,8 @@ from urllib.parse import urlsplit
 STABLE_TAG = re.compile(r"v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)")
 INDEX_HOSTS = {"testpypi": "test.pypi.org", "pypi": "pypi.org"}
 FILE_HOSTS = {"files.pythonhosted.org", "test-files.pythonhosted.org"}
+INDEX_READY_TIMEOUT = 300
+INDEX_POLL_INTERVAL = 10
 
 
 def git(root: Path, *args: str) -> str:
@@ -206,17 +208,31 @@ def prepare_upload(index: str, report: dict[str, Any], directory: Path, destinat
 
 def verify_index(index: str, report: dict[str, Any], destination: Path) -> None:
     url = f"https://{INDEX_HOSTS[index]}/pypi/morphiq-sdk/{report['version']}/json"
-    # Only index reads are retried, to allow CDN propagation; uploads are never retried here.
-    for attempt in range(6):
+    # A new release can remain absent from the index after the upload succeeds.
+    # Poll only read-side 404s; uploads and SDK requests are never replayed here.
+    deadline = time.monotonic() + INDEX_READY_TIMEOUT
+    while True:
         try:
             with urllib.request.urlopen(url, timeout=30) as response:
                 data = json.load(response)
             urls = check_index_metadata(data, report)
             break
         except urllib.error.HTTPError as error:
-            if error.code != 404 or attempt == 5:
+            if error.code != 404:
                 raise
-            time.sleep(10)
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise TimeoutError(
+                    f"{index} release {report['version']} is still absent after "
+                    f"{INDEX_READY_TIMEOUT}s. The upload may have succeeded; check the "
+                    "index, then rerun failed verification jobs using the retained artifacts."
+                ) from error
+            pause = min(INDEX_POLL_INTERVAL, remaining)
+            print(
+                f"Waiting for {index} release {report['version']}; checking again in {pause:g}s",
+                flush=True,
+            )
+            time.sleep(pause)
     destination.mkdir(parents=True, exist_ok=False)
     for name, file_url in urls.items():
         with urllib.request.urlopen(file_url, timeout=60) as response:

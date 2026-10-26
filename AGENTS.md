@@ -30,7 +30,8 @@ commercial policy, account authority and execution remain server-side.
 - Follow RELEASE.md: no manual release version bumps or package publication.
   Release Please owns pyproject.toml version, manifest and changelog updates.
 
-The unreleased preview implements sync/async single-option JSON pricing, all-ten-Greeks analysis, implied volatility, combined analytics and
-regime identification, plus explicit ordered batches for the four option operations,
-with a local quickstart and feature notebooks. Other endpoints, package/image publication and hosted
-notebooks remain planned. Keep availability statements precise.
+The published SDK implements sync/async single-option JSON pricing, all-ten-Greeks
+analysis, implied volatility, combined analytics and regime identification, plus
+explicit ordered batches and optional bounded concurrency for the four option
+operations. PyPI publication is live; notebook images and hosted notebooks remain
+separate work. Keep availability statements precise.

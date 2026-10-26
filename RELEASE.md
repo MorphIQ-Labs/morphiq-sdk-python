@@ -44,19 +44,18 @@ replace a tag. Keep its `autorelease: pending` / `autorelease: tagged` labels in
 If an already released version needs correction, merge a fix and release a new
 version. Never overwrite an existing release's identity.
 
-Package publication is prepared in `.github/workflows/publish.yml` and remains
-disabled until `PYPI_PUBLISHING_ENABLED=true` is configured. The SDK, examples and
-notebooks use MIT. The repository remains private until the visibility change;
-PyPI ownership and reviewer configuration are still pending. Follow the
-[publishing runbook](docs/PUBLISHING.md) for
-ownership, licensing, public documentation, protected environments and trusted
-publisher setup before activation. Once enabled, a published Release Please
-release builds once, verifies TestPyPI installations, and promotes the same files
-to PyPI after environment review. The runbook covers compatibility, support,
-interrupted uploads and yanking/recovery.
+Package publication is enabled in `.github/workflows/publish.yml`. The public
+SDK, examples and notebooks use MIT. Version `0.1.0` was published to TestPyPI
+and PyPI through trusted publishing on 2026-10-25. Both environments require the
+sole maintainer's approval and disallow administrator bypass.
 
-[Issue #9](https://github.com/MorphIQ-Labs/morphiq-sdk-python/issues/9) tracks the
-remaining public distribution gates and live publication acceptance.
+A published Release Please release builds once, verifies TestPyPI installations,
+and promotes the same files to PyPI after environment review. Follow the
+[publishing runbook](docs/PUBLISHING.md) for the recorded release evidence,
+compatibility, support, interrupted uploads and yanking/recovery.
+
+[Issue #9](https://github.com/MorphIQ-Labs/morphiq-sdk-python/issues/9) records package
+distribution acceptance.
 [Issue #14](https://github.com/MorphIQ-Labs/morphiq-sdk-python/issues/14) tracks
 versioned notebook image publication separately. Package/image publication is
 never a side effect of project setup.
