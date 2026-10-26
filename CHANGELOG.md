@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/MorphIQ-Labs/morphiq-sdk-python/compare/v0.1.0...v0.1.1) (2026-10-26)
+
+
+### Bug Fixes
+
+* **release:** wait for package index propagation ([#36](https://github.com/MorphIQ-Labs/morphiq-sdk-python/issues/36)) ([01d2f64](https://github.com/MorphIQ-Labs/morphiq-sdk-python/commit/01d2f64f81da717f6241a2aa678567612a78637e))
+
 ## 0.1.0 (2026-10-25)
 
 
