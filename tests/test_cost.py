@@ -223,3 +223,81 @@ def test_cost_notebook_actions_are_explicit_and_ceiling_is_forwarded(monkeypatch
     scope["strike"].value = 101.0
     scope["execute_request"](None)
     assert len(recorded) == 3 and scope["execute_button"].disabled
+
+
+@pytest.mark.parametrize(
+    "arguments,quantity,execute,ceiling",
+    [
+        ([], 1, False, None),
+        (["--batch"], 2, False, None),
+        (["--execute"], 1, True, 1),
+        (["--batch", "--execute"], 2, True, 2),
+        (["--batch", "--execute", "--max-cu", "1"], 2, True, 1),
+    ],
+)
+def test_cost_example_requests_and_refusal_evidence(
+    monkeypatch, capsys, arguments, quantity, execute, ceiling
+):
+    import copy
+    import runpy
+    import sys
+
+    recorded = []
+    price_case = next(cases())[2]
+    quoted = copy.deepcopy(QUOTE)
+    quoted["quote"].update(total_fcu=quantity, variable_fcu=quantity)
+    quoted["quote"]["lines"][0].update(quantity=quantity, variable_fcu=quantity)
+    quoted["resolved_models"][0]["quantity"] = quantity
+
+    def handler(request):
+        recorded.append(request)
+        if request.url.path == "/v1/cost/schedule":
+            return httpx.Response(200, json=SCHEDULE)
+        body = json.loads(request.content)
+        if request.url.path == "/v1/cost/quote":
+            assert body["operation"] == ("price_batch" if quantity == 2 else "price")
+            return httpx.Response(200, json=quoted)
+        assert request.headers["x-morphiq-max-cu"] == str(ceiling)
+        assert body == json.loads(recorded[1].content)["request"]
+        if quantity == 2:
+            assert request.url.path == "/v1/price:batch" and len(body["requests"]) == 2
+        else:
+            assert request.url.path == "/v1/price"
+        if ceiling < quantity:
+            return httpx.Response(
+                409,
+                json={
+                    "metadata": {**METADATA, "fcu_quoted": quantity},
+                    "error": {"code": "cost_limit_exceeded", "message": "ceiling exceeded"},
+                },
+            )
+        response = price_case["response"]
+        if quantity == 2:
+            response = {
+                "metadata": response["metadata"],
+                "results": [
+                    {"index": index, "status": "success", "result": response["result"]}
+                    for index in range(quantity)
+                ],
+            }
+        return httpx.Response(200, json=response)
+
+    original = sdk.MorphIQ
+    monkeypatch.setenv("MORPHIQ_API_KEY", "synthetic-test-key")
+    monkeypatch.setattr(sdk, "MorphIQ", lambda: original(transport=httpx.MockTransport(handler)))
+    monkeypatch.setattr(sys, "argv", ["cost_quote.py", *arguments])
+    if execute and ceiling < quantity:
+        with pytest.raises(SystemExit) as failure:
+            runpy.run_path(str(ROOT / "examples/cost_quote.py"), run_name="__main__")
+        assert failure.value.code == 1
+    else:
+        runpy.run_path(str(ROOT / "examples/cost_quote.py"), run_name="__main__")
+    assert len(recorded) == (3 if execute else 2)
+    output = capsys.readouterr()
+    assert "synthetic-test-key" not in output.out + output.err
+    assert f"Prospective execution CU: {quantity}" in output.out
+    assert "Utility CU charged: 0" in output.out
+    if execute and ceiling < quantity:
+        assert "409: cost_limit_exceeded" in output.err
+        assert "Execution quote CU: 2" in output.err and "CU charged: 0" in output.err
+        assert "No retry or automatic ceiling increase." in output.err
