@@ -39,25 +39,45 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
+      - name: Check prose scope decisions
+        run: python3 -m unittest discover -s ci -p test_prose_ci.py
+      - name: Classify the complete change and check whitespace
+        id: prose
+        env:
+          CI_PROSE_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          CI_PROSE_HEAD: ${{ github.sha }}
+        run: python3 ci/prose_ci.py
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
           cache-dependency-path: requirements-dev.txt
+        if: ${{ steps.prose.outputs.prose_only != 'true' }}
       - name: Install pinned development tools and SDK
         run: |
           python -m pip install --require-hashes -r requirements-dev.txt
           python -m pip install --no-build-isolation -e .
+        if: ${{ steps.prose.outputs.prose_only != 'true' }}
       - name: Verify package, release proposal and tag versions
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}
         run: python scripts/check_release_version.py
+        if: ${{ steps.prose.outputs.prose_only != 'true' }}
       - run: python -m ruff check .
+        if: ${{ steps.prose.outputs.prose_only != 'true' }}
       - run: python -m ruff format --check .
+        if: ${{ steps.prose.outputs.prose_only != 'true' }}
       - run: python -m mypy
+        if: ${{ steps.prose.outputs.prose_only != 'true' }}
       - run: python scripts/generate_notebook.py --check
+        if: ${{ steps.prose.outputs.prose_only != 'true' }}
       - run: python -m pytest -q
+        if: ${{ steps.prose.outputs.prose_only != 'true' }}
       - run: python scripts/check_package.py
+        if: ${{ steps.prose.outputs.prose_only != 'true' }}
+      - name: Prose-only change
+        if: ${{ steps.prose.outputs.prose_only == 'true' }}
+        run: echo "Reviewed prose-only paths; this job's build and runtime checks are not applicable."
 
   notebook-container:
     name: Docker notebook
@@ -66,6 +86,21 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
+          fetch-depth: 0
+      - name: Check prose scope decisions
+        run: python3 -m unittest discover -s ci -p test_prose_ci.py
+      - name: Classify the complete change and check whitespace
+        id: prose
+        env:
+          CI_PROSE_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          CI_PROSE_HEAD: ${{ github.sha }}
+        run: python3 ci/prose_ci.py
       - run: docker compose config --quiet
+        if: ${{ steps.prose.outputs.prose_only != 'true' }}
       - run: docker build -t morphiq-sdk-notebook:test .
+        if: ${{ steps.prose.outputs.prose_only != 'true' }}
       - run: python3 scripts/check_notebook_container.py --image morphiq-sdk-notebook:test
+        if: ${{ steps.prose.outputs.prose_only != 'true' }}
+      - name: Prose-only change
+        if: ${{ steps.prose.outputs.prose_only == 'true' }}
+        run: echo "Reviewed prose-only paths; this job's build and runtime checks are not applicable."
