@@ -4,6 +4,20 @@ This repository owns the Python API client, cookbook and notebook companions.
 The API repository owns the reviewed OpenAPI contract. Numerical engines,
 commercial policy, account authority and execution remain server-side.
 
+## Strategic Pragmatism
+
+Be strategically pragmatic in all MorphIQ Labs work. Choose the simplest solution that delivers the intended outcome and meets its correctness, performance, and operational contracts.
+
+- **Keep the outcome and scope explicit.** Resist speculative features, general-purpose frameworks, and adjacent problems that are not needed for the agreed result. Added scope must earn its implementation, maintenance, and opportunity cost.
+- **Challenge direction constructively.** Treat proposed approaches, including the owner's, as proposals to evaluate. Raise concerns early, explain the tradeoffs, and recommend a simpler or better-supported alternative when one exists. Agreement is not a substitute for judgment.
+- **Respect ownership boundaries.** Prefer established libraries and supported provider capabilities. Do not turn a third-party limitation or a problem outside our domain into a subsystem we must build and maintain. Establish our boundary, surface the limitation, and recommend an upstream fix, a supported alternative, or an explicit scope reduction; custom machinery needs a clear domain benefit.
+- **Bound investigations.** Name the question, the evidence needed to decide, and a stopping condition. When further investigation or engineering costs substantially more than its expected value, stop expanding the work and recommend a decision or rescope. Do not chase exhaustive explanations that cannot change that decision.
+- **Prefer explicit failure to speculative recovery.** Reject unsupported inputs or conditions with an actionable error or exception at the owning boundary rather than adding fallbacks for every conceivable edge case. Preserve valid state and required cleanup; never silently approximate, discard data, or report success. Required supported cases and recovery guarantees still have to work.
+
+Pragmatism governs which guarantees we undertake, not whether we honor them. If an existing commitment is disproportionate, make the tradeoff and proposed contract change explicit to the owner before narrowing it; do not disguise unfinished work as completion.
+
+## Client contract
+
 - Preserve wire semantics, numerical values, diagnostics/provenance, ordering
   and optional commercial CU fields. Internal `units_charged` is not the
   commercial `fcu_charged` amount.
