@@ -6,6 +6,7 @@ response types, configuration and errors.
 
 | Task | Guide | Executable examples |
 | --- | --- | --- |
+| Discover rates and quote requests | [Cost utilities](COST.md) | [Quote and optional capped execution](../examples/cost_quote.py) |
 | Price European/American options | [Pricing quickstart](QUICKSTART.md) | [European](../examples/price_european.py), [American](../examples/price_american.py), [async](../examples/price_async.py) |
 | Calculate price and ten Greeks | [Greeks and units](GREEKS.md) | [Sync](../examples/greeks.py), [async](../examples/greeks_async.py) |
 | Solve volatility from an option premium | [Implied volatility](IMPLIED_VOLATILITY.md) | [Sync](../examples/implied_volatility.py), [async](../examples/implied_volatility_async.py) |
