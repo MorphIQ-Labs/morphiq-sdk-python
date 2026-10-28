@@ -23,6 +23,8 @@ from .models import (
     BatchImpliedVolatilityResponse,
     BatchPriceRequest,
     BatchPriceResponse,
+    CostQuoteResponse,
+    CostScheduleResponse,
     ErrorEnvelope,
     GreeksRequest,
     GreeksResponse,
@@ -48,6 +50,8 @@ _ResponseType = TypeVar(
     GreeksResponse,
     ImpliedVolatilityResponse,
     AnalyticsResponse,
+    CostQuoteResponse,
+    CostScheduleResponse,
 )
 
 
@@ -88,6 +92,54 @@ def _redact_body(body: bytes, key: str) -> bytes:
 
     sanitized = visit(payload)
     return json.dumps(sanitized).encode() if changed else body
+
+
+QuoteInput = (
+    PriceRequest
+    | RegimeRequest
+    | GreeksRequest
+    | ImpliedVolatilityRequest
+    | AnalyticsRequest
+    | BatchPriceRequest
+    | BatchGreeksRequest
+    | BatchImpliedVolatilityRequest
+    | BatchAnalyticsRequest
+)
+_QUOTE_OPERATIONS = {
+    PriceRequest: "price",
+    RegimeRequest: "regime",
+    GreeksRequest: "greeks",
+    ImpliedVolatilityRequest: "implied_volatility",
+    AnalyticsRequest: "analytics",
+    BatchPriceRequest: "price_batch",
+    BatchGreeksRequest: "greeks_batch",
+    BatchImpliedVolatilityRequest: "implied_volatility_batch",
+    BatchAnalyticsRequest: "analytics_batch",
+}
+
+
+def _quote_payload(request: QuoteInput) -> dict[str, Any]:
+    operation = _QUOTE_OPERATIONS.get(type(request))
+    if operation is None:
+        raise TypeError("quote expects a supported MorphIQ request model")
+    return {"operation": operation, "request": request.to_wire()}
+
+
+def _cost_headers(max_cu: int | None) -> dict[str, str]:
+    if max_cu is None:
+        return {}
+    if type(max_cu) is not int or not 0 <= max_cu <= 2**64 - 1:
+        raise ValueError("max_cu must be an unsigned 64-bit integer")
+    return {"X-MorphIQ-Max-CU": str(max_cu)}
+
+
+def _transport_message(failure: str, billable: bool) -> str:
+    evidence = (
+        "Execution and CU charges may be unknown"
+        if billable
+        else "This utility request performs no calculation or CU charge"
+    )
+    return f"The request {failure}. {evidence}; no retry was attempted."
 
 
 class _Configuration:
@@ -202,52 +254,64 @@ class MorphIQ:
             trust_env=False,
         )
 
-    def price(self, request: PriceRequest) -> PriceResponse:
+    def price(self, request: PriceRequest, *, max_cu: int | None = None) -> PriceResponse:
         """Price one option; preserve server model selection and charge evidence."""
-        return self._post("v1/price", request.to_wire(), PriceResponse)
+        return self._post("v1/price", request.to_wire(), PriceResponse, max_cu=max_cu)
 
-    def regime(self, request: RegimeRequest) -> RegimeResponse:
+    def regime(self, request: RegimeRequest, *, max_cu: int | None = None) -> RegimeResponse:
         """Identify regime heads; preserve scores, applicability and provenance."""
-        return self._post("v1/regime", request.to_wire(), RegimeResponse)
+        return self._post("v1/regime", request.to_wire(), RegimeResponse, max_cu=max_cu)
 
-    def greeks(self, request: GreeksRequest) -> GreeksResponse:
+    def greeks(self, request: GreeksRequest, *, max_cu: int | None = None) -> GreeksResponse:
         """Return the option price and all ten Greeks, preserving the API's units."""
-        return self._post("v1/greeks", request.to_wire(), GreeksResponse)
+        return self._post("v1/greeks", request.to_wire(), GreeksResponse, max_cu=max_cu)
 
-    def implied_volatility(self, request: ImpliedVolatilityRequest) -> ImpliedVolatilityResponse:
+    def implied_volatility(
+        self, request: ImpliedVolatilityRequest, *, max_cu: int | None = None
+    ) -> ImpliedVolatilityResponse:
         """Solve IV from an option premium; preserve residual basis and charge evidence."""
-        return self._post("v1/implied-volatility", request.to_wire(), ImpliedVolatilityResponse)
+        return self._post(
+            "v1/implied-volatility", request.to_wire(), ImpliedVolatilityResponse, max_cu=max_cu
+        )
 
-    def analytics(self, request: AnalyticsRequest) -> AnalyticsResponse:
+    def analytics(
+        self, request: AnalyticsRequest, *, max_cu: int | None = None
+    ) -> AnalyticsResponse:
         """Return combined analytics and one server-reported commercial charge."""
-        return self._post("v1/analytics", request.to_wire(), AnalyticsResponse)
+        return self._post("v1/analytics", request.to_wire(), AnalyticsResponse, max_cu=max_cu)
 
-    def price_batch(self, request: BatchPriceRequest) -> BatchPriceResponse:
+    def price_batch(
+        self, request: BatchPriceRequest, *, max_cu: int | None = None
+    ) -> BatchPriceResponse:
         """Submit one batch; preserve ordered outcomes and count its charge once."""
         payload = request.to_wire()
-        response = self._post("v1/price:batch", payload, BatchPriceResponse)
+        response = self._post("v1/price:batch", payload, BatchPriceResponse, max_cu=max_cu)
         return _check_batch(response, len(payload["requests"]))
 
-    def greeks_batch(self, request: BatchGreeksRequest) -> BatchGreeksResponse:
+    def greeks_batch(
+        self, request: BatchGreeksRequest, *, max_cu: int | None = None
+    ) -> BatchGreeksResponse:
         """Submit one batch; preserve ordered outcomes and count its charge once."""
         payload = request.to_wire()
-        response = self._post("v1/greeks:batch", payload, BatchGreeksResponse)
+        response = self._post("v1/greeks:batch", payload, BatchGreeksResponse, max_cu=max_cu)
         return _check_batch(response, len(payload["requests"]))
 
     def implied_volatility_batch(
-        self, request: BatchImpliedVolatilityRequest
+        self, request: BatchImpliedVolatilityRequest, *, max_cu: int | None = None
     ) -> BatchImpliedVolatilityResponse:
         """Submit one batch; preserve ordered outcomes and count its charge once."""
         payload = request.to_wire()
         response = self._post(
-            "v1/implied-volatility:batch", payload, BatchImpliedVolatilityResponse
+            "v1/implied-volatility:batch", payload, BatchImpliedVolatilityResponse, max_cu=max_cu
         )
         return _check_batch(response, len(payload["requests"]))
 
-    def analytics_batch(self, request: BatchAnalyticsRequest) -> BatchAnalyticsResponse:
+    def analytics_batch(
+        self, request: BatchAnalyticsRequest, *, max_cu: int | None = None
+    ) -> BatchAnalyticsResponse:
         """Submit one batch; preserve ordered outcomes and count its charge once."""
         payload = request.to_wire()
-        response = self._post("v1/analytics:batch", payload, BatchAnalyticsResponse)
+        response = self._post("v1/analytics:batch", payload, BatchAnalyticsResponse, max_cu=max_cu)
         return _check_batch(response, len(payload["requests"]))
 
     def price_workflow(
@@ -283,20 +347,56 @@ class MorphIQ:
             _prepare_chunks(requests, BatchAnalyticsRequest, chunk_size), self.analytics_batch
         )
 
+    def cost_schedule(
+        self, *, operation: str | None = None, model: str | None = None
+    ) -> CostScheduleResponse:
+        """Read your active schedule, optionally filtered; consumes no commercial CUs."""
+        params = {
+            key: value
+            for key, value in {"operation": operation, "model": model}.items()
+            if value is not None
+        }
+        return self._request(
+            "GET", "v1/cost/schedule", None, CostScheduleResponse, params=params, billable=False
+        )
+
+    def quote(self, request: QuoteInput) -> CostQuoteResponse:
+        """Quote the same typed request you will execute, without running its calculation."""
+        return self._request(
+            "POST", "v1/cost/quote", _quote_payload(request), CostQuoteResponse, billable=False
+        )
+
     def _post(
-        self, path: str, payload: dict[str, Any], model: type[_ResponseType]
+        self,
+        path: str,
+        payload: dict[str, Any],
+        model: type[_ResponseType],
+        *,
+        max_cu: int | None = None,
     ) -> _ResponseType:
+        return self._request("POST", path, payload, model, max_cu=max_cu)
+
+    def _request(
+        self,
+        method: str,
+        path: str,
+        payload: dict[str, Any] | None,
+        model: type[_ResponseType],
+        *,
+        params: dict[str, str] | None = None,
+        max_cu: int | None = None,
+        billable: bool = True,
+    ) -> _ResponseType:
+        headers = _cost_headers(max_cu)
         try:
-            response = self._http.post(path, json=payload)
+            response = self._http.request(
+                method, path, json=payload, params=params, headers=headers
+            )
         except httpx.TimeoutException:
-            raise RequestTimeout(
-                "The request timed out; execution and CU charges may be unknown. "
-                "No retry was attempted."
-            ) from None
+            raise RequestTimeout(_transport_message("timed out", billable)) from None
         except httpx.RequestError:
             raise TransportError(
-                "The request failed before a complete response was received. "
-                "Execution and CU charges may be unknown; no retry was attempted."
+                _transport_message("failed before a complete response", billable)
             ) from None
         return self._config.decode(response, model)
 
@@ -340,56 +440,66 @@ class AsyncMorphIQ:
             trust_env=False,
         )
 
-    async def price(self, request: PriceRequest) -> PriceResponse:
+    async def price(self, request: PriceRequest, *, max_cu: int | None = None) -> PriceResponse:
         """Price one option; preserve server model selection and charge evidence."""
-        return await self._post("v1/price", request.to_wire(), PriceResponse)
+        return await self._post("v1/price", request.to_wire(), PriceResponse, max_cu=max_cu)
 
-    async def regime(self, request: RegimeRequest) -> RegimeResponse:
+    async def regime(self, request: RegimeRequest, *, max_cu: int | None = None) -> RegimeResponse:
         """Identify regime heads; preserve scores, applicability and provenance."""
-        return await self._post("v1/regime", request.to_wire(), RegimeResponse)
+        return await self._post("v1/regime", request.to_wire(), RegimeResponse, max_cu=max_cu)
 
-    async def greeks(self, request: GreeksRequest) -> GreeksResponse:
+    async def greeks(self, request: GreeksRequest, *, max_cu: int | None = None) -> GreeksResponse:
         """Return the option price and all ten Greeks, preserving the API's units."""
-        return await self._post("v1/greeks", request.to_wire(), GreeksResponse)
+        return await self._post("v1/greeks", request.to_wire(), GreeksResponse, max_cu=max_cu)
 
     async def implied_volatility(
-        self, request: ImpliedVolatilityRequest
+        self, request: ImpliedVolatilityRequest, *, max_cu: int | None = None
     ) -> ImpliedVolatilityResponse:
         """Solve IV from an option premium; preserve residual basis and charge evidence."""
         return await self._post(
-            "v1/implied-volatility", request.to_wire(), ImpliedVolatilityResponse
+            "v1/implied-volatility", request.to_wire(), ImpliedVolatilityResponse, max_cu=max_cu
         )
 
-    async def analytics(self, request: AnalyticsRequest) -> AnalyticsResponse:
+    async def analytics(
+        self, request: AnalyticsRequest, *, max_cu: int | None = None
+    ) -> AnalyticsResponse:
         """Return combined analytics and one server-reported commercial charge."""
-        return await self._post("v1/analytics", request.to_wire(), AnalyticsResponse)
+        return await self._post("v1/analytics", request.to_wire(), AnalyticsResponse, max_cu=max_cu)
 
-    async def price_batch(self, request: BatchPriceRequest) -> BatchPriceResponse:
+    async def price_batch(
+        self, request: BatchPriceRequest, *, max_cu: int | None = None
+    ) -> BatchPriceResponse:
         """Submit one batch; preserve ordered outcomes and count its charge once."""
         payload = request.to_wire()
-        response = await self._post("v1/price:batch", payload, BatchPriceResponse)
+        response = await self._post("v1/price:batch", payload, BatchPriceResponse, max_cu=max_cu)
         return _check_batch(response, len(payload["requests"]))
 
-    async def greeks_batch(self, request: BatchGreeksRequest) -> BatchGreeksResponse:
+    async def greeks_batch(
+        self, request: BatchGreeksRequest, *, max_cu: int | None = None
+    ) -> BatchGreeksResponse:
         """Submit one batch; preserve ordered outcomes and count its charge once."""
         payload = request.to_wire()
-        response = await self._post("v1/greeks:batch", payload, BatchGreeksResponse)
+        response = await self._post("v1/greeks:batch", payload, BatchGreeksResponse, max_cu=max_cu)
         return _check_batch(response, len(payload["requests"]))
 
     async def implied_volatility_batch(
-        self, request: BatchImpliedVolatilityRequest
+        self, request: BatchImpliedVolatilityRequest, *, max_cu: int | None = None
     ) -> BatchImpliedVolatilityResponse:
         """Submit one batch; preserve ordered outcomes and count its charge once."""
         payload = request.to_wire()
         response = await self._post(
-            "v1/implied-volatility:batch", payload, BatchImpliedVolatilityResponse
+            "v1/implied-volatility:batch", payload, BatchImpliedVolatilityResponse, max_cu=max_cu
         )
         return _check_batch(response, len(payload["requests"]))
 
-    async def analytics_batch(self, request: BatchAnalyticsRequest) -> BatchAnalyticsResponse:
+    async def analytics_batch(
+        self, request: BatchAnalyticsRequest, *, max_cu: int | None = None
+    ) -> BatchAnalyticsResponse:
         """Submit one batch; preserve ordered outcomes and count its charge once."""
         payload = request.to_wire()
-        response = await self._post("v1/analytics:batch", payload, BatchAnalyticsResponse)
+        response = await self._post(
+            "v1/analytics:batch", payload, BatchAnalyticsResponse, max_cu=max_cu
+        )
         return _check_batch(response, len(payload["requests"]))
 
     def price_workflow(
@@ -436,20 +546,56 @@ class AsyncMorphIQ:
             max_concurrency=max_concurrency,
         )
 
+    async def cost_schedule(
+        self, *, operation: str | None = None, model: str | None = None
+    ) -> CostScheduleResponse:
+        """Read your active schedule, optionally filtered; consumes no commercial CUs."""
+        params = {
+            key: value
+            for key, value in {"operation": operation, "model": model}.items()
+            if value is not None
+        }
+        return await self._request(
+            "GET", "v1/cost/schedule", None, CostScheduleResponse, params=params, billable=False
+        )
+
+    async def quote(self, request: QuoteInput) -> CostQuoteResponse:
+        """Quote the same typed request you will execute, without running its calculation."""
+        return await self._request(
+            "POST", "v1/cost/quote", _quote_payload(request), CostQuoteResponse, billable=False
+        )
+
     async def _post(
-        self, path: str, payload: dict[str, Any], model: type[_ResponseType]
+        self,
+        path: str,
+        payload: dict[str, Any],
+        model: type[_ResponseType],
+        *,
+        max_cu: int | None = None,
     ) -> _ResponseType:
+        return await self._request("POST", path, payload, model, max_cu=max_cu)
+
+    async def _request(
+        self,
+        method: str,
+        path: str,
+        payload: dict[str, Any] | None,
+        model: type[_ResponseType],
+        *,
+        params: dict[str, str] | None = None,
+        max_cu: int | None = None,
+        billable: bool = True,
+    ) -> _ResponseType:
+        headers = _cost_headers(max_cu)
         try:
-            response = await self._http.post(path, json=payload)
+            response = await self._http.request(
+                method, path, json=payload, params=params, headers=headers
+            )
         except httpx.TimeoutException:
-            raise RequestTimeout(
-                "The request timed out; execution and CU charges may be unknown. "
-                "No retry was attempted."
-            ) from None
+            raise RequestTimeout(_transport_message("timed out", billable)) from None
         except httpx.RequestError:
             raise TransportError(
-                "The request failed before a complete response was received. "
-                "Execution and CU charges may be unknown; no retry was attempted."
+                _transport_message("failed before a complete response", billable)
             ) from None
         return self._config.decode(response, model)
 

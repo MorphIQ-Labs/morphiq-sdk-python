@@ -1,6 +1,6 @@
 {
-  "source_commit": "b2cb8d72b049d61c062f787724c1c02c15dd12be",
-  "contract_sha256": "09527006497b4f23bbf174f4a5b8bd9d02f75d02554b3d489eaba953ec5a18f1",
+  "source_commit": "e8778e480f1bac36cc36a3ad64f08d9b525d55e8",
+  "contract_sha256": "82fb3502db75a8020cc54d6a860c7398cbdf852b1882a989145ee00928b9ce5a",
   "admission": "open",
   "note": "Synthetic inputs evaluated by the native API built with --locked from the pinned source commit. Served OpenAPI digest verified. Request IDs normalized; open mode does not report commercial CU. No Python numerical implementation.",
   "cases": [

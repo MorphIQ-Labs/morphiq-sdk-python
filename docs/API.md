@@ -194,3 +194,5 @@ with separate `results` and `requests` DataFrames, execution `state`,
 `reported_fcu_charged`, `unknown_charge_count` and `total_fcu_charged`.
 The optional `pandas` extra is required only at conversion time. See the
 [table schema, units, missing-value and cost semantics](PANDAS.md).
+
+See [cost schedules and request quotes](COST.md) for zero-CU discovery, conditional quotes, and the optional `max_cu` execution ceiling.

@@ -3,7 +3,7 @@
   "info": {
     "title": "MorphIQ API",
     "description": "Native HTTP API for MorphIQ Labs pricing, risk and regime analysis",
-    "version": "3.0.0"
+    "version": "0.1.0"
   },
   "paths": {
     "/health": {
@@ -170,6 +170,19 @@
           "pricing"
         ],
         "operationId": "fusedAnalytics",
+        "parameters": [
+          {
+            "name": "x-morphiq-max-cu",
+            "in": "header",
+            "description": "Optional maximum commercial CU charge for this whole request. An actual quote above this ceiling is refused before commitment with 409 cost_limit_exceeded and zero charged CUs. Applies equally to JSON, Protobuf and gRPC metadata. Zero is allowed; duplicate or malformed values are rejected.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 18446744073709551615,
+              "minimum": 0
+            }
+          }
+        ],
         "requestBody": {
           "description": "FusedAnalyticsRequest encoded as JSON or morphiq.ferro_risk.v1.FusedAnalyticsRequest",
           "content": {
@@ -319,7 +332,7 @@
             }
           },
           "409": {
-            "description": "The reservation expired before execution began",
+            "description": "Reservation expired, or the quote exceeds x-morphiq-max-cu; check error.code. Zero commercial charge.",
             "headers": {
               "x-request-id": {
                 "schema": {
@@ -483,6 +496,19 @@
           "pricing"
         ],
         "operationId": "fusedAnalyticsBatch",
+        "parameters": [
+          {
+            "name": "x-morphiq-max-cu",
+            "in": "header",
+            "description": "Optional maximum commercial CU charge for this whole request. An actual quote above this ceiling is refused before commitment with 409 cost_limit_exceeded and zero charged CUs. Applies equally to JSON, Protobuf and gRPC metadata. Zero is allowed; duplicate or malformed values are rejected.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 18446744073709551615,
+              "minimum": 0
+            }
+          }
+        ],
         "requestBody": {
           "description": "BatchFusedAnalyticsRequest encoded as JSON or morphiq.ferro_risk.v1.BatchFusedAnalyticsRequest",
           "content": {
@@ -632,7 +658,7 @@
             }
           },
           "409": {
-            "description": "The reservation expired before execution began",
+            "description": "Reservation expired, or the quote exceeds x-morphiq-max-cu; check error.code. Zero commercial charge.",
             "headers": {
               "x-request-id": {
                 "schema": {
@@ -790,12 +816,487 @@
         }
       }
     },
+    "/v1/cost/quote": {
+      "post": {
+        "tags": [
+          "cost"
+        ],
+        "operationId": "quoteCost",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CostQuoteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Exact conditional CU quote; no execution, reservation or charge",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CostQuoteResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed JSON",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credential",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Account or target operation forbidden",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceErrorEnvelope"
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "JSON response not acceptable",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceErrorEnvelope"
+                }
+              }
+            }
+          },
+          "408": {
+            "description": "Body deadline exceeded",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceErrorEnvelope"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request too large",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceErrorEnvelope"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "JSON required",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid or unquotable request",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Utility rate or account concurrency exhausted",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Minimum retry delay in seconds"
+              },
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Utility worker or response encoding failure",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Target, policy or utility workers unavailable",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Minimum retry delay in seconds"
+              },
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceErrorEnvelope"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Utility compute deadline exceeded",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceErrorEnvelope"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ]
+      }
+    },
+    "/v1/cost/schedule": {
+      "get": {
+        "tags": [
+          "cost"
+        ],
+        "operationId": "getCostSchedule",
+        "parameters": [
+          {
+            "name": "operation",
+            "in": "query",
+            "description": "Filter by operation: price, implied_volatility, greeks, analytics, regime",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "model",
+            "in": "query",
+            "description": "Filter by versioned model identifier",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Account-effective active cost schedule; zero CU charge",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CostScheduleResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credential",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Account forbidden",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceErrorEnvelope"
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "JSON response not acceptable",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid filter",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Utility rate or account concurrency exhausted",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Minimum retry delay in seconds"
+              },
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Response encoding failure",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Policy or service unavailable",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Minimum retry delay in seconds"
+              },
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceErrorEnvelope"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ]
+      }
+    },
     "/v1/greeks": {
       "post": {
         "tags": [
           "pricing"
         ],
         "operationId": "greeksAllTen",
+        "parameters": [
+          {
+            "name": "x-morphiq-max-cu",
+            "in": "header",
+            "description": "Optional maximum commercial CU charge for this whole request. An actual quote above this ceiling is refused before commitment with 409 cost_limit_exceeded and zero charged CUs. Applies equally to JSON, Protobuf and gRPC metadata. Zero is allowed; duplicate or malformed values are rejected.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 18446744073709551615,
+              "minimum": 0
+            }
+          }
+        ],
         "requestBody": {
           "description": "GreeksAllTenRequest encoded as JSON or morphiq.ferro_risk.v1.GreeksAllTenRequest",
           "content": {
@@ -945,7 +1446,7 @@
             }
           },
           "409": {
-            "description": "The reservation expired before execution began",
+            "description": "Reservation expired, or the quote exceeds x-morphiq-max-cu; check error.code. Zero commercial charge.",
             "headers": {
               "x-request-id": {
                 "schema": {
@@ -1109,6 +1610,19 @@
           "pricing"
         ],
         "operationId": "greeksAllTenBatch",
+        "parameters": [
+          {
+            "name": "x-morphiq-max-cu",
+            "in": "header",
+            "description": "Optional maximum commercial CU charge for this whole request. An actual quote above this ceiling is refused before commitment with 409 cost_limit_exceeded and zero charged CUs. Applies equally to JSON, Protobuf and gRPC metadata. Zero is allowed; duplicate or malformed values are rejected.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 18446744073709551615,
+              "minimum": 0
+            }
+          }
+        ],
         "requestBody": {
           "description": "BatchGreeksAllTenRequest encoded as JSON or morphiq.ferro_risk.v1.BatchGreeksAllTenRequest",
           "content": {
@@ -1258,7 +1772,7 @@
             }
           },
           "409": {
-            "description": "The reservation expired before execution began",
+            "description": "Reservation expired, or the quote exceeds x-morphiq-max-cu; check error.code. Zero commercial charge.",
             "headers": {
               "x-request-id": {
                 "schema": {
@@ -1422,6 +1936,19 @@
           "pricing"
         ],
         "operationId": "impliedVolatility",
+        "parameters": [
+          {
+            "name": "x-morphiq-max-cu",
+            "in": "header",
+            "description": "Optional maximum commercial CU charge for this whole request. An actual quote above this ceiling is refused before commitment with 409 cost_limit_exceeded and zero charged CUs. Applies equally to JSON, Protobuf and gRPC metadata. Zero is allowed; duplicate or malformed values are rejected.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 18446744073709551615,
+              "minimum": 0
+            }
+          }
+        ],
         "requestBody": {
           "description": "ImpliedVolatilityRequest encoded as JSON or morphiq.ferro_risk.v1.ImpliedVolatilityRequest",
           "content": {
@@ -1571,7 +2098,7 @@
             }
           },
           "409": {
-            "description": "The reservation expired before execution began",
+            "description": "Reservation expired, or the quote exceeds x-morphiq-max-cu; check error.code. Zero commercial charge.",
             "headers": {
               "x-request-id": {
                 "schema": {
@@ -1735,6 +2262,19 @@
           "pricing"
         ],
         "operationId": "impliedVolatilityBatch",
+        "parameters": [
+          {
+            "name": "x-morphiq-max-cu",
+            "in": "header",
+            "description": "Optional maximum commercial CU charge for this whole request. An actual quote above this ceiling is refused before commitment with 409 cost_limit_exceeded and zero charged CUs. Applies equally to JSON, Protobuf and gRPC metadata. Zero is allowed; duplicate or malformed values are rejected.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 18446744073709551615,
+              "minimum": 0
+            }
+          }
+        ],
         "requestBody": {
           "description": "BatchImpliedVolatilityRequest encoded as JSON or morphiq.ferro_risk.v1.BatchImpliedVolatilityRequest",
           "content": {
@@ -1884,7 +2424,7 @@
             }
           },
           "409": {
-            "description": "The reservation expired before execution began",
+            "description": "Reservation expired, or the quote exceeds x-morphiq-max-cu; check error.code. Zero commercial charge.",
             "headers": {
               "x-request-id": {
                 "schema": {
@@ -2048,6 +2588,19 @@
           "pricing"
         ],
         "operationId": "priceOption",
+        "parameters": [
+          {
+            "name": "x-morphiq-max-cu",
+            "in": "header",
+            "description": "Optional maximum commercial CU charge for this whole request. An actual quote above this ceiling is refused before commitment with 409 cost_limit_exceeded and zero charged CUs. Applies equally to JSON, Protobuf and gRPC metadata. Zero is allowed; duplicate or malformed values are rejected.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 18446744073709551615,
+              "minimum": 0
+            }
+          }
+        ],
         "requestBody": {
           "description": "PriceRequest encoded as JSON or morphiq.ferro_risk.v1.PriceRequest",
           "content": {
@@ -2197,7 +2750,7 @@
             }
           },
           "409": {
-            "description": "The reservation expired before execution began",
+            "description": "Reservation expired, or the quote exceeds x-morphiq-max-cu; check error.code. Zero commercial charge.",
             "headers": {
               "x-request-id": {
                 "schema": {
@@ -2361,6 +2914,19 @@
           "pricing"
         ],
         "operationId": "priceOptionBatch",
+        "parameters": [
+          {
+            "name": "x-morphiq-max-cu",
+            "in": "header",
+            "description": "Optional maximum commercial CU charge for this whole request. An actual quote above this ceiling is refused before commitment with 409 cost_limit_exceeded and zero charged CUs. Applies equally to JSON, Protobuf and gRPC metadata. Zero is allowed; duplicate or malformed values are rejected.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 18446744073709551615,
+              "minimum": 0
+            }
+          }
+        ],
         "requestBody": {
           "description": "BatchPriceRequest encoded as JSON or morphiq.ferro_risk.v1.BatchPriceRequest",
           "content": {
@@ -2510,7 +3076,7 @@
             }
           },
           "409": {
-            "description": "The reservation expired before execution began",
+            "description": "Reservation expired, or the quote exceeds x-morphiq-max-cu; check error.code. Zero commercial charge.",
             "headers": {
               "x-request-id": {
                 "schema": {
@@ -2674,6 +3240,19 @@
           "regime"
         ],
         "operationId": "identifyRegime",
+        "parameters": [
+          {
+            "name": "x-morphiq-max-cu",
+            "in": "header",
+            "description": "Optional maximum commercial CU charge for this whole request. An actual quote above this ceiling is refused before commitment with 409 cost_limit_exceeded and zero charged CUs. Applies equally to JSON, Protobuf and gRPC metadata. Zero is allowed; duplicate or malformed values are rejected.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 18446744073709551615,
+              "minimum": 0
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -2812,7 +3391,7 @@
             }
           },
           "409": {
-            "description": "Reservation expired before execution",
+            "description": "Reservation expired, or the quote exceeds x-morphiq-max-cu; check error.code. Zero commercial charge.",
             "headers": {
               "x-request-id": {
                 "schema": {
@@ -3350,6 +3929,384 @@
             "items": {
               "$ref": "#/components/schemas/BatchItemResult"
             }
+          }
+        }
+      },
+      "CostBreakdown": {
+        "type": "object",
+        "description": "Tollgate's exact quote, conditional on this policy and workload at execution.",
+        "required": [
+          "total_fcu",
+          "fixed_fcu",
+          "variable_fcu",
+          "minimum_charge_fcu",
+          "lines"
+        ],
+        "properties": {
+          "fixed_fcu": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CostLine"
+            }
+          },
+          "minimum_charge_fcu": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "total_fcu": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "variable_fcu": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          }
+        }
+      },
+      "CostLine": {
+        "type": "object",
+        "description": "A rate-class aggregate. Model identifies the schedule row, not necessarily\nthe selected numerical algorithm; `resolved_models` reports the latter.",
+        "required": [
+          "operation",
+          "model",
+          "billing_unit",
+          "quantity",
+          "fcu_per_unit",
+          "variable_fcu"
+        ],
+        "properties": {
+          "billing_unit": {
+            "type": "string"
+          },
+          "fcu_per_unit": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "model": {
+            "type": "string"
+          },
+          "operation": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "variable_fcu": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          }
+        }
+      },
+      "CostQuoteRequest": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "request",
+              "operation"
+            ],
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "price"
+                ]
+              },
+              "request": {
+                "$ref": "#/components/schemas/PriceRequest"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "request",
+              "operation"
+            ],
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "price_batch"
+                ]
+              },
+              "request": {
+                "$ref": "#/components/schemas/BatchPriceRequest"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "request",
+              "operation"
+            ],
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "implied_volatility"
+                ]
+              },
+              "request": {
+                "$ref": "#/components/schemas/ImpliedVolatilityRequest"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "request",
+              "operation"
+            ],
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "implied_volatility_batch"
+                ]
+              },
+              "request": {
+                "$ref": "#/components/schemas/BatchImpliedVolatilityRequest"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "request",
+              "operation"
+            ],
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "greeks"
+                ]
+              },
+              "request": {
+                "$ref": "#/components/schemas/GreeksAllTenRequest"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "request",
+              "operation"
+            ],
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "greeks_batch"
+                ]
+              },
+              "request": {
+                "$ref": "#/components/schemas/BatchGreeksAllTenRequest"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "request",
+              "operation"
+            ],
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "analytics"
+                ]
+              },
+              "request": {
+                "$ref": "#/components/schemas/FusedAnalyticsRequest"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "request",
+              "operation"
+            ],
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "analytics_batch"
+                ]
+              },
+              "request": {
+                "$ref": "#/components/schemas/BatchFusedAnalyticsRequest"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "request",
+              "operation"
+            ],
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "regime"
+                ]
+              },
+              "request": {
+                "$ref": "#/components/schemas/RegimeRequest"
+              }
+            }
+          }
+        ],
+        "description": "OpenAPI's discriminated request union; runtime retains each body verbatim."
+      },
+      "CostQuoteResponse": {
+        "type": "object",
+        "description": "Quote identity and breakdown, with no reservation or price lock.",
+        "required": [
+          "quote",
+          "resolved_models",
+          "metadata"
+        ],
+        "properties": {
+          "metadata": {
+            "$ref": "#/components/schemas/ServiceErrorMetadata"
+          },
+          "quote": {
+            "$ref": "#/components/schemas/CostBreakdown"
+          },
+          "resolved_models": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResolvedCostModel"
+            }
+          }
+        }
+      },
+      "CostRate": {
+        "type": "object",
+        "description": "A published rate under the caller's pinned schedule. A rate is not an entitlement.",
+        "required": [
+          "operation",
+          "model",
+          "billing_unit",
+          "fcu_per_unit",
+          "max_discrete_dividends"
+        ],
+        "properties": {
+          "billing_unit": {
+            "type": "string"
+          },
+          "fcu_per_unit": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "max_discrete_dividends": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "model": {
+            "type": "string"
+          },
+          "operation": {
+            "type": "string"
+          }
+        }
+      },
+      "CostSchedule": {
+        "type": "object",
+        "description": "Customer-facing projection of one immutable, account-effective cost schedule.",
+        "required": [
+          "schedule_id",
+          "schedule_version",
+          "record_version",
+          "policy_revision",
+          "effective_from",
+          "fixed_request_fcu",
+          "minimum_charge_fcu",
+          "rounding",
+          "failure_charging",
+          "rates"
+        ],
+        "properties": {
+          "effective_from": {
+            "type": "string"
+          },
+          "effective_until": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "failure_charging": {
+            "type": "string"
+          },
+          "fixed_request_fcu": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "minimum_charge_fcu": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "policy_revision": {
+            "type": "string"
+          },
+          "rates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CostRate"
+            }
+          },
+          "record_version": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "rounding": {
+            "type": "string"
+          },
+          "schedule_id": {
+            "type": "string"
+          },
+          "schedule_version": {
+            "type": "string"
+          }
+        }
+      },
+      "CostScheduleResponse": {
+        "type": "object",
+        "description": "Full or filtered schedule; metadata describes this non-billable utility call.",
+        "required": [
+          "schedule",
+          "metadata"
+        ],
+        "properties": {
+          "metadata": {
+            "$ref": "#/components/schemas/ServiceErrorMetadata"
+          },
+          "schedule": {
+            "$ref": "#/components/schemas/CostSchedule"
           }
         }
       },
@@ -4798,6 +5755,24 @@
           "option_price"
         ]
       },
+      "ResolvedCostModel": {
+        "type": "object",
+        "description": "Selected numerical model identity, without executing the numerical kernel.",
+        "required": [
+          "model",
+          "quantity"
+        ],
+        "properties": {
+          "model": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          }
+        }
+      },
       "ResolvedPricingModel": {
         "type": "string",
         "description": "Pricing algorithm selected after resolving an input request.\n\nUnlike [`PricingModel`], this output-only type cannot represent `auto`.",
@@ -5031,6 +6006,10 @@
     }
   },
   "tags": [
+    {
+      "name": "cost",
+      "description": "Authenticated cost schedules and non-billable request quotes"
+    },
     {
       "name": "pricing",
       "description": "MorphIQ Risk pricing operations"

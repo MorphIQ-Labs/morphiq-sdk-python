@@ -216,3 +216,5 @@ For a controlled open local service only, set a non-secret placeholder such as
 `allow_unauthenticated=True` with no key when constructing a client. This does not
 authenticate against a protected service. Configure the local endpoint explicitly;
 the SDK does not start that service.
+
+See [cost schedules and request quotes](COST.md) for zero-CU discovery, conditional quotes, and the optional `max_cu` execution ceiling.

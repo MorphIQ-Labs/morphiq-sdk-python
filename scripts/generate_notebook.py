@@ -72,6 +72,8 @@ def notebook() -> dict[str, Any]:
 
 ## Choose an analysis
 
+- [Cost quotation](cost/quotation.ipynb): inspect active rates, quote a synthetic
+  option, and explicitly execute with a maximum CU charge.
 - [Option pricing](pricing/options.ipynb): value European or American calls and puts,
   load a daily or intraday underlying price from Yahoo, inspect Greeks, solve implied
   volatility, analyze a premium with Greeks, track session CU, and chart sensitivity.
@@ -109,7 +111,11 @@ The executable Python scripts in `examples/` demonstrate SDK usage separately.
 def notebooks() -> dict[str, dict[str, Any]]:
     result = {"start-here.ipynb": notebook()}
     # Analysis notebooks are authored directly; tests verify their SDK requests.
-    for filename in ("pricing/options.ipynb", "regime/identification.ipynb"):
+    for filename in (
+        "pricing/options.ipynb",
+        "regime/identification.ipynb",
+        "cost/quotation.ipynb",
+    ):
         content = json.loads((ROOT / "notebooks" / filename).read_text())
         if "widgets" in content["metadata"]:
             raise ValueError(f"{filename}: remove saved widget state before committing")

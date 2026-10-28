@@ -440,3 +440,62 @@ class BatchImpliedVolatilityResponse(_BatchResponse[ImpliedVolatilityResult]):
 
 class BatchAnalyticsResponse(_BatchResponse[AnalyticsResult]):
     """Ordered combined analytics outcomes and batch-level charge evidence."""
+
+
+class CostRate(_Response):
+    """One published rate; its presence does not establish entitlement or availability."""
+
+    operation: str
+    model: str
+    billing_unit: str
+    fcu_per_unit: int
+    max_discrete_dividends: int
+
+
+class CostSchedule(_Response):
+    schedule_id: str
+    schedule_version: str
+    record_version: int
+    policy_revision: str
+    effective_from: str
+    effective_until: str | None
+    fixed_request_fcu: int
+    minimum_charge_fcu: int
+    rounding: str
+    failure_charging: str
+    rates: list[CostRate]
+
+
+class CostLine(_Response):
+    operation: str
+    model: str
+    billing_unit: str
+    quantity: int
+    fcu_per_unit: int
+    variable_fcu: int
+
+
+class CostBreakdown(_Response):
+    total_fcu: int
+    fixed_fcu: int
+    variable_fcu: int
+    minimum_charge_fcu: int
+    lines: list[CostLine]
+
+
+class ResolvedCostModel(_Response):
+    model: str
+    quantity: int
+
+
+class CostScheduleResponse(_EvidenceResponse):
+    schedule: CostSchedule
+    metadata: ServiceErrorMetadata
+
+
+class CostQuoteResponse(_EvidenceResponse):
+    """Exact conditional quote. No funds, execution capacity, or price are reserved."""
+
+    quote: CostBreakdown
+    resolved_models: list[ResolvedCostModel]
+    metadata: ServiceErrorMetadata

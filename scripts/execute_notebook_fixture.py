@@ -16,6 +16,7 @@ from nbclient import NotebookClient
 
 NOTEBOOK_CASES = {
     "start-here.ipynb": (),
+    "cost/quotation.ipynb": (),  # Setup is inert; test_cost exercises explicit actions.
     "pricing/options.ipynb": (
         "batch-price-sweep",
         "european",

@@ -10,9 +10,9 @@ docker compose up --build
 ```
 
 Open the local token-authenticated URL printed by Jupyter to reach Start Here.
-Choose [option pricing](../notebooks/pricing/options.ipynb) or
+Choose [cost quotation](../notebooks/cost/quotation.ipynb), [option pricing](../notebooks/pricing/options.ipynb) or
 [regime analysis](../notebooks/regime/identification.ipynb), then select
-**Run → Run All Cells** to initialize the controls. The start page and both
+**Run → Run All Cells** to initialize the controls. The start page and all
 workspaces are included in the image.
 Compose passes the key into the container at runtime; it is not baked into the
 image. The notebook connects to `https://api.morphiqlabs.com` automatically. Leave

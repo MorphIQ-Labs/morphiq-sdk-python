@@ -207,3 +207,5 @@ docs/              Usage guides and contract documentation
 
 The SDK, examples and notebooks are licensed under the
 [MIT License](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/LICENSE).
+
+See [cost schedules and request quotes](docs/COST.md) for zero-CU discovery, conditional quotes, and the optional `max_cu` execution ceiling.

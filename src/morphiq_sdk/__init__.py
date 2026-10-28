@@ -26,6 +26,12 @@ from .models import (
     BatchPriceRequest,
     BatchPriceResponse,
     BatchSuccess,
+    CostBreakdown,
+    CostLine,
+    CostQuoteResponse,
+    CostRate,
+    CostSchedule,
+    CostScheduleResponse,
     DividendEvent,
     Greeks,
     GreeksRequest,
@@ -38,12 +44,20 @@ from .models import (
     PriceResponse,
     RegimeRequest,
     RegimeResponse,
+    ResolvedCostModel,
 )
 from .workflows import AsyncBatchWorkflow, BatchWorkflow, ChunkAttempt
 
 __version__ = version("morphiq-sdk")
 
 __all__ = [
+    "CostRate",
+    "CostSchedule",
+    "CostLine",
+    "CostBreakdown",
+    "ResolvedCostModel",
+    "CostScheduleResponse",
+    "CostQuoteResponse",
     "AsyncBatchWorkflow",
     "BatchWorkflow",
     "ChunkAttempt",
