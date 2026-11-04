@@ -4,6 +4,38 @@ This repository owns the Python API client, cookbook and notebook companions.
 The API repository owns the reviewed OpenAPI contract. Numerical engines,
 commercial policy, account authority and execution remain server-side.
 
+## Strategic Pragmatism
+
+Be strategically pragmatic in all MorphIQ Labs work. Choose the simplest solution that delivers the intended outcome and meets its correctness, performance, and operational contracts.
+
+- **Keep the outcome and scope explicit.** Resist speculative features, general-purpose frameworks, and adjacent problems that are not needed for the agreed result. Added scope must earn its implementation, maintenance, and opportunity cost.
+- **Challenge direction constructively.** Treat proposed approaches, including the owner's, as proposals to evaluate. Raise concerns early, explain the tradeoffs, and recommend a simpler or better-supported alternative when one exists. Agreement is not a substitute for judgment.
+- **Respect ownership boundaries.** Prefer established libraries and supported provider capabilities. Do not turn a third-party limitation or a problem outside our domain into a subsystem we must build and maintain. Establish our boundary, surface the limitation, and recommend an upstream fix, a supported alternative, or an explicit scope reduction; custom machinery needs a clear domain benefit.
+- **Bound investigations.** Name the question, the evidence needed to decide, and a stopping condition. When further investigation or engineering costs substantially more than its expected value, stop expanding the work and recommend a decision or rescope. Do not chase exhaustive explanations that cannot change that decision.
+- **Prefer explicit failure to speculative recovery.** Reject unsupported inputs or conditions with an actionable error or exception at the owning boundary rather than adding fallbacks for every conceivable edge case. Preserve valid state and required cleanup; never silently approximate, discard data, or report success. Required supported cases and recovery guarantees still have to work.
+
+Pragmatism governs which guarantees we undertake, not whether we honor them. If an existing commitment is disproportionate, make the tradeoff and proposed contract change explicit to the owner before narrowing it; do not disguise unfinished work as completion.
+
+## Prose-only CI
+
+Changes confined to the root `AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`,
+`README.md`, or Markdown files directly under `docs/adr/` use lightweight prose
+checks. This is an explicit exception to the general every-change build, test,
+assurance and dependency-audit rules. Keep applicable title, repository-hygiene,
+secret and whitespace checks, and a required successful pipeline/check result.
+Do not use a blanket CI-skip marker or leave required checks pending.
+
+The allowlist is deliberately narrow. Any mixed change or other path retains
+its existing CI gates, including unfamiliar files, code, dependencies, build/CI
+configuration, release metadata, examples, notebooks, fixtures, generated inputs
+and proof-related documentation. Review consumers before extending the allowlist;
+Markdown is not automatically inert. Preserve focused checks that read an
+allowlisted file as a policy input. Scheduled/operational pipelines and release
+automation retain their existing responsibilities. CI-rule changes themselves
+run full CI and exercise prose, mixed, renamed and unknown-path cases.
+
+## Client contract
+
 - Preserve wire semantics, numerical values, diagnostics/provenance, ordering
   and optional commercial CU fields. Internal `units_charged` is not the
   commercial `fcu_charged` amount.
