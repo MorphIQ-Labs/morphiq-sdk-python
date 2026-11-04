@@ -1,0 +1,92 @@
+{
+  "source_commit": "2284d802b5ac0b37b43ee269bbf4bfeec3777776",
+  "contract_sha256": "e206327e13aee32c02dbfa22e1d8e8a80ea2d549083971a1cc87aa2b67f401e7",
+  "cases": [
+    {
+      "name": "greeks-standard-european",
+      "path": "/v1/greeks/standard",
+      "request": {
+        "exercise_style": "european",
+        "pricing_model": "auto",
+        "option_type": "call",
+        "spot": 100.0,
+        "strike": 100.0,
+        "time_to_expiry_years": 1,
+        "risk_free_rate": 0.05,
+        "dividend_yield": 0,
+        "volatility": 0.2
+      },
+      "response": {
+        "metadata": {
+          "request_id": "fr-18e4e90129262501-0000000000000019",
+          "api_version": "v1",
+          "engine_version": "0.43.5",
+          "engines": [
+            {
+              "name": "morphiq-risk",
+              "version": "0.43.5",
+              "revision": "43ca7f93b9edda6078b49950de6a8b7d51a3e3ef"
+            }
+          ],
+          "units_charged": 6,
+          "compute_schedule_version": "2026-09-11"
+        },
+        "result": {
+          "price": 10.45058357218557,
+          "greeks": {
+            "delta": 0.6368306511756191,
+            "gamma": 0.018762017345846895,
+            "theta": -6.414027546438199,
+            "vega": 37.52403469169381,
+            "rho": 53.232481545376345
+          },
+          "pricing_model": "black_scholes_merton",
+          "model_version": "black_scholes_merton/1"
+        }
+      }
+    },
+    {
+      "name": "greeks-standard-american",
+      "path": "/v1/greeks/standard",
+      "request": {
+        "exercise_style": "american",
+        "pricing_model": "bjerksund_stensland_1993",
+        "option_type": "put",
+        "spot": 100.0,
+        "strike": 105.0,
+        "time_to_expiry_years": 0.5,
+        "risk_free_rate": 0.05,
+        "dividend_yield": 0.01,
+        "volatility": 0.2
+      },
+      "response": {
+        "metadata": {
+          "request_id": "fr-18e4e90129262501-000000000000001a",
+          "api_version": "v1",
+          "engine_version": "0.43.5",
+          "engines": [
+            {
+              "name": "morphiq-risk",
+              "version": "0.43.5",
+              "revision": "43ca7f93b9edda6078b49950de6a8b7d51a3e3ef"
+            }
+          ],
+          "units_charged": 400,
+          "compute_schedule_version": "2026-09-11"
+        },
+        "result": {
+          "price": 7.5298454349124135,
+          "greeks": {
+            "delta": -0.5892018845247824,
+            "gamma": 0.03283315892329423,
+            "theta": -3.55494205524821,
+            "vega": 26.586081744012873,
+            "rho": -21.61207168023723
+          },
+          "pricing_model": "bjerksund_stensland_1993",
+          "model_version": "bjerksund_stensland_1993/1"
+        }
+      }
+    }
+  ]
+}

@@ -106,8 +106,8 @@ They also run directly as `python examples/price_european.py` and
 `python examples/price_american.py`, with no repository helper imports.
 
 The [native reference fixtures](../tests/fixtures/pricing.json) record about
-**10.450583572185538** for the European call (`black_scholes_merton/1`) and
-**7.584143004464017** for the American put (`bjerksund_stensland_2002/1`). These
+**10.45058357218557** for the European call (`black_scholes_merton/1`) and
+**7.6165316765775835** for the American put (`qd_fixed_point/1`). These
 results belong to the recorded service/engine identity; they are not universal
 expectations for future models selected by `auto`. Request IDs vary. The fixture
 service ran in open mode and omitted commercial charges.
@@ -216,3 +216,5 @@ For a controlled open local service only, set a non-secret placeholder such as
 `allow_unauthenticated=True` with no key when constructing a client. This does not
 authenticate against a protected service. Configure the local endpoint explicitly;
 the SDK does not start that service.
+
+See [cost schedules and request quotes](COST.md) for zero-CU discovery, conditional quotes, and the optional `max_cu` execution ceiling.

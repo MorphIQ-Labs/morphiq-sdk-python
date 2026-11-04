@@ -319,7 +319,8 @@ def test_environment_configuration_and_representations(monkeypatch):
         assert "explicit-key" not in repr(client)
     monkeypatch.delenv("MORPHIQ_API_KEY")
     with pytest.raises(ValueError, match="MORPHIQ_API_KEY"):
-        MorphIQ()
+        with MorphIQ() as client:
+            client.cost_schedule()
     with MorphIQ(allow_unauthenticated=True):
         pass
 

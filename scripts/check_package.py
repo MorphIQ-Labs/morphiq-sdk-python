@@ -118,6 +118,7 @@ def main() -> None:
                 from morphiq_sdk import (
                     MorphIQ, BatchPriceResponse, BatchGreeksResponse,
                     BatchImpliedVolatilityResponse, BatchAnalyticsResponse,
+                    BatchGreeksStandardResponse,
                 )
                 from morphiq_sdk.pandas import batch_to_frames, workflow_to_frames
                 assert find_spec('yfinance') is None
@@ -141,9 +142,16 @@ def main() -> None:
                     frames = workflow_to_frames(workflow)
                     assert frames.results.empty and frames.requests.empty
                     assert frames.total_fcu_charged == 0
-                print('Isolated pandas extra and all four batch conversions verified')
+                standard = json.loads(Path(sys.argv[2]).read_text())['cases'][0]['response']
+                body = {'metadata': standard['metadata'], 'results': [
+                    {'index': 0, 'status': 'success', 'result': standard['result']}
+                ]}
+                frames = batch_to_frames(BatchGreeksStandardResponse.model_validate(body))
+                assert frames.results['outcome'].tolist() == body['results']
+                print('Isolated pandas extra and all five batch conversions verified')
                 """),
                 str(root / "tests/fixtures/batch.json"),
+                str(root / "tests/fixtures/greeks_standard.json"),
             ],
             cwd=temporary,
             check=True,

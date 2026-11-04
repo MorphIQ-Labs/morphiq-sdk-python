@@ -12,7 +12,7 @@ these keyword-only arguments:
 
 | Argument | Default and behavior |
 | --- | --- |
-| `api_key: str \| None` | Explicit key, otherwise `MORPHIQ_API_KEY`. Required unless open development access is explicitly enabled. |
+| `api_key: str \| None` | Explicit key, otherwise `MORPHIQ_API_KEY`. Required for protected calls unless open development access is explicitly enabled. Public `pricing_models()` needs no key. |
 | `base_url: str \| None` | Explicit URL, otherwise `MORPHIQ_API_BASE_URL`, otherwise `https://api.morphiqlabs.com`. Use the API root, not an operation path. |
 | `timeout: float \| httpx.Timeout` | `30.0` seconds per connection/read/write/pool wait, not a total request deadline. |
 | `allow_unauthenticated: bool` | `False`. Set `True` only for a controlled open development service; it does not bypass authentication on a protected service. |
@@ -38,11 +38,13 @@ All request/response classes below are exported from `morphiq_sdk`.
 | Method | Request type | Response type | Route |
 | --- | --- | --- | --- |
 | `price(request)` | `PriceRequest` | `PriceResponse` | `/v1/price` |
+| `greeks_standard(request)` | `GreeksStandardRequest` | `GreeksStandardResponse` | `/v1/greeks/standard` |
 | `greeks(request)` | `GreeksRequest` | `GreeksResponse` | `/v1/greeks` |
 | `implied_volatility(request)` | `ImpliedVolatilityRequest` | `ImpliedVolatilityResponse` | `/v1/implied-volatility` |
 | `analytics(request)` | `AnalyticsRequest` | `AnalyticsResponse` | `/v1/analytics` |
 | `regime(request)` | `RegimeRequest` | `RegimeResponse` | `/v1/regime` |
 | `price_batch(request)` | `BatchPriceRequest` | `BatchPriceResponse` | `/v1/price:batch` |
+| `greeks_standard_batch(request)` | `BatchGreeksStandardRequest` | `BatchGreeksStandardResponse` | `/v1/greeks/standard:batch` |
 | `greeks_batch(request)` | `BatchGreeksRequest` | `BatchGreeksResponse` | `/v1/greeks:batch` |
 | `implied_volatility_batch(request)` | `BatchImpliedVolatilityRequest` | `BatchImpliedVolatilityResponse` | `/v1/implied-volatility:batch` |
 | `analytics_batch(request)` | `BatchAnalyticsRequest` | `BatchAnalyticsResponse` | `/v1/analytics:batch` |
@@ -54,6 +56,7 @@ batch envelope; they do not split requests or start parallel calls.
 ## Workflow factories
 
 Both clients expose `price_workflow(requests, *, chunk_size)`,
+`greeks_standard_workflow(requests, *, chunk_size)`,
 `greeks_workflow(requests, *, chunk_size)`,
 `implied_volatility_workflow(requests, *, chunk_size)` and
 `analytics_workflow(requests, *, chunk_size)`. Each takes a sequence of the
@@ -72,7 +75,7 @@ stopping behavior](WORKFLOWS.md).
 
 ## Option request fields
 
-`PriceRequest`, `GreeksRequest`, `ImpliedVolatilityRequest` and `AnalyticsRequest`
+`PriceRequest`, `GreeksRequest`, `GreeksStandardRequest`, `ImpliedVolatilityRequest` and `AnalyticsRequest`
 share these fields:
 
 | Field | Type/default | Meaning |
@@ -82,7 +85,7 @@ share these fields:
 | `spot`, `strike` | Required finite numbers | Underlying and strike prices in the same currency. |
 | `time_to_expiry_years` | Required finite number | Time from valuation in years. No date/day-count conversion is performed. |
 | `risk_free_rate`, `dividend_yield` | Required finite numbers | Annual rate and continuous yield as decimals; 0.05 means 5%. |
-| `pricing_model` | `"auto"` | Also accepts `"black_scholes_merton"`, `"bjerksund_stensland_2002"`, `"bjerksund_stensland_1993"`. The service validates compatibility and chooses the resolved model. |
+| `pricing_model` | `"auto"` | Accepts `"black_scholes_merton"`, `"bjerksund_stensland_1993"`, `"black_scholes_merton_qdfp"`, `"black_scholes_merton_fd"`, and aliases `"qd_fixed_point"`/`"cash_dividend_american"`. BS2002 is retained as an input for the server's actionable retirement error. The service validates compatibility and chooses the resolved model. |
 | `model_version` | Optional string or explicit null | Forwarded to the service; omitted unless supplied. |
 | `dividend_schedule` | Optional list of `DividendEvent` | Cash per share at each ex-dividend time. Wire maximum: 16 events. Support and domain constraints remain server-owned. |
 
@@ -94,7 +97,7 @@ Operation-specific fields:
 
 | Request | Additional fields |
 | --- | --- |
-| `PriceRequest`, `GreeksRequest` | Required finite `volatility`, as a decimal fraction; 0.20 means 20%. |
+| `PriceRequest`, `GreeksRequest`, `GreeksStandardRequest` | Required finite `volatility`, as a decimal fraction; 0.20 means 20%. |
 | `ImpliedVolatilityRequest` | Required finite `market_price`, the option premium per share. `volatility` is not accepted. |
 | `AnalyticsRequest` | Required finite `volatility`; optional finite `market_price` or null. With a premium, the API solves IV and ignores supplied volatility. Without a premium, it uses supplied volatility. |
 
@@ -109,10 +112,10 @@ updates do not themselves validate changed values.
 ## Batch and regime requests
 
 Every batch envelope requires `requests`, a list of the corresponding single
-request type. The reviewed wire schema accepts 1–1024 items; service/account
+request type. The reviewed wire schema accepts 1–100 items; service/account
 limits can be lower. Empty/oversized lists and invalid list edits fail locally.
 The SDK preserves item order and single-request omission/null semantics.
-See [all four batch construction examples](BATCH.md#constructing-each-batch-type).
+See [batch construction examples](BATCH.md#constructing-each-batch-type).
 
 `RegimeRequest` takes `prices`, an ordered list of at least 512 finite positive
 prices, and optional `as_of: str | None` (maximum 64 characters). The service
@@ -194,3 +197,11 @@ with separate `results` and `requests` DataFrames, execution `state`,
 `reported_fcu_charged`, `unknown_charge_count` and `total_fcu_charged`.
 The optional `pandas` extra is required only at conversion time. See the
 [table schema, units, missing-value and cost semantics](PANDAS.md).
+
+See [cost schedules and request quotes](COST.md) for zero-CU discovery, conditional quotes, and the optional `max_cu` execution ceiling.
+
+Standard-five batching uses `BatchGreeksStandardRequest(requests=[...])` and
+`client.greeks_standard_batch(...)` (or `await` with `AsyncMorphIQ`). The batch
+contains `GreeksStandardRequest` items; ordering, error and charge handling match
+the other batch families. Public `client.pricing_models()` returns a typed
+`PricingModelCatalog` without authentication; see [model discovery](MODELS.md).

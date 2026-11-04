@@ -1,13 +1,31 @@
 """API wire models for the reviewed HTTP contract; no pricing logic lives here."""
 
+from __future__ import annotations
+
 from typing import Annotated, Any, Generic, Literal, TypeVar
 
-from pydantic import BaseModel, ConfigDict, Field, FiniteFloat, PrivateAttr
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    FiniteFloat,
+    PrivateAttr,
+    ValidationInfo,
+    field_validator,
+    model_validator,
+)
 
 ExerciseStyle = Literal["european", "american"]
 OptionType = Literal["call", "put"]
 PricingModel = Literal[
-    "auto", "black_scholes_merton", "bjerksund_stensland_2002", "bjerksund_stensland_1993"
+    "auto",
+    "black_scholes_merton",
+    "bjerksund_stensland_2002",
+    "bjerksund_stensland_1993",
+    "black_scholes_merton_qdfp",
+    "black_scholes_merton_fd",
+    "qd_fixed_point",
+    "cash_dividend_american",
 ]
 
 
@@ -75,6 +93,16 @@ class _Response(BaseModel):
     model_config = ConfigDict(extra="allow", strict=True, allow_inf_nan=False)
 
 
+class ErrorDetails(_Response):
+    code: str
+    message: str
+    field: str | None = None
+
+
+class GreeksStandardRequest(PriceRequest):
+    """Price and delta, gamma, theta, vega and rho for a supported model."""
+
+
 class GreeksRequest(PriceRequest):
     """Price and all ten Greeks at a supplied volatility, using the pricing inputs.
 
@@ -93,22 +121,55 @@ class AnalyticsRequest(PriceRequest):
     market_price: FiniteFloat | None = None
 
 
-class Greeks(_Response):
-    """Unscaled API values: time derivatives per year; volatility/rates per unit.
+class GreeksStandard(_Response):
+    """Unscaled derivatives; omitted quantities have typed unavailable reasons.
 
-    No calendar-day, percentage-point or contract-multiplier conversion occurs.
+    Time derivatives are per year, volatility/rate derivatives per unit.
+    A resolved zero stays 0.0; unavailable quantities are never filled with zero.
+    Use model_dump(exclude_unset=True) to preserve the original wire presence.
     """
 
-    delta: FiniteFloat
-    gamma: FiniteFloat
-    theta: FiniteFloat
-    vega: FiniteFloat
-    rho: FiniteFloat
-    vanna: FiniteFloat
-    volga: FiniteFloat
-    charm: FiniteFloat
-    veta: FiniteFloat
-    color: FiniteFloat
+    delta: FiniteFloat | None = None
+    gamma: FiniteFloat | None = None
+    theta: FiniteFloat | None = None
+    vega: FiniteFloat | None = None
+    rho: FiniteFloat | None = None
+    unavailable: dict[str, ErrorDetails] = Field(default_factory=dict)
+
+    @field_validator("*", mode="before")
+    @classmethod
+    def reject_null_quantity(cls, value: Any, info: ValidationInfo) -> Any:
+        if info.field_name != "unavailable" and value is None:
+            raise ValueError("Unavailable Greeks must be omitted, not null")
+        return value
+
+    @model_validator(mode="after")
+    def require_availability_evidence(self) -> GreeksStandard:
+        for name in type(self).model_fields:
+            if name == "unavailable":
+                continue
+            present = getattr(self, name) is not None
+            explained = name in self.unavailable
+            if present == explained:
+                raise ValueError(f"{name} must have either a value or an unavailable reason")
+        return self
+
+
+class Greeks(GreeksStandard):
+    """All ten derivatives, retaining partial results and unavailable reasons."""
+
+    vanna: FiniteFloat | None = None
+    volga: FiniteFloat | None = None
+    charm: FiniteFloat | None = None
+    veta: FiniteFloat | None = None
+    color: FiniteFloat | None = None
+
+
+class GreeksStandardResult(_Response):
+    price: FiniteFloat
+    greeks: GreeksStandard
+    pricing_model: str
+    model_version: str
 
 
 class GreeksResult(_Response):
@@ -211,6 +272,11 @@ class _EvidenceResponse(_Response):
 
 class PriceResponse(_EvidenceResponse):
     result: PriceResult
+    metadata: ResponseMetadata
+
+
+class GreeksStandardResponse(_EvidenceResponse):
+    result: GreeksStandardResult
     metadata: ResponseMetadata
 
 
@@ -367,12 +433,6 @@ class RegimeResponse(_EvidenceResponse):
     metadata: RegimeMetadata
 
 
-class ErrorDetails(_Response):
-    code: str
-    message: str
-    field: str | None = None
-
-
 class ErrorEnvelope(_Response):
     error: ErrorDetails
     metadata: ResponseMetadata | ServiceErrorMetadata
@@ -384,7 +444,7 @@ _OptionResultType = TypeVar("_OptionResultType", bound=_Response)
 
 class _BatchRequest(_Request, Generic[_OptionRequestType]):
     # This is the reviewed wire limit, not an account/plan limit.
-    requests: list[_OptionRequestType] = Field(min_length=1, max_length=1024)
+    requests: list[_OptionRequestType] = Field(min_length=1, max_length=100)
 
     def to_wire(self) -> dict[str, Any]:
         validated = type(self).model_validate({"requests": self.requests})
@@ -393,6 +453,10 @@ class _BatchRequest(_Request, Generic[_OptionRequestType]):
 
 class BatchPriceRequest(_BatchRequest[PriceRequest]):
     """One explicit batch of pricing requests in caller order."""
+
+
+class BatchGreeksStandardRequest(_BatchRequest[GreeksStandardRequest]):
+    """One ordered batch of standard-five requests, at most 100 contracts."""
 
 
 class BatchGreeksRequest(_BatchRequest[GreeksRequest]):
@@ -430,6 +494,10 @@ class BatchPriceResponse(_BatchResponse[PriceResult]):
     """Ordered outcomes and one metadata/charge block for the entire batch."""
 
 
+class BatchGreeksStandardResponse(_BatchResponse[GreeksStandardResult]):
+    """Ordered standard-five outcomes with batch-level charge evidence."""
+
+
 class BatchGreeksResponse(_BatchResponse[GreeksResult]):
     """Ordered Greeks outcomes and batch-level charge evidence."""
 
@@ -440,3 +508,95 @@ class BatchImpliedVolatilityResponse(_BatchResponse[ImpliedVolatilityResult]):
 
 class BatchAnalyticsResponse(_BatchResponse[AnalyticsResult]):
     """Ordered combined analytics outcomes and batch-level charge evidence."""
+
+
+class CostRate(_Response):
+    """One published rate; its presence does not establish entitlement or availability."""
+
+    operation: str
+    model: str
+    billing_unit: str
+    fcu_per_unit: int
+    max_discrete_dividends: int
+
+
+class CostSchedule(_Response):
+    schedule_id: str
+    schedule_version: str
+    record_version: int
+    policy_revision: str
+    effective_from: str
+    effective_until: str | None
+    fixed_request_fcu: int
+    minimum_charge_fcu: int
+    rounding: str
+    failure_charging: str
+    rates: list[CostRate]
+
+
+class CostLine(_Response):
+    operation: str
+    model: str
+    billing_unit: str
+    quantity: int
+    fcu_per_unit: int
+    variable_fcu: int
+
+
+class CostBreakdown(_Response):
+    total_fcu: int
+    fixed_fcu: int
+    variable_fcu: int
+    minimum_charge_fcu: int
+    lines: list[CostLine]
+
+
+class ResolvedCostModel(_Response):
+    model: str
+    quantity: int
+
+
+class CostScheduleResponse(_EvidenceResponse):
+    schedule: CostSchedule
+    metadata: ServiceErrorMetadata
+
+
+class CostQuoteResponse(_EvidenceResponse):
+    """Exact conditional quote. No funds, execution capacity, or price are reserved."""
+
+    quote: CostBreakdown
+    resolved_models: list[ResolvedCostModel]
+    metadata: ServiceErrorMetadata
+
+
+class ModelConstraint(_Response):
+    quantity: str
+    description: str
+    minimum: FiniteFloat | None = None
+    maximum: FiniteFloat | None = None
+
+
+class PricingModelDescriptor(_Response):
+    id: str
+    name: str
+    version: str
+    model_version: str
+    aliases: list[str]
+    underlying_model: str
+    method: str
+    exercise_styles: list[ExerciseStyle]
+    dividend_support: list[str]
+    operations: list[str]
+    batch_operations: list[str]
+    greeks: list[str]
+    guidance: str
+    constraints: list[ModelConstraint]
+    notes: str
+
+
+class PricingModelCatalog(_EvidenceResponse):
+    """Public compiled capabilities; account entitlements and rates are separate."""
+
+    models: list[PricingModelDescriptor]
+    engines: list[EngineIdentity]
+    greek_units: dict[str, str]

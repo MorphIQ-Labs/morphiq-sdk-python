@@ -39,7 +39,7 @@ async def main() -> None:
             ),
             PriceRequest(
                 exercise_style="american",
-                pricing_model="auto",
+                pricing_model="bjerksund_stensland_1993",
                 option_type="put",
                 spot=100.0,
                 strike=105.0,

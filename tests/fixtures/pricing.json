@@ -1,8 +1,8 @@
 {
-  "source_commit": "b2cb8d72b049d61c062f787724c1c02c15dd12be",
-  "contract_sha256": "09527006497b4f23bbf174f4a5b8bd9d02f75d02554b3d489eaba953ec5a18f1",
-  "admission": "open",
-  "note": "Synthetic inputs evaluated by the pinned native API. Request IDs normalized. Commercial CU metadata is absent in open mode.",
+  "source_commit": "2284d802b5ac0b37b43ee269bbf4bfeec3777776",
+  "contract_sha256": "e206327e13aee32c02dbfa22e1d8e8a80ea2d549083971a1cc87aa2b67f401e7",
+  "admission": "open (isolated loopback service; no commercial charge)",
+  "note": "Synthetic requests evaluated by a --locked native build of deployed API v0.5.0. American Greeks/analytics/batches explicitly use BS1993; Auto American singles resolve to QdFp.",
   "cases": [
     {
       "name": "european",
@@ -19,21 +19,21 @@
       },
       "response": {
         "metadata": {
-          "request_id": "fixture-european",
+          "request_id": "fr-18e4e90129262501-0000000000000003",
           "api_version": "v1",
-          "engine_version": "0.39.1",
+          "engine_version": "0.43.5",
           "engines": [
             {
               "name": "morphiq-risk",
-              "version": "0.39.1",
-              "revision": "b4c29d492ff96dddf9b25f745d2be4d253202164"
+              "version": "0.43.5",
+              "revision": "43ca7f93b9edda6078b49950de6a8b7d51a3e3ef"
             }
           ],
           "units_charged": 1,
           "compute_schedule_version": "2026-09-11"
         },
         "result": {
-          "price": 10.450583572185538,
+          "price": 10.45058357218557,
           "exercise_style": "european",
           "option_type": "call",
           "pricing_model": "black_scholes_merton",
@@ -56,25 +56,25 @@
       },
       "response": {
         "metadata": {
-          "request_id": "fixture-american",
+          "request_id": "fr-18e4e90129262501-0000000000000004",
           "api_version": "v1",
-          "engine_version": "0.39.1",
+          "engine_version": "0.43.5",
           "engines": [
             {
               "name": "morphiq-risk",
-              "version": "0.39.1",
-              "revision": "b4c29d492ff96dddf9b25f745d2be4d253202164"
+              "version": "0.43.5",
+              "revision": "43ca7f93b9edda6078b49950de6a8b7d51a3e3ef"
             }
           ],
           "units_charged": 50,
           "compute_schedule_version": "2026-09-11"
         },
         "result": {
-          "price": 7.584143004464017,
+          "price": 7.6165316765775835,
           "exercise_style": "american",
           "option_type": "put",
-          "pricing_model": "bjerksund_stensland_2002",
-          "model_version": "bjerksund_stensland_2002/1"
+          "pricing_model": "black_scholes_merton_qdfp",
+          "model_version": "qd_fixed_point/1"
         }
       }
     }

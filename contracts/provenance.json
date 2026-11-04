@@ -1,10 +1,10 @@
 {
   "repository": "https://gitlab.com/prophetizo/morphiq-labs/sites/morphiq-api",
-  "source_commit": "b2cb8d72b049d61c062f787724c1c02c15dd12be",
+  "source_commit": "2284d802b5ac0b37b43ee269bbf4bfeec3777776",
   "source_path": "services/api/openapi.json",
-  "contract_version": "3.0.0",
-  "sha256": "09527006497b4f23bbf174f4a5b8bd9d02f75d02554b3d489eaba953ec5a18f1",
-  "import_method": "Reviewed main snapshot copied byte-for-byte from the immutable Git commit; automated artifact publication remains SDK #2.",
+  "contract_version": "0.1.0",
+  "sha256": "e206327e13aee32c02dbfa22e1d8e8a80ea2d549083971a1cc87aa2b67f401e7",
+  "import_method": "Reviewed API v0.5.0 source snapshot copied byte-for-byte from the deployed immutable main commit; the release tag has the identical source tree. Public API and developer-site schema digests verified at adoption.",
   "covered_operations": [
     "POST /v1/price",
     "POST /v1/regime",
@@ -14,6 +14,11 @@
     "POST /v1/price:batch",
     "POST /v1/greeks:batch",
     "POST /v1/implied-volatility:batch",
-    "POST /v1/analytics:batch"
+    "POST /v1/analytics:batch",
+    "GET /v1/cost/schedule",
+    "POST /v1/cost/quote",
+    "GET /v1/pricing/models",
+    "POST /v1/greeks/standard",
+    "POST /v1/greeks/standard:batch"
   ]
 }

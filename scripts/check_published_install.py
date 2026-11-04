@@ -22,7 +22,9 @@ assert files('morphiq_sdk').joinpath('py.typed').is_file()
 assert files('morphiq_sdk_yahoo').joinpath('py.typed').is_file()
 for client in (sdk.MorphIQ, sdk.AsyncMorphIQ):
     for method in ('price', 'greeks', 'implied_volatility', 'analytics', 'regime',
-                   'price_batch', 'greeks_batch', 'implied_volatility_batch', 'analytics_batch'):
+                   'price_batch', 'greeks_batch', 'implied_volatility_batch', 'analytics_batch',
+                   'greeks_standard', 'greeks_standard_batch', 'greeks_standard_workflow',
+                   'pricing_models', 'cost_schedule', 'quote'):
         assert callable(getattr(client, method))
 with sdk.MorphIQ(api_key='offline-install-check') as client:
     workflow = client.price_workflow([], chunk_size=1)
@@ -38,7 +40,8 @@ import sys
 from pathlib import Path
 import ipykernel, ipywidgets, jupyterlab, matplotlib, pandas, yfinance
 from morphiq_sdk import (BatchPriceResponse, BatchGreeksResponse,
-                        BatchImpliedVolatilityResponse, BatchAnalyticsResponse)
+                        BatchImpliedVolatilityResponse, BatchAnalyticsResponse,
+                        BatchGreeksStandardResponse)
 from morphiq_sdk.pandas import batch_to_frames
 cases = json.loads(Path(sys.argv[1]).read_text())['cases']
 for cls, case in zip((BatchPriceResponse, BatchGreeksResponse,
@@ -49,7 +52,14 @@ for cls, case in zip((BatchPriceResponse, BatchGreeksResponse,
     assert frames.results['outcome'].tolist() == body['results']
     assert frames.results['identifier'].tolist() == [1, None, 2**100]
     assert frames.total_fcu_charged == 2**100
-print('All extras import; all batch conversions preserve outcomes and exact charges')
+standard = json.loads(Path(sys.argv[1]).with_name('greeks_standard.json').read_text())['cases'][0]
+body = {'metadata': {**standard['response']['metadata'], 'fcu_charged': 2**100}, 'results': [
+    {'index': 0, 'status': 'success', 'result': standard['response']['result']}
+]}
+frames = batch_to_frames(BatchGreeksStandardResponse.model_validate(body))
+assert frames.results['outcome'].tolist() == body['results']
+assert frames.total_fcu_charged == 2**100
+print('All extras import; all five batch conversions preserve outcomes and exact charges')
 """
 
 

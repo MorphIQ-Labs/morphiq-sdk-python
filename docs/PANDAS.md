@@ -13,7 +13,7 @@ even importing `morphiq_sdk.pandas` does not import pandas until conversion.
 ## Convert results
 
 Import `batch_to_frames`, `workflow_to_frames` and the returned `BatchFrames` type
-from `morphiq_sdk.pandas`. All four batch operations are supported: pricing,
+from `morphiq_sdk.pandas`. All five batch operations are supported: pricing, standard-five Greeks,
 Greeks, implied volatility and combined analytics. Responses from sync and async
 clients use the same synchronous conversion functions.
 

@@ -1,0 +1,205 @@
+{
+  "models": [
+    {
+      "id": "black_scholes_merton",
+      "name": "Black\u2013Scholes\u2013Merton",
+      "version": "1",
+      "model_version": "black_scholes_merton/1",
+      "aliases": [],
+      "underlying_model": "black_scholes_merton",
+      "method": "analytic",
+      "exercise_styles": [
+        "european"
+      ],
+      "dividend_support": [
+        "continuous_yield"
+      ],
+      "operations": [
+        "price",
+        "implied_volatility",
+        "greeks_standard",
+        "greeks",
+        "analytics"
+      ],
+      "batch_operations": [
+        "price",
+        "implied_volatility",
+        "greeks_standard",
+        "greeks",
+        "analytics"
+      ],
+      "greeks": [
+        "delta",
+        "gamma",
+        "theta",
+        "vega",
+        "rho",
+        "vanna",
+        "volga",
+        "charm",
+        "veta",
+        "color"
+      ],
+      "guidance": "European calls and puts.",
+      "constraints": [],
+      "notes": "The engine enforces model-specific domains and accuracy regions. Implemented Greeks may be unavailable for particular inputs, including expiry, exercise-boundary kinks and unresolved derivatives. An empty constraints list does not imply an unrestricted domain."
+    },
+    {
+      "id": "black_scholes_merton_qdfp",
+      "name": "American Black\u2013Scholes\u2013Merton \u2014 QdFp",
+      "version": "1",
+      "model_version": "qd_fixed_point/1",
+      "aliases": [
+        "qd_fixed_point"
+      ],
+      "underlying_model": "black_scholes_merton",
+      "method": "qd_fixed_point",
+      "exercise_styles": [
+        "american"
+      ],
+      "dividend_support": [
+        "continuous_yield"
+      ],
+      "operations": [
+        "price",
+        "implied_volatility"
+      ],
+      "batch_operations": [],
+      "greeks": [],
+      "guidance": "American calls and puts with a continuous dividend yield.",
+      "constraints": [],
+      "notes": "Risk v0.43.5 uses optimized fixed-work pricing with absolute error at most 1e-4 * max(spot, strike) against the independent American value, including reference uncertainty. The API accepts price and IV only. Standard-five, all-ten and analytics requests return HTTP 400 unsupported_operation, including Auto resolving to QdFp. Engine derivative implementations are retained but not exposed. IV inverts the served price; its residual is not an exact-American volatility error bound. Numerical values and inverse availability change from v0.42.x despite the unchanged model_version. Engine domains and per-input refusals remain authoritative."
+    },
+    {
+      "id": "black_scholes_merton_fd",
+      "name": "Black\u2013Scholes finite difference (cash dividends)",
+      "version": "1",
+      "model_version": "cash_dividend_american/1",
+      "aliases": [
+        "cash_dividend_american"
+      ],
+      "underlying_model": "black_scholes_merton",
+      "method": "finite_difference_tr_bdf2",
+      "exercise_styles": [
+        "american"
+      ],
+      "dividend_support": [
+        "continuous_yield",
+        "discrete_cash"
+      ],
+      "operations": [
+        "price",
+        "implied_volatility"
+      ],
+      "batch_operations": [],
+      "greeks": [],
+      "guidance": "American options with scheduled cash dividends.",
+      "constraints": [
+        {
+          "quantity": "spot / strike",
+          "minimum": 0.8,
+          "maximum": 1.2,
+          "description": "Live-contract moneyness."
+        },
+        {
+          "quantity": "time_to_expiry_years",
+          "minimum": 0.2493150684931507,
+          "maximum": 2.0,
+          "description": "Live-contract expiry in years; exact expiry has separate payoff handling."
+        },
+        {
+          "quantity": "volatility",
+          "minimum": 0.15,
+          "maximum": 0.5,
+          "description": "Annual lognormal volatility; also the implied-volatility search band."
+        },
+        {
+          "quantity": "risk_free_rate",
+          "minimum": 0.0,
+          "maximum": 0.05,
+          "description": "Annual continuously compounded rate."
+        },
+        {
+          "quantity": "dividend_yield",
+          "minimum": 0.0,
+          "maximum": 0.02,
+          "description": "Annual continuous dividend yield, in addition to cash events."
+        },
+        {
+          "quantity": "live_dividend_count",
+          "maximum": 2.0,
+          "description": "Cash events strictly before expiry; the request separately allows at most 16 supplied events."
+        },
+        {
+          "quantity": "live_dividend_sum / spot",
+          "maximum": 0.125,
+          "description": "Sum of cash amounts strictly before expiry divided by spot."
+        }
+      ],
+      "notes": "Live-contract ranges describe the pinned finite-difference solver; expiry price is intrinsic. IV searches the stated volatility band. Events at or after expiry do not affect price. The API accepts price and IV only. Standard-five, all-ten and analytics requests return HTTP 400 unsupported_operation, including Auto resolving to this model, before execution or charge. Engine derivative implementations are retained but not exposed."
+    },
+    {
+      "id": "bjerksund_stensland_1993",
+      "name": "Bjerksund\u2013Stensland 1993",
+      "version": "1",
+      "model_version": "bjerksund_stensland_1993/1",
+      "aliases": [],
+      "underlying_model": "black_scholes_merton",
+      "method": "bjerksund_stensland_1993_approximation",
+      "exercise_styles": [
+        "american"
+      ],
+      "dividend_support": [
+        "continuous_yield"
+      ],
+      "operations": [
+        "price",
+        "implied_volatility",
+        "greeks_standard",
+        "greeks",
+        "analytics"
+      ],
+      "batch_operations": [
+        "price",
+        "implied_volatility",
+        "greeks_standard",
+        "greeks",
+        "analytics"
+      ],
+      "greeks": [
+        "delta",
+        "gamma",
+        "theta",
+        "vega",
+        "rho",
+        "vanna",
+        "volga",
+        "charm",
+        "veta",
+        "color"
+      ],
+      "guidance": "American option pricing using the BS1993 approximation.",
+      "constraints": [],
+      "notes": "The engine enforces model-specific domains and accuracy regions. Implemented Greeks may be unavailable for particular inputs, including expiry, exercise-boundary kinks and unresolved derivatives. An empty constraints list does not imply an unrestricted domain."
+    }
+  ],
+  "engines": [
+    {
+      "name": "morphiq-risk",
+      "version": "0.43.5",
+      "revision": "43ca7f93b9edda6078b49950de6a8b7d51a3e3ef"
+    }
+  ],
+  "greek_units": {
+    "charm": "`d\u00b2V/(dS dt)`, **per year**.",
+    "color": "`d\u00b3V/(dS\u00b2 dt)`, **per year**.",
+    "delta": "`dV/dS`.",
+    "gamma": "`d\u00b2V/dS\u00b2`.",
+    "rho": "`dV/dr`, per unit rate.",
+    "theta": "`dV/dt`, **per year**.",
+    "vanna": "`d\u00b2V/(dS d\u03c3)`, per unit volatility.",
+    "vega": "`dV/d\u03c3`, per unit volatility.",
+    "veta": "`d\u00b2V/(d\u03c3 dt)`, **per year** per unit volatility.",
+    "volga": "`d\u00b2V/d\u03c3\u00b2`, per unit volatility squared."
+  }
+}

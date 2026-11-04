@@ -1,8 +1,8 @@
 {
-  "source_commit": "b2cb8d72b049d61c062f787724c1c02c15dd12be",
-  "contract_sha256": "09527006497b4f23bbf174f4a5b8bd9d02f75d02554b3d489eaba953ec5a18f1",
-  "admission": "open",
-  "note": "Synthetic inputs evaluated by the native API built with --locked from the pinned source commit. Served OpenAPI digest verified. Request IDs normalized; open mode does not report commercial CU. No Python numerical implementation.",
+  "source_commit": "2284d802b5ac0b37b43ee269bbf4bfeec3777776",
+  "contract_sha256": "e206327e13aee32c02dbfa22e1d8e8a80ea2d549083971a1cc87aa2b67f401e7",
+  "admission": "open (isolated loopback service; no commercial charge)",
+  "note": "Synthetic requests evaluated by a --locked native build of deployed API v0.5.0. American Greeks/analytics/batches explicitly use BS1993; Auto American singles resolve to QdFp.",
   "cases": [
     {
       "name": "analytics-european-volatility",
@@ -20,27 +20,27 @@
       },
       "response": {
         "metadata": {
-          "request_id": "fixture-analytics-european-volatility",
+          "request_id": "fr-18e4e90129262501-000000000000000a",
           "api_version": "v1",
-          "engine_version": "0.39.1",
+          "engine_version": "0.43.5",
           "engines": [
             {
               "name": "morphiq-risk",
-              "version": "0.39.1",
-              "revision": "b4c29d492ff96dddf9b25f745d2be4d253202164"
+              "version": "0.43.5",
+              "revision": "43ca7f93b9edda6078b49950de6a8b7d51a3e3ef"
             }
           ],
           "units_charged": 10,
           "compute_schedule_version": "2026-09-11"
         },
         "result": {
-          "price": 10.450583572185538,
+          "price": 10.45058357218557,
           "greeks": {
             "delta": 0.6368306511756191,
             "gamma": 0.018762017345846895,
-            "theta": -6.4140275464382,
+            "theta": -6.414027546438199,
             "vega": 37.52403469169381,
-            "rho": 53.23248154537637,
+            "rho": 53.232481545376345,
             "vanna": -0.28143026018770334,
             "volga": 9.850059106569617,
             "charm": -0.06566706071046415,
@@ -69,14 +69,14 @@
       },
       "response": {
         "metadata": {
-          "request_id": "fixture-analytics-european-premium",
+          "request_id": "fr-18e4e90129262501-000000000000000b",
           "api_version": "v1",
-          "engine_version": "0.39.1",
+          "engine_version": "0.43.5",
           "engines": [
             {
               "name": "morphiq-risk",
-              "version": "0.39.1",
-              "revision": "b4c29d492ff96dddf9b25f745d2be4d253202164"
+              "version": "0.43.5",
+              "revision": "43ca7f93b9edda6078b49950de6a8b7d51a3e3ef"
             }
           ],
           "units_charged": 10,
@@ -85,22 +85,22 @@
         "result": {
           "price": 10.450583572185543,
           "greeks": {
-            "delta": 0.6368306511756191,
-            "gamma": 0.018762017345846888,
-            "theta": -6.414027546438201,
-            "vega": 37.52403469169381,
-            "rho": 53.23248154537637,
-            "vanna": -0.2814302601877032,
-            "volga": 9.850059106569608,
-            "charm": -0.06566706071046412,
-            "veta": -16.46367022098066,
-            "color": 0.010530182235356567
+            "delta": 0.6368306511756192,
+            "gamma": 0.018762017345846965,
+            "theta": -6.414027546438186,
+            "vega": 37.5240346916938,
+            "rho": 53.232481545376395,
+            "vanna": -0.28143026018770706,
+            "volga": 9.850059106569766,
+            "charm": -0.06566706071046423,
+            "veta": -16.46367022098065,
+            "color": 0.010530182235356613
           },
           "implied_volatility": {
-            "implied_volatility": 0.20000000000000007,
+            "implied_volatility": 0.1999999999999992,
             "iterations": 2,
             "used_fallback": false,
-            "residual": 1.3877787807814457e-17,
+            "residual": 1.3200960109770371e-17,
             "residual_basis": "forward_normalised_price",
             "pricing_model": "black_scholes_merton",
             "model_version": "black_scholes_merton/1"
@@ -115,7 +115,7 @@
       "path": "/v1/analytics",
       "request": {
         "exercise_style": "american",
-        "pricing_model": "auto",
+        "pricing_model": "bjerksund_stensland_1993",
         "option_type": "put",
         "spot": 100.0,
         "strike": 105.0,
@@ -126,35 +126,35 @@
       },
       "response": {
         "metadata": {
-          "request_id": "fixture-analytics-american-volatility",
+          "request_id": "fr-18e4e90129262501-000000000000000c",
           "api_version": "v1",
-          "engine_version": "0.39.1",
+          "engine_version": "0.43.5",
           "engines": [
             {
               "name": "morphiq-risk",
-              "version": "0.39.1",
-              "revision": "b4c29d492ff96dddf9b25f745d2be4d253202164"
+              "version": "0.43.5",
+              "revision": "43ca7f93b9edda6078b49950de6a8b7d51a3e3ef"
             }
           ],
           "units_charged": 5400,
           "compute_schedule_version": "2026-09-11"
         },
         "result": {
-          "price": 7.584143004464017,
+          "price": 7.5298454349124135,
           "greeks": {
-            "delta": -0.5897928172087801,
-            "gamma": 0.03222261065667377,
-            "theta": -3.6051933523200046,
-            "vega": 26.684513084217365,
-            "rho": -21.188538179070036,
-            "vanna": 0.8767139435075082,
-            "volga": 22.095184006704915,
-            "charm": -0.18487751813050776,
-            "veta": -28.54236738380589,
-            "color": 0.02499731184924664
+            "delta": -0.5892018845247824,
+            "gamma": 0.03283315892329423,
+            "theta": -3.55494205524821,
+            "vega": 26.586081744012873,
+            "rho": -21.61207168023723,
+            "vanna": 0.8950133905908548,
+            "volga": 24.916694215773163,
+            "charm": -0.18410996878530597,
+            "veta": -28.20742602649876,
+            "color": 0.025532151457727196
           },
-          "pricing_model": "bjerksund_stensland_2002",
-          "model_version": "bjerksund_stensland_2002/1"
+          "pricing_model": "bjerksund_stensland_1993",
+          "model_version": "bjerksund_stensland_1993/1"
         }
       }
     },
@@ -163,7 +163,7 @@
       "path": "/v1/analytics",
       "request": {
         "exercise_style": "american",
-        "pricing_model": "auto",
+        "pricing_model": "bjerksund_stensland_1993",
         "option_type": "put",
         "spot": 100.0,
         "strike": 105.0,
@@ -171,48 +171,48 @@
         "risk_free_rate": 0.05,
         "dividend_yield": 0.01,
         "volatility": 0.35,
-        "market_price": 7.584143004464017
+        "market_price": 7.5298454349124135
       },
       "response": {
         "metadata": {
-          "request_id": "fixture-analytics-american-premium",
+          "request_id": "fr-18e4e90129262501-000000000000000e",
           "api_version": "v1",
-          "engine_version": "0.39.1",
+          "engine_version": "0.43.5",
           "engines": [
             {
               "name": "morphiq-risk",
-              "version": "0.39.1",
-              "revision": "b4c29d492ff96dddf9b25f745d2be4d253202164"
+              "version": "0.43.5",
+              "revision": "43ca7f93b9edda6078b49950de6a8b7d51a3e3ef"
             }
           ],
           "units_charged": 5400,
           "compute_schedule_version": "2026-09-11"
         },
         "result": {
-          "price": 7.584143004464022,
+          "price": 7.529845434912404,
           "greeks": {
-            "delta": -0.5897928172087792,
-            "gamma": 0.03222261065667396,
-            "theta": -3.6051933523200215,
-            "vega": 26.6845130842174,
-            "rho": -21.188538179070036,
-            "vanna": 0.8767139435075141,
-            "volga": 22.095184006705093,
-            "charm": -0.18487751813050896,
-            "veta": -28.542367383805793,
-            "color": 0.0249973118491495
+            "delta": -0.589201884524784,
+            "gamma": 0.032833158923294165,
+            "theta": -3.5549420552482323,
+            "vega": 26.586081744012873,
+            "rho": -21.612071680237182,
+            "vanna": 0.8950133905908535,
+            "volga": 24.916694215773237,
+            "charm": -0.18410996878530728,
+            "veta": -28.207426026498748,
+            "color": 0.025532151457727564
           },
           "implied_volatility": {
-            "implied_volatility": 0.19999999999999996,
+            "implied_volatility": 0.20000000000000026,
             "iterations": 9,
             "used_fallback": true,
-            "residual": 5.329070518200751e-15,
+            "residual": 9.769962616701378e-15,
             "residual_basis": "option_price",
-            "pricing_model": "bjerksund_stensland_2002",
-            "model_version": "bjerksund_stensland_2002/1"
+            "pricing_model": "bjerksund_stensland_1993",
+            "model_version": "bjerksund_stensland_1993/1"
           },
-          "pricing_model": "bjerksund_stensland_2002",
-          "model_version": "bjerksund_stensland_2002/1"
+          "pricing_model": "bjerksund_stensland_1993",
+          "model_version": "bjerksund_stensland_1993/1"
         }
       }
     }
