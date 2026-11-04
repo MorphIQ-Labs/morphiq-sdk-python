@@ -27,7 +27,7 @@ with MorphIQ() as client:
     print(result.metadata.fcu_charged)
 ```
 
-`AsyncMorphIQ` exposes the same methods with `await`. All nine existing typed
+`AsyncMorphIQ` exposes the same methods with `await`. All eleven typed
 single and batch request models can be passed to `quote`; the SDK infers the
 operation and serializes the same body it uses for execution. It performs no
 local pricing or CU calculation. The response keeps the original JSON in `raw_body`;
@@ -83,14 +83,15 @@ No command retries or raises its ceiling automatically. The
 quote and capped execution buttons, with synthetic inputs and no setup-time calls.
 
 
-## Response examples
+## Historical wire-response examples
 
 These are wire responses from synthetic requests against the local API example
 schedule, captured for [API !188](https://gitlab.com/prophetizo/morphiq-labs/sites/morphiq-api/-/merge_requests/188)
 at source `ae243c62bf2c3c06182f845bab4f8131c60e3d48`. Request IDs are normalized;
 optional policy and budget metadata is omitted for readability. Your account's
-rates, policy identity and service version can differ. These examples do not
-establish that the endpoints are deployed or that the SDK feature is released.
+rates, policy identity and service version can differ. They illustrate the wire shape, not the current production rate card.
+API v0.5.0 exposes these utilities; fetch your current schedule instead of
+copying the sample rates or schedule identity. SDK availability follows its own release.
 
 A filtered schedule, accessed as `response.schedule`:
 

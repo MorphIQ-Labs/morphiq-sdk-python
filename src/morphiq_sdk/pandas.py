@@ -17,6 +17,7 @@ from .errors import APIError, MorphIQError, ResponseError
 from .models import (
     BatchAnalyticsResponse,
     BatchGreeksResponse,
+    BatchGreeksStandardResponse,
     BatchImpliedVolatilityResponse,
     BatchPriceResponse,
 )
@@ -28,6 +29,7 @@ if TYPE_CHECKING:
 _BatchResponse = (
     BatchPriceResponse
     | BatchGreeksResponse
+    | BatchGreeksStandardResponse
     | BatchImpliedVolatilityResponse
     | BatchAnalyticsResponse
 )
@@ -99,7 +101,7 @@ def _fields(model: BaseModel, prefix: str) -> dict[str, Any]:
         if isinstance(value, BaseModel):
             result.update(_fields(value, key))
         else:
-            result[key] = deepcopy(value)
+            result[key] = deepcopy(model.model_dump(exclude_unset=True)[name])
     return result
 
 

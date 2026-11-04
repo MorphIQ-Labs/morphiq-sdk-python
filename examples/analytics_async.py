@@ -82,7 +82,9 @@ async def main() -> None:
         "veta",
         "color",
     ):
-        print(f"  {name}: {getattr(response.result.greeks, name)}")
+        value = getattr(response.result.greeks, name)
+        reason = response.result.greeks.unavailable.get(name)
+        print(f"  {name}: {value if value is not None else reason}")
     # The combined response reports one charge, not one charge per result component.
     print(f"Model: {response.result.pricing_model} ({response.result.model_version})")
     print(f"Request ID: {response.metadata.request_id}")

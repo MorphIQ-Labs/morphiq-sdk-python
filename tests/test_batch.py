@@ -90,7 +90,9 @@ def test_ordered_mixed_outcomes_and_one_charge(mode, index, batch_cases):
     assert len(calls) == 1
     assert result.model_dump(exclude_unset=True) == case["response"]
     assert json.loads(result.raw_body) == case["response"]
-    assert [x.status for x in result.results] == ["success", "error", "success"]
+    assert [x.status for x in result.results] == (
+        ["success", "error", "success"] if index < 2 else ["success"] * 3
+    )
     assert [x.index for x in result.results] == [0, 1, 2]
     assert result.metadata.fcu_charged == 2**53 + 1
 
@@ -102,8 +104,8 @@ def test_batch_inputs_revalidate_edits_without_plan_assumptions(index, batch_cas
     with pytest.raises(ValidationError):
         cls(requests=[])
     with pytest.raises(ValidationError):
-        cls(requests=[values[0]] * 1025)
-    assert len(cls(requests=[values[0]] * 1024).to_wire()["requests"]) == 1024
+        cls(requests=[values[0]] * 101)
+    assert len(cls(requests=[values[0]] * 100).to_wire()["requests"]) == 100
     request = cls(requests=values)
     request.requests[0].dividend_schedule.append(
         {"ex_time_years": float("nan"), "cash_amount": 1.0}

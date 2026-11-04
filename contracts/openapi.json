@@ -224,7 +224,7 @@
             }
           },
           "400": {
-            "description": "Malformed request",
+            "description": "Malformed request, or disabled model operation (unsupported_operation): QdFp Greeks/analytics or cash-dividend finite-difference Greeks/analytics, including Auto",
             "headers": {
               "x-request-id": {
                 "schema": {
@@ -495,6 +495,7 @@
         "tags": [
           "pricing"
         ],
+        "description": "Synchronous BSM/BS1993 batches only; at most 100 contracts or the lower account limit. Any QdFp or cash-dividend item rejects the whole batch before reservation or execution. Results preserve input order; the charge sums per-contract CUs.",
         "operationId": "fusedAnalyticsBatch",
         "parameters": [
           {
@@ -1097,7 +1098,7 @@
           {
             "name": "operation",
             "in": "query",
-            "description": "Filter by operation: price, implied_volatility, greeks, analytics, regime",
+            "description": "Filter by operation: price, implied_volatility, greeks_standard, greeks, analytics, regime",
             "required": false,
             "schema": {
               "type": "string"
@@ -1338,7 +1339,7 @@
             }
           },
           "400": {
-            "description": "Malformed request",
+            "description": "Malformed request, or disabled model operation (unsupported_operation): QdFp Greeks/analytics or cash-dividend finite-difference Greeks/analytics, including Auto",
             "headers": {
               "x-request-id": {
                 "schema": {
@@ -1604,11 +1605,665 @@
         }
       }
     },
+    "/v1/greeks/standard": {
+      "post": {
+        "tags": [
+          "pricing"
+        ],
+        "operationId": "greeksStandard",
+        "parameters": [
+          {
+            "name": "x-morphiq-max-cu",
+            "in": "header",
+            "description": "Optional maximum commercial CU charge for this whole request. An actual quote above this ceiling is refused before commitment with 409 cost_limit_exceeded and zero charged CUs. Applies equally to JSON, Protobuf and gRPC metadata. Zero is allowed; duplicate or malformed values are rejected.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 18446744073709551615,
+              "minimum": 0
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "GreeksStandardRequest encoded as JSON or morphiq.ferro_risk.v1.GreeksStandardRequest",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GreeksStandardRequest"
+              }
+            },
+            "application/protobuf": {
+              "schema": {
+                "$ref": "#/components/schemas/ProtobufBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Numerical result",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GreeksStandardResponse"
+                }
+              },
+              "application/protobuf": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProtobufBody"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed request, or disabled model operation (unsupported_operation): QdFp or cash-dividend finite-difference Greeks/analytics, including Auto",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Credential missing or not verifiable",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "The account's funding is spent until a top-up or the next budget period",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The account is not permitted, or its plan does not include this operation",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "Response media type is not acceptable",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "408": {
+            "description": "Request body deadline exceeded",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Reservation expired, or the quote exceeds x-morphiq-max-cu; check error.code. Zero commercial charge.",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request too large",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported media type",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid pricing request, or work that cannot be priced under the account's limits",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Request rate or concurrent request allowance exhausted",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Minimum retry delay in seconds"
+              },
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Pricing failure",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Capacity exhausted, funding, policy or admission temporarily unavailable, or service draining",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Minimum retry delay in seconds"
+              },
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Compute deadline exceeded",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/greeks/standard:batch": {
+      "post": {
+        "tags": [
+          "pricing"
+        ],
+        "description": "Synchronous BSM/BS1993 batches only; at most 100 contracts or the lower account limit. Any QdFp or cash-dividend item rejects the whole batch before reservation or execution. Results preserve input order; the charge sums per-contract CUs.",
+        "operationId": "greeksStandardBatch",
+        "parameters": [
+          {
+            "name": "x-morphiq-max-cu",
+            "in": "header",
+            "description": "Optional maximum commercial CU charge for this whole request. An actual quote above this ceiling is refused before commitment with 409 cost_limit_exceeded and zero charged CUs. Applies equally to JSON, Protobuf and gRPC metadata. Zero is allowed; duplicate or malformed values are rejected.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 18446744073709551615,
+              "minimum": 0
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "BatchGreeksStandardRequest encoded as JSON or morphiq.ferro_risk.v1.BatchGreeksStandardRequest",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchGreeksStandardRequest"
+              }
+            },
+            "application/protobuf": {
+              "schema": {
+                "$ref": "#/components/schemas/ProtobufBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Ordered batch results",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchGreeksStandardResponse"
+                }
+              },
+              "application/protobuf": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProtobufBody"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed request",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Credential missing or not verifiable",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "The account's funding is spent until a top-up or the next budget period",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The account is not permitted, or its plan does not include this operation",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "Response media type is not acceptable",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "408": {
+            "description": "Request body deadline exceeded",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Reservation expired, or the quote exceeds x-morphiq-max-cu; check error.code. Zero commercial charge.",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request too large",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported media type",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid batch request, or work that cannot be priced under the account's limits",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Request rate or concurrent request allowance exhausted",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Minimum retry delay in seconds"
+              },
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Pricing failure",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Ingress or weighted compute capacity exhausted, or funding, policy or admission temporarily unavailable",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Minimum retry delay in seconds"
+              },
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Compute deadline exceeded",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/greeks:batch": {
       "post": {
         "tags": [
           "pricing"
         ],
+        "description": "Synchronous BSM/BS1993 batches only; at most 100 contracts or the lower account limit. Any QdFp or cash-dividend item rejects the whole batch before reservation or execution. Results preserve input order; the charge sums per-contract CUs.",
         "operationId": "greeksAllTenBatch",
         "parameters": [
           {
@@ -2261,6 +2916,7 @@
         "tags": [
           "pricing"
         ],
+        "description": "Synchronous BSM/BS1993 batches only; at most 100 contracts or the lower account limit. Any QdFp or cash-dividend item rejects the whole batch before reservation or execution. Results preserve input order; the charge sums per-contract CUs.",
         "operationId": "impliedVolatilityBatch",
         "parameters": [
           {
@@ -2913,6 +3569,7 @@
         "tags": [
           "pricing"
         ],
+        "description": "Synchronous BSM/BS1993 batches only; at most 100 contracts or the lower account limit. Any QdFp or cash-dividend item rejects the whole batch before reservation or execution. Results preserve input order; the charge sums per-contract CUs.",
         "operationId": "priceOptionBatch",
         "parameters": [
           {
@@ -3232,6 +3889,57 @@
             }
           }
         }
+      }
+    },
+    "/v1/pricing/models": {
+      "get": {
+        "tags": [
+          "pricing"
+        ],
+        "summary": "List pricing models and their numerical capabilities.",
+        "description": "Public JSON discovery: no API key, account filtering, pricing work or CU\ncharge. Every caller receives the same compiled catalog. Quantity support\nis a capability, not a promise of convergence for every input. Auto selects\nEuropean BSM, American QdFp, or American finite difference with cash events.",
+        "operationId": "listPricingModels",
+        "responses": {
+          "200": {
+            "description": "All pricing models with methods, capabilities and usage guidance",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PricingModelCatalog"
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "JSON is not acceptable",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceErrorEnvelope"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {}
+        ]
       }
     },
     "/v1/regime": {
@@ -3612,7 +4320,8 @@
             "items": {
               "$ref": "#/components/schemas/FusedAnalyticsRequest"
             },
-            "maxItems": 1024,
+            "description": "One to 100 contracts; a lower account limit still applies.",
+            "maxItems": 100,
             "minItems": 1
           }
         },
@@ -3710,7 +4419,8 @@
             "items": {
               "$ref": "#/components/schemas/GreeksAllTenRequest"
             },
-            "maxItems": 1024,
+            "description": "One to 100 contracts; a lower account limit still applies.",
+            "maxItems": 100,
             "minItems": 1
           }
         },
@@ -3731,6 +4441,105 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/BatchGreeksAllTenItemResult"
+            }
+          }
+        }
+      },
+      "BatchGreeksStandardItemResult": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BatchGreeksStandardOutcome"
+          },
+          {
+            "type": "object",
+            "required": [
+              "index"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "format": "int32",
+                "minimum": 0
+              }
+            }
+          }
+        ],
+        "description": "Ordered result with an explicit per-item failure alternative."
+      },
+      "BatchGreeksStandardOutcome": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "result",
+              "status"
+            ],
+            "properties": {
+              "result": {
+                "$ref": "#/components/schemas/GreeksStandardResult"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "success"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "error",
+              "status"
+            ],
+            "properties": {
+              "error": {
+                "$ref": "#/components/schemas/ErrorBody"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "error"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "BatchGreeksStandardRequest": {
+        "type": "object",
+        "description": "Ordered request envelope; runtime applies the pinned plan limit.",
+        "required": [
+          "requests"
+        ],
+        "properties": {
+          "requests": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GreeksStandardRequest"
+            },
+            "description": "One to 100 contracts; a lower account limit still applies.",
+            "maxItems": 100,
+            "minItems": 1
+          }
+        },
+        "additionalProperties": false
+      },
+      "BatchGreeksStandardResponse": {
+        "type": "object",
+        "description": "One metadata block for the entire admitted batch.",
+        "required": [
+          "metadata",
+          "results"
+        ],
+        "properties": {
+          "metadata": {
+            "$ref": "#/components/schemas/ResponseMetadata"
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BatchGreeksStandardItemResult"
             }
           }
         }
@@ -3808,7 +4617,8 @@
             "items": {
               "$ref": "#/components/schemas/ImpliedVolatilityRequest"
             },
-            "maxItems": 1024,
+            "description": "One to 100 contracts; a lower account limit still applies.",
+            "maxItems": 100,
             "minItems": 1
           }
         },
@@ -3907,7 +4717,8 @@
             "items": {
               "$ref": "#/components/schemas/PriceRequest"
             },
-            "maxItems": 1024,
+            "description": "One to 100 contracts; a lower account limit still applies.",
+            "maxItems": 100,
             "minItems": 1
           }
         },
@@ -4080,6 +4891,42 @@
               },
               "request": {
                 "$ref": "#/components/schemas/BatchImpliedVolatilityRequest"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "request",
+              "operation"
+            ],
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "greeks_standard"
+                ]
+              },
+              "request": {
+                "$ref": "#/components/schemas/GreeksStandardRequest"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "request",
+              "operation"
+            ],
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "greeks_standard_batch"
+                ]
+              },
+              "request": {
+                "$ref": "#/components/schemas/BatchGreeksStandardRequest"
               }
             }
           },
@@ -4417,7 +5264,7 @@
             "items": {
               "$ref": "#/components/schemas/DividendEvent"
             },
-            "description": "Served only together with `market_price` (#330).",
+            "description": "Cash dividends are supported with supplied or solved volatility.",
             "maxItems": 16
           },
           "dividend_yield": {
@@ -4525,19 +5372,7 @@
       },
       "GreeksAllTen": {
         "type": "object",
-        "description": "The ten Greeks, on the contract's stated bases.\n\nTime derivatives are **per year**. The engine reports them per calendar\nday, which embeds a 365-day calendar; the contract carries no calendar,\nso the service scales by the engine's own day count at this boundary and\nthe caller applies whichever convention it holds. Vega is raw `dV/dσ` per\nunit volatility, not per point. Nothing else is rescaled.",
-        "required": [
-          "delta",
-          "gamma",
-          "theta",
-          "vega",
-          "rho",
-          "vanna",
-          "volga",
-          "charm",
-          "veta",
-          "color"
-        ],
+        "description": "Available Greeks on the contract's stated bases; absent values are explained by `unavailable`.\n\nTime derivatives are **per year**. The engine reports them per calendar\nday, which embeds a 365-day calendar; the contract carries no calendar,\nso the service scales by the engine's own day count at this boundary and\nthe caller applies whichever convention it holds. Vega is raw `dV/dσ` per\nunit volatility, not per point. Nothing else is rescaled.",
         "properties": {
           "charm": {
             "type": "number",
@@ -4568,6 +5403,16 @@
             "type": "number",
             "format": "double",
             "description": "`dV/dt`, **per year**."
+          },
+          "unavailable": {
+            "type": "object",
+            "description": "Each omitted Greek has a reason. A resolved zero is present as 0.0.\nCodes distinguish unsupported quantities, model domain/validity,\naccuracy refusals and unresolved numerical derivatives.",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ErrorBody"
+            },
+            "propertyNames": {
+              "type": "string"
+            }
           },
           "vanna": {
             "type": "number",
@@ -4611,7 +5456,7 @@
             "items": {
               "$ref": "#/components/schemas/DividendEvent"
             },
-            "description": "Accepted by the wire contract, refused by this operation until the\nengine exposes schedule-aware Greeks without a premium (#330). A\nschedule is served on `FusedAnalytics` with `market_price`.",
+            "description": "Cash dividends select the finite-difference American model with Auto.",
             "maxItems": 16
           },
           "dividend_yield": {
@@ -4684,6 +5529,153 @@
         "properties": {
           "greeks": {
             "$ref": "#/components/schemas/GreeksAllTen"
+          },
+          "model_version": {
+            "type": "string"
+          },
+          "price": {
+            "type": "number",
+            "format": "double"
+          },
+          "pricing_model": {
+            "$ref": "#/components/schemas/ResolvedPricingModel"
+          }
+        }
+      },
+      "GreeksStandard": {
+        "type": "object",
+        "description": "Available Greeks on the contract's stated bases; absent values are explained by `unavailable`.\n\nTime derivatives are **per year**. The engine reports them per calendar\nday, which embeds a 365-day calendar; the contract carries no calendar,\nso the service scales by the engine's own day count at this boundary and\nthe caller applies whichever convention it holds. Vega is raw `dV/dσ` per\nunit volatility, not per point. Nothing else is rescaled.",
+        "properties": {
+          "delta": {
+            "type": "number",
+            "format": "double",
+            "description": "`dV/dS`."
+          },
+          "gamma": {
+            "type": "number",
+            "format": "double",
+            "description": "`d²V/dS²`."
+          },
+          "rho": {
+            "type": "number",
+            "format": "double",
+            "description": "`dV/dr`, per unit rate."
+          },
+          "theta": {
+            "type": "number",
+            "format": "double",
+            "description": "`dV/dt`, **per year**."
+          },
+          "unavailable": {
+            "type": "object",
+            "description": "Each omitted Greek has a reason. A resolved zero is present as 0.0.\nCodes distinguish unsupported quantities, model domain/validity,\naccuracy refusals and unresolved numerical derivatives.",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ErrorBody"
+            },
+            "propertyNames": {
+              "type": "string"
+            }
+          },
+          "vega": {
+            "type": "number",
+            "format": "double",
+            "description": "`dV/dσ`, per unit volatility."
+          }
+        }
+      },
+      "GreeksStandardRequest": {
+        "type": "object",
+        "description": "A request for the price and the standard five Greeks at a supplied volatility.\n\nThe same shape as `PriceRequest`: the Greeks are derivatives of the\nprice, so they are a property of the same contract and the same\ncoordinates.",
+        "required": [
+          "exercise_style",
+          "pricing_model",
+          "option_type",
+          "spot",
+          "strike",
+          "time_to_expiry_years",
+          "risk_free_rate",
+          "dividend_yield",
+          "volatility"
+        ],
+        "properties": {
+          "dividend_schedule": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DividendEvent"
+            },
+            "description": "Cash dividends select the finite-difference American model with Auto.",
+            "maxItems": 16
+          },
+          "dividend_yield": {
+            "type": "number",
+            "format": "double"
+          },
+          "exercise_style": {
+            "$ref": "#/components/schemas/ExerciseStyle"
+          },
+          "model_version": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "option_type": {
+            "$ref": "#/components/schemas/OptionType"
+          },
+          "pricing_model": {
+            "$ref": "#/components/schemas/PricingModel"
+          },
+          "risk_free_rate": {
+            "type": "number",
+            "format": "double"
+          },
+          "spot": {
+            "type": "number",
+            "format": "double"
+          },
+          "strike": {
+            "type": "number",
+            "format": "double"
+          },
+          "time_to_expiry_years": {
+            "type": "number",
+            "format": "double"
+          },
+          "volatility": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "GreeksStandardResponse": {
+        "type": "object",
+        "description": "Successful response for one standard-five-Greeks operation.",
+        "required": [
+          "metadata",
+          "result"
+        ],
+        "properties": {
+          "metadata": {
+            "$ref": "#/components/schemas/ResponseMetadata"
+          },
+          "result": {
+            "$ref": "#/components/schemas/GreeksStandardResult"
+          }
+        }
+      },
+      "GreeksStandardResult": {
+        "type": "object",
+        "description": "The price and Greeks of one contract at the volatility supplied.",
+        "required": [
+          "price",
+          "greeks",
+          "pricing_model",
+          "model_version"
+        ],
+        "properties": {
+          "greeks": {
+            "$ref": "#/components/schemas/GreeksStandard"
           },
           "model_version": {
             "type": "string"
@@ -4820,6 +5812,38 @@
           }
         }
       },
+      "ModelConstraint": {
+        "type": "object",
+        "required": [
+          "quantity",
+          "description"
+        ],
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "maximum": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "Inclusive upper bound when present."
+          },
+          "minimum": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "Inclusive lower bound when present."
+          },
+          "quantity": {
+            "type": "string",
+            "description": "Input field or derived quantity, defined by description."
+          }
+        }
+      },
       "OptionType": {
         "type": "string",
         "description": "Option payoff direction.",
@@ -4878,7 +5902,7 @@
             "items": {
               "$ref": "#/components/schemas/DividendEvent"
             },
-            "description": "Discrete cash dividends within the option's life. American\nBjerksund-Stensland 2002 only; omit for continuous `dividend_yield` alone.",
+            "description": "Discrete cash dividends within the option's life. American\nCash-dividend American model only; Auto selects it for a non-empty schedule.",
             "maxItems": 16
           },
           "dividend_yield": {
@@ -4972,13 +5996,146 @@
       },
       "PricingModel": {
         "type": "string",
-        "description": "Pricing algorithm selection. `Auto` resolves from the exercise style.",
+        "description": "Canonical selectors are listed by GET /v1/pricing/models. qd_fixed_point and cash_dividend_american remain input aliases. BS2002 is retired and returns a migration error.",
         "enum": [
           "auto",
           "black_scholes_merton",
           "bjerksund_stensland_2002",
-          "bjerksund_stensland_1993"
+          "bjerksund_stensland_1993",
+          "black_scholes_merton_qdfp",
+          "black_scholes_merton_fd",
+          "qd_fixed_point",
+          "cash_dividend_american"
         ]
+      },
+      "PricingModelCatalog": {
+        "type": "object",
+        "required": [
+          "models",
+          "engines",
+          "greek_units"
+        ],
+        "properties": {
+          "engines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EngineIdentity"
+            }
+          },
+          "greek_units": {
+            "type": "object",
+            "description": "API units, derived from canonical Greek field descriptions.",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "propertyNames": {
+              "type": "string"
+            }
+          },
+          "models": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PricingModelDescriptor"
+            },
+            "description": "All executable pricing models in this build, identical for every caller.\nAuto is a selection rule and retired BS2002 is not an executable model."
+          }
+        }
+      },
+      "PricingModelDescriptor": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "version",
+          "model_version",
+          "aliases",
+          "underlying_model",
+          "method",
+          "exercise_styles",
+          "dividend_support",
+          "operations",
+          "batch_operations",
+          "greeks",
+          "guidance",
+          "constraints",
+          "notes"
+        ],
+        "properties": {
+          "aliases": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Earlier JSON selectors still accepted as aliases of this same algorithm."
+          },
+          "batch_operations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Operations also supported in synchronous batches of at most 100 contracts."
+          },
+          "constraints": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ModelConstraint"
+            },
+            "description": "Selected structured limits of the pinned engine for live contracts.\nThese describe capabilities; the engine remains the validation authority."
+          },
+          "dividend_support": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "exercise_styles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExerciseStyle"
+            }
+          },
+          "greeks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Implemented quantities, not a guarantee they resolve for every input.\nPer-request refusals appear in greeks.unavailable."
+          },
+          "guidance": {
+            "type": "string"
+          },
+          "id": {
+            "$ref": "#/components/schemas/ResolvedPricingModel",
+            "description": "Canonical JSON pricing_model selector, accepted by pricing operations."
+          },
+          "method": {
+            "type": "string"
+          },
+          "model_version": {
+            "type": "string",
+            "description": "Exact compatible model_version pin for requests and response provenance."
+          },
+          "name": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "operations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Operation identifiers supported as single requests."
+          },
+          "underlying_model": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string",
+            "description": "Algorithm revision, independent of API and engine package versions."
+          }
+        }
       },
       "ProtobufBody": {
         "type": "string",
@@ -5749,7 +6906,7 @@
       },
       "ResidualBasis": {
         "type": "string",
-        "description": "The basis a solved residual is expressed in.\n\nThe residual is not one quantity. European and Black paths report a\nforward-normalised price residual comparable against the engine's\nconvergence threshold; Bachelier and American Bjerksund-Stensland report a\nraw option-price residual. Publishing the number without its basis would\ninvite exactly the cross-model comparison it does not support, so the basis\ntravels with it and a client that ignores this field cannot silently get it\nwrong.",
+        "description": "The basis a solved residual is expressed in.\n\nThe residual is not one quantity. European and Black paths report a\nforward-normalised price residual comparable against the engine's\nconvergence threshold; American models report a\nraw option-price residual. Publishing the number without its basis would\ninvite exactly the cross-model comparison it does not support, so the basis\ntravels with it and a client that ignores this field cannot silently get it\nwrong.",
         "enum": [
           "forward_normalised_price",
           "option_price"
@@ -5778,8 +6935,9 @@
         "description": "Pricing algorithm selected after resolving an input request.\n\nUnlike [`PricingModel`], this output-only type cannot represent `auto`.",
         "x-extensible-enum": [
           "black_scholes_merton",
-          "bjerksund_stensland_2002",
-          "bjerksund_stensland_1993"
+          "bjerksund_stensland_1993",
+          "black_scholes_merton_qdfp",
+          "black_scholes_merton_fd"
         ]
       },
       "ResponseMetadata": {
@@ -6048,5 +7206,61 @@
       },
       "status": 405
     }
-  ]
+  ],
+  "x-morphiq-mcp": {
+    "accept": [
+      "application/json",
+      "text/event-stream"
+    ],
+    "authentication": "Bearer API key and signed MCP representation permission",
+    "contract": "services/api/mcp.contract.json",
+    "documentation": "/docs/mcp",
+    "enableEnvironment": "MORPHIQ_API_MCP_ENABLED",
+    "enabledByDefault": false,
+    "headers": [
+      "x-request-id"
+    ],
+    "implementedTools": [
+      "analytics",
+      "analytics_batch",
+      "cost_quote",
+      "cost_schedule",
+      "greeks",
+      "greeks_batch",
+      "greeks_standard",
+      "greeks_standard_batch",
+      "implied_volatility",
+      "implied_volatility_batch",
+      "price",
+      "price_batch",
+      "pricing_models",
+      "regime"
+    ],
+    "limits": {
+      "costQuote": {
+        "jsonNodes": 131072,
+        "requestBytes": 40960,
+        "stringBytes": 1024
+      },
+      "jsonDepth": 16,
+      "jsonNodes": 1024,
+      "regime": {
+        "jsonNodes": 32768,
+        "requestBytes": 32768,
+        "stringBytes": 1024
+      },
+      "requestBytes": 8192,
+      "responseBytes": 131072,
+      "toolValueBytes": 16384
+    },
+    "method": "POST",
+    "path": "/mcp",
+    "protocolVersion": "2026-07-28",
+    "requestContentType": "application/json",
+    "responseContentType": "application/json",
+    "unsupportedMethods": {
+      "allow": "POST",
+      "status": 405
+    }
+  }
 }

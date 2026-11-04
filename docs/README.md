@@ -1,11 +1,16 @@
 # SDK documentation
 
+See [API v0.5.0 model capabilities](MODELS.md) for supported operations,
+100-item batch limits and unavailable-Greek semantics.
+
 Start with [API access, installation and your first request](QUICKSTART.md).
 The [client and model reference](API.md) lists every supported method, its inputs,
 response types, configuration and errors.
 
 | Task | Guide | Executable examples |
 | --- | --- | --- |
+| Discover models | [Model capabilities](MODELS.md) | [Public discovery](../examples/pricing_models.py) |
+| Calculate standard-five Greeks | [Greeks and units](GREEKS.md) | [Standard five](../examples/greeks_standard.py) |
 | Discover rates and quote requests | [Cost utilities](COST.md) | [Quote and optional capped execution](../examples/cost_quote.py) |
 | Price European/American options | [Pricing quickstart](QUICKSTART.md) | [European](../examples/price_european.py), [American](../examples/price_american.py), [async](../examples/price_async.py) |
 | Calculate price and ten Greeks | [Greeks and units](GREEKS.md) | [Sync](../examples/greeks.py), [async](../examples/greeks_async.py) |

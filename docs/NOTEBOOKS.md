@@ -10,7 +10,9 @@ docker compose up --build
 ```
 
 Open the local token-authenticated URL printed by Jupyter to reach Start Here.
-Choose [cost quotation](../notebooks/cost/quotation.ipynb), [option pricing](../notebooks/pricing/options.ipynb) or
+Choose [available models](../notebooks/pricing/models.ipynb),
+[standard-five Greeks](../notebooks/pricing/standard-five.ipynb),
+[cost quotation](../notebooks/cost/quotation.ipynb), [option pricing](../notebooks/pricing/options.ipynb) or
 [regime analysis](../notebooks/regime/identification.ipynb), then select
 **Run → Run All Cells** to initialize the controls. The start page and all
 workspaces are included in the image.
@@ -34,6 +36,8 @@ Choose the action that matches the analysis you need:
 | Action | Inputs and result | MorphIQ requests |
 | --- | --- | --- |
 | **Price option** | Supplied volatility and option terms → price and comparison history | 1 |
+| **Load models** | Public model capabilities and constraints; no API key, 0 CU | 1 |
+| **Calculate** (standard five) | Supplied inputs → price, delta, gamma, theta, vega, rho | 1 |
 | **Price + Greeks** | Supplied volatility and option terms → price and all ten Greeks | 1 |
 | **Solve IV** | Entered per-share option premium and terms → IV and solver diagnostics | 1 |
 | **Analyze premium** | Entered premium and terms → native combined IV, price and Greeks at solved IV | 1 |

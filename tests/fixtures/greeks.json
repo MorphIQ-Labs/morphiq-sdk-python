@@ -1,8 +1,8 @@
 {
-  "source_commit": "e8778e480f1bac36cc36a3ad64f08d9b525d55e8",
-  "contract_sha256": "82fb3502db75a8020cc54d6a860c7398cbdf852b1882a989145ee00928b9ce5a",
-  "admission": "open",
-  "note": "Synthetic inputs evaluated by the native API built with --locked from the pinned source commit. Served OpenAPI digest verified. Request IDs normalized; open mode does not report commercial CU. No Python numerical implementation.",
+  "source_commit": "2284d802b5ac0b37b43ee269bbf4bfeec3777776",
+  "contract_sha256": "e206327e13aee32c02dbfa22e1d8e8a80ea2d549083971a1cc87aa2b67f401e7",
+  "admission": "open (isolated loopback service; no commercial charge)",
+  "note": "Synthetic requests evaluated by a --locked native build of deployed API v0.5.0. American Greeks/analytics/batches explicitly use BS1993; Auto American singles resolve to QdFp.",
   "cases": [
     {
       "name": "greeks-european",
@@ -20,27 +20,27 @@
       },
       "response": {
         "metadata": {
-          "request_id": "fixture-greeks-european",
+          "request_id": "fr-18e4e90129262501-0000000000000005",
           "api_version": "v1",
-          "engine_version": "0.39.1",
+          "engine_version": "0.43.5",
           "engines": [
             {
               "name": "morphiq-risk",
-              "version": "0.39.1",
-              "revision": "b4c29d492ff96dddf9b25f745d2be4d253202164"
+              "version": "0.43.5",
+              "revision": "43ca7f93b9edda6078b49950de6a8b7d51a3e3ef"
             }
           ],
           "units_charged": 6,
           "compute_schedule_version": "2026-09-11"
         },
         "result": {
-          "price": 10.450583572185538,
+          "price": 10.45058357218557,
           "greeks": {
             "delta": 0.6368306511756191,
             "gamma": 0.018762017345846895,
-            "theta": -6.4140275464382,
+            "theta": -6.414027546438199,
             "vega": 37.52403469169381,
-            "rho": 53.23248154537637,
+            "rho": 53.232481545376345,
             "vanna": -0.28143026018770334,
             "volga": 9.850059106569617,
             "charm": -0.06566706071046415,
@@ -57,7 +57,7 @@
       "path": "/v1/greeks",
       "request": {
         "exercise_style": "american",
-        "pricing_model": "auto",
+        "pricing_model": "bjerksund_stensland_1993",
         "option_type": "put",
         "spot": 100.0,
         "strike": 105.0,
@@ -68,35 +68,35 @@
       },
       "response": {
         "metadata": {
-          "request_id": "fixture-greeks-american",
+          "request_id": "fr-18e4e90129262501-0000000000000006",
           "api_version": "v1",
-          "engine_version": "0.39.1",
+          "engine_version": "0.43.5",
           "engines": [
             {
               "name": "morphiq-risk",
-              "version": "0.39.1",
-              "revision": "b4c29d492ff96dddf9b25f745d2be4d253202164"
+              "version": "0.43.5",
+              "revision": "43ca7f93b9edda6078b49950de6a8b7d51a3e3ef"
             }
           ],
           "units_charged": 400,
           "compute_schedule_version": "2026-09-11"
         },
         "result": {
-          "price": 7.584143004464017,
+          "price": 7.5298454349124135,
           "greeks": {
-            "delta": -0.5897928172087801,
-            "gamma": 0.03222261065667377,
-            "theta": -3.6051933523200046,
-            "vega": 26.684513084217365,
-            "rho": -21.188538179070036,
-            "vanna": 0.8767139435075082,
-            "volga": 22.095184006704915,
-            "charm": -0.18487751813050776,
-            "veta": -28.54236738380589,
-            "color": 0.02499731184924664
+            "delta": -0.5892018845247824,
+            "gamma": 0.03283315892329423,
+            "theta": -3.55494205524821,
+            "vega": 26.586081744012873,
+            "rho": -21.61207168023723,
+            "vanna": 0.8950133905908548,
+            "volga": 24.916694215773163,
+            "charm": -0.18410996878530597,
+            "veta": -28.20742602649876,
+            "color": 0.025532151457727196
           },
-          "pricing_model": "bjerksund_stensland_2002",
-          "model_version": "bjerksund_stensland_2002/1"
+          "pricing_model": "bjerksund_stensland_1993",
+          "model_version": "bjerksund_stensland_1993/1"
         }
       }
     }

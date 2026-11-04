@@ -1,10 +1,10 @@
 {
   "repository": "https://gitlab.com/prophetizo/morphiq-labs/sites/morphiq-api",
-  "source_commit": "e8778e480f1bac36cc36a3ad64f08d9b525d55e8",
+  "source_commit": "2284d802b5ac0b37b43ee269bbf4bfeec3777776",
   "source_path": "services/api/openapi.json",
   "contract_version": "0.1.0",
-  "sha256": "82fb3502db75a8020cc54d6a860c7398cbdf852b1882a989145ee00928b9ce5a",
-  "import_method": "Candidate API feature/cost-utilities snapshot copied byte-for-byte from this immutable commit; API and SDK review and merge must be coordinated. Automated artifact publication remains SDK #2.",
+  "sha256": "e206327e13aee32c02dbfa22e1d8e8a80ea2d549083971a1cc87aa2b67f401e7",
+  "import_method": "Reviewed API v0.5.0 source snapshot copied byte-for-byte from the deployed immutable main commit; the release tag has the identical source tree. Public API and developer-site schema digests verified at adoption.",
   "covered_operations": [
     "POST /v1/price",
     "POST /v1/regime",
@@ -16,6 +16,9 @@
     "POST /v1/implied-volatility:batch",
     "POST /v1/analytics:batch",
     "GET /v1/cost/schedule",
-    "POST /v1/cost/quote"
+    "POST /v1/cost/quote",
+    "GET /v1/pricing/models",
+    "POST /v1/greeks/standard",
+    "POST /v1/greeks/standard:batch"
   ]
 }

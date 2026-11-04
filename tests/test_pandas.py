@@ -33,6 +33,12 @@ RESPONSE_TYPES = [
 @pytest.mark.parametrize("charge", [None, 0, 2**53 + 1, 2**100])
 def test_batch_tables_preserve_lossless_rows_and_one_exact_charge(operation, charge, batch_cases):
     body = copy.deepcopy(batch_cases[operation]["response"])
+    # Synthetic per-item failure to exercise lossless mixed outcomes.
+    body["results"][1] = {
+        "index": 1,
+        "status": "error",
+        "error": {"code": "pricing_failed", "message": "Synthetic failure"},
+    }
     body["metadata"].update(fcu_charged=charge, fcu_quoted=999999)
     body["future_root"] = {"version": 2**100}
     # Future keys, even dotted names, must survive without colliding with typed columns.
@@ -76,6 +82,12 @@ def test_batch_tables_preserve_lossless_rows_and_one_exact_charge(operation, cha
 
 def test_integer_and_boolean_diagnostics_and_float_units_are_unchanged(batch_cases):
     body = copy.deepcopy(batch_cases[2]["response"])
+    # Synthetic per-item failure to exercise lossless mixed outcomes.
+    body["results"][1] = {
+        "index": 1,
+        "status": "error",
+        "error": {"code": "pricing_failed", "message": "Synthetic failure"},
+    }
     body["results"][0]["result"].update(iterations=2**100, used_fallback=False, residual=-0.0)
     frames = batch_to_frames(BatchImpliedVolatilityResponse.model_validate(body))
     assert frames.results["result.iterations"].dtype == object
@@ -94,7 +106,7 @@ def test_integer_and_boolean_diagnostics_and_float_units_are_unchanged(batch_cas
     ]:
         result = cls.model_validate(case["response"])
         frame = batch_to_frames(result).results
-        for name, value in result.results[0].result.greeks.model_dump().items():
+        for name, value in result.results[0].result.greeks.model_dump(exclude_unset=True).items():
             assert frame.loc[0, f"result.greeks.{name}"] == value
 
 

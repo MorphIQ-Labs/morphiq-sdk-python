@@ -1,6 +1,6 @@
 # Option pricing, Greeks, volatility and market regimes in Python
 
-Price European and American options, calculate ten Greeks, solve implied
+Price European and American options, calculate standard-five or all-ten Greeks, solve implied
 volatility, and identify market regimes from price histories.
 
 `morphiq-sdk` is a typed Python client for the MorphIQ API, with synchronous and
@@ -10,6 +10,12 @@ valuation, sensitivity analysis and market-regime identification.
 
 See the [documentation index](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/docs/README.md) for all feature guides and the
 [Python API reference](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/docs/API.md) for methods, models and errors.
+
+This client targets API **v0.5.0**, including public model discovery,
+standard-five Greeks, cost utilities and spend caps. SDK 0.1.x lacks these
+additions; use the release containing this contract update or install this checkout.
+See [model capabilities and migration](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/docs/MODELS.md): BSM/BS1993 support batches
+up to 100; QdFp and cash-dividend finite difference support single price and IV.
 
 ## Quickstart
 
@@ -70,26 +76,26 @@ and prints the JSON response. Example response from the recorded synthetic fixtu
 
 ```json
 {
-  "result": {
-    "price": 10.450583572185538,
-    "exercise_style": "european",
-    "option_type": "call",
-    "pricing_model": "black_scholes_merton",
-    "model_version": "black_scholes_merton/1"
-  },
   "metadata": {
-    "request_id": "fixture-european",
+    "request_id": "fr-18e4e90129262501-0000000000000003",
     "api_version": "v1",
-    "engine_version": "0.39.1",
+    "engine_version": "0.43.5",
     "engines": [
       {
         "name": "morphiq-risk",
-        "version": "0.39.1",
-        "revision": "b4c29d492ff96dddf9b25f745d2be4d253202164"
+        "version": "0.43.5",
+        "revision": "43ca7f93b9edda6078b49950de6a8b7d51a3e3ef"
       }
     ],
     "units_charged": 1,
     "compute_schedule_version": "2026-09-11"
+  },
+  "result": {
+    "price": 10.45058357218557,
+    "exercise_style": "european",
+    "option_type": "call",
+    "pricing_model": "black_scholes_merton",
+    "model_version": "black_scholes_merton/1"
   }
 }
 ```

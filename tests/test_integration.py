@@ -43,7 +43,11 @@ def test_native_api_sync_async_and_validation(cases):
             sync = client.price(request)
             asynchronous = asyncio.run(run_async(request))
             raw = httpx.post(f"{ENDPOINT}/v1/price", json=request.to_wire()).json()
-            assert sync.result.model_dump() == asynchronous.result.model_dump() == raw["result"]
+            assert (
+                sync.result.model_dump(exclude_unset=True)
+                == asynchronous.result.model_dump(exclude_unset=True)
+                == raw["result"]
+            )
             assert sync.result.price == pytest.approx(
                 case["response"]["result"]["price"], abs=1e-12
             )
@@ -72,8 +76,12 @@ def test_native_greeks_sync_async_and_validation(greeks_cases):
             sync = client.greeks(request)
             asynchronous = asyncio.run(run_async(request))
             raw = httpx.post(f"{ENDPOINT}/v1/greeks", json=request.to_wire()).json()
-            assert sync.result.model_dump() == asynchronous.result.model_dump() == raw["result"]
-            assert sync.result.model_dump() == case["response"]["result"]
+            assert (
+                sync.result.model_dump(exclude_unset=True)
+                == asynchronous.result.model_dump(exclude_unset=True)
+                == raw["result"]
+            )
+            assert sync.result.model_dump(exclude_unset=True) == case["response"]["result"]
             assert sync.metadata.fcu_charged is None
         request = GreeksRequest(**{**greeks_cases[0]["request"], "spot": -1})
         with pytest.raises(APIError) as error:
@@ -128,12 +136,16 @@ def test_native_implied_volatility_sync_async_and_validation(iv_cases):
             sync = client.implied_volatility(request)
             asynchronous = asyncio.run(run_async(request))
             raw = httpx.post(f"{ENDPOINT}/v1/implied-volatility", json=request.to_wire()).json()
-            assert sync.result.model_dump() == asynchronous.result.model_dump() == raw["result"]
-            assert sync.result.model_dump() == case["response"]["result"]
+            assert (
+                sync.result.model_dump(exclude_unset=True)
+                == asynchronous.result.model_dump(exclude_unset=True)
+                == raw["result"]
+            )
+            assert sync.result.model_dump(exclude_unset=True) == case["response"]["result"]
             assert sync.result.implied_volatility == pytest.approx(0.2, abs=1e-10)
             assert sync.result.residual_basis in ("forward_normalised_price", "option_price")
             assert sync.metadata.fcu_charged is None
-        for premium, status in [(-1, 422), (1000, 500)]:
+        for premium, status in [(-1, 422), (1000, 422)]:
             request = ImpliedVolatilityRequest(
                 **{**iv_cases[1]["request"], "market_price": premium}
             )
@@ -141,8 +153,8 @@ def test_native_implied_volatility_sync_async_and_validation(iv_cases):
                 client.implied_volatility(request)
             assert error.value.status_code == status and error.value.request_id
             if premium == 1000:
-                # The pinned service reports an unbracketable American solve as an engine error.
-                assert error.value.code == "pricing_failed"
+                # Out-of-bounds premiums fail request validation before numerical execution.
+                assert error.value.code == "invalid_pricing_request"
 
 
 def test_native_regime_sync_async_and_wire_response(regime_cases):
@@ -202,7 +214,9 @@ def test_native_batches_preserve_order_errors_and_metadata(batch_cases, index):
     assert [item.model_dump(exclude_unset=True) for item in sync.results] == raw["results"]
     assert [item.model_dump(exclude_unset=True) for item in asynchronous.results] == raw["results"]
     assert raw["results"] == case["response"]["results"]
-    assert [item.status for item in sync.results] == ["success", "error", "success"]
+    assert [item.status for item in sync.results] == (
+        ["success", "error", "success"] if index < 2 else ["success"] * 3
+    )
     assert sync.metadata.fcu_charged is None
 
 
@@ -243,3 +257,65 @@ def test_native_workflows_keep_chunk_metadata_and_order(batch_cases, index, max_
             assert [item.model_dump(exclude_unset=True) for item in attempt.response.results] == (
                 case["response"]["results"]
             )
+
+
+def test_native_discovery_standard_and_model_policy(cases):
+    from morphiq_sdk import BatchGreeksStandardRequest, BatchPriceRequest, GreeksStandardRequest
+
+    with MorphIQ(base_url=ENDPOINT, allow_unauthenticated=True) as client:
+        catalog = client.pricing_models()
+        assert (
+            catalog.model_dump(exclude_unset=True)
+            == httpx.get(f"{ENDPOINT}/v1/pricing/models").json()
+        )
+        request = GreeksStandardRequest(**cases[0]["request"])
+        response = client.greeks_standard(request)
+        raw = httpx.post(f"{ENDPOINT}/v1/greeks/standard", json=request.to_wire()).json()
+        assert response.result.model_dump(exclude_unset=True) == raw["result"]
+        batch = client.greeks_standard_batch(BatchGreeksStandardRequest(requests=[request] * 100))
+        assert len(batch.results) == 100
+        assert all(x.result.model_dump(exclude_unset=True) == raw["result"] for x in batch.results)
+        workflow = client.greeks_standard_workflow([request] * 3, chunk_size=2)
+        workflow.run()
+        assert [(a.start, a.stop) for a in workflow.attempts] == [(0, 2), (2, 3)]
+        for selector in ["black_scholes_merton_qdfp", "black_scholes_merton_fd"]:
+            values = {**cases[1]["request"], "pricing_model": selector}
+            price = client.price(PriceRequest(**values))
+            iv_request = {k: v for k, v in values.items() if k != "volatility"}
+            iv = client.implied_volatility(
+                ImpliedVolatilityRequest(**iv_request, market_price=price.result.price)
+            )
+            assert iv.result.implied_volatility == pytest.approx(0.2, abs=1e-6)
+            for method, model in [
+                ("greeks", GreeksRequest),
+                ("greeks_standard", GreeksStandardRequest),
+                ("analytics", AnalyticsRequest),
+            ]:
+                with pytest.raises(APIError) as error:
+                    getattr(client, method)(model(**values))
+                assert error.value.status_code == 400
+                assert error.value.code == "unsupported_operation"
+            with pytest.raises(APIError) as error:
+                client.price_batch(BatchPriceRequest(requests=[PriceRequest(**values)]))
+            assert error.value.status_code == 400
+        with pytest.raises(APIError) as retired:
+            client.price(
+                PriceRequest(**{**cases[1]["request"], "pricing_model": "bjerksund_stensland_2002"})
+            )
+        assert retired.value.status_code == 422
+        assert retired.value.code == "invalid_field"
+        assert "retired" in retired.value.message
+
+    async def run():
+        async with AsyncMorphIQ(base_url=ENDPOINT, allow_unauthenticated=True) as client:
+            assert (await client.pricing_models()).model_dump() == catalog.model_dump()
+            assert (
+                await client.greeks_standard(request)
+            ).result.model_dump() == response.result.model_dump()
+            workflow = client.greeks_standard_workflow(
+                [request] * 3, chunk_size=2, max_concurrency=2
+            )
+            await workflow.run()
+            assert workflow.state == "completed" and len(workflow.attempts) == 2
+
+    asyncio.run(run())

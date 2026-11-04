@@ -147,7 +147,7 @@ def test_analytics_errors_preserve_billing_evidence_without_retries(
     assert len(calls) == 1
     if failure != "timeout":
         assert caught.value.metadata.fcu_charged == charge
-        assert caught.value.request_id == "fixture-analytics-european-premium"
+        assert caught.value.request_id == analytics_cases[1]["response"]["metadata"]["request_id"]
         assert "analytics-test-key" not in str(caught.value) + caught.value.body.decode()
 
 

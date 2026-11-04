@@ -19,6 +19,8 @@ from .models import (
     BatchAnalyticsResponse,
     BatchGreeksRequest,
     BatchGreeksResponse,
+    BatchGreeksStandardRequest,
+    BatchGreeksStandardResponse,
     BatchImpliedVolatilityRequest,
     BatchImpliedVolatilityResponse,
     BatchPriceRequest,
@@ -28,10 +30,13 @@ from .models import (
     ErrorEnvelope,
     GreeksRequest,
     GreeksResponse,
+    GreeksStandardRequest,
+    GreeksStandardResponse,
     ImpliedVolatilityRequest,
     ImpliedVolatilityResponse,
     PriceRequest,
     PriceResponse,
+    PricingModelCatalog,
     RegimeRequest,
     RegimeResponse,
     ResponseMetadata,
@@ -43,11 +48,14 @@ _ResponseType = TypeVar(
     "_ResponseType",
     BatchPriceResponse,
     BatchGreeksResponse,
+    BatchGreeksStandardResponse,
     BatchImpliedVolatilityResponse,
     BatchAnalyticsResponse,
     PriceResponse,
+    PricingModelCatalog,
     RegimeResponse,
     GreeksResponse,
+    GreeksStandardResponse,
     ImpliedVolatilityResponse,
     AnalyticsResponse,
     CostQuoteResponse,
@@ -98,10 +106,12 @@ QuoteInput = (
     PriceRequest
     | RegimeRequest
     | GreeksRequest
+    | GreeksStandardRequest
     | ImpliedVolatilityRequest
     | AnalyticsRequest
     | BatchPriceRequest
     | BatchGreeksRequest
+    | BatchGreeksStandardRequest
     | BatchImpliedVolatilityRequest
     | BatchAnalyticsRequest
 )
@@ -109,10 +119,12 @@ _QUOTE_OPERATIONS = {
     PriceRequest: "price",
     RegimeRequest: "regime",
     GreeksRequest: "greeks",
+    GreeksStandardRequest: "greeks_standard",
     ImpliedVolatilityRequest: "implied_volatility",
     AnalyticsRequest: "analytics",
     BatchPriceRequest: "price_batch",
     BatchGreeksRequest: "greeks_batch",
+    BatchGreeksStandardRequest: "greeks_standard_batch",
     BatchImpliedVolatilityRequest: "implied_volatility_batch",
     BatchAnalyticsRequest: "analytics_batch",
 }
@@ -169,12 +181,16 @@ class _Configuration:
         key = api_key if api_key is not None else os.environ.get("MORPHIQ_API_KEY")
         if key is not None and (not key or not key.isascii() or any(c.isspace() for c in key)):
             raise ValueError("API key must be a non-empty ASCII token without whitespace.")
-        if not key and not allow_unauthenticated:
+        self._key = key
+        self._allow_unauthenticated = allow_unauthenticated
+
+    def require_auth(self) -> None:
+        if not self._key and not self._allow_unauthenticated:
             raise ValueError(
-                "Pass api_key or set MORPHIQ_API_KEY. Only a controlled open development "
+                "Pass api_key or set MORPHIQ_API_KEY for authenticated operations. "
+                "pricing_models() is public. Only a controlled open development "
                 "service should use allow_unauthenticated=True."
             )
-        self._key = key
 
     def headers(self) -> dict[str, str]:
         result = {"Accept": "application/json", "User-Agent": "morphiq-sdk-python"}
@@ -262,6 +278,14 @@ class MorphIQ:
         """Identify regime heads; preserve scores, applicability and provenance."""
         return self._post("v1/regime", request.to_wire(), RegimeResponse, max_cu=max_cu)
 
+    def greeks_standard(
+        self, request: GreeksStandardRequest, *, max_cu: int | None = None
+    ) -> GreeksStandardResponse:
+        """Return the option price and standard five Greeks, preserving the API's units."""
+        return self._post(
+            "v1/greeks/standard", request.to_wire(), GreeksStandardResponse, max_cu=max_cu
+        )
+
     def greeks(self, request: GreeksRequest, *, max_cu: int | None = None) -> GreeksResponse:
         """Return the option price and all ten Greeks, preserving the API's units."""
         return self._post("v1/greeks", request.to_wire(), GreeksResponse, max_cu=max_cu)
@@ -286,6 +310,16 @@ class MorphIQ:
         """Submit one batch; preserve ordered outcomes and count its charge once."""
         payload = request.to_wire()
         response = self._post("v1/price:batch", payload, BatchPriceResponse, max_cu=max_cu)
+        return _check_batch(response, len(payload["requests"]))
+
+    def greeks_standard_batch(
+        self, request: BatchGreeksStandardRequest, *, max_cu: int | None = None
+    ) -> BatchGreeksStandardResponse:
+        """Submit one batch; preserve ordered outcomes and count its charge once."""
+        payload = request.to_wire()
+        response = self._post(
+            "v1/greeks/standard:batch", payload, BatchGreeksStandardResponse, max_cu=max_cu
+        )
         return _check_batch(response, len(payload["requests"]))
 
     def greeks_batch(
@@ -322,6 +356,15 @@ class MorphIQ:
             _prepare_chunks(requests, BatchPriceRequest, chunk_size), self.price_batch
         )
 
+    def greeks_standard_workflow(
+        self, requests: Sequence[GreeksStandardRequest], *, chunk_size: int
+    ) -> BatchWorkflow[BatchGreeksStandardRequest, BatchGreeksStandardResponse]:
+        """Prepare explicit sequential chunks without sending requests; call run() once."""
+        return BatchWorkflow(
+            _prepare_chunks(requests, BatchGreeksStandardRequest, chunk_size),
+            self.greeks_standard_batch,
+        )
+
     def greeks_workflow(
         self, requests: Sequence[GreeksRequest], *, chunk_size: int
     ) -> BatchWorkflow[BatchGreeksRequest, BatchGreeksResponse]:
@@ -345,6 +388,12 @@ class MorphIQ:
         """Prepare explicit sequential chunks without sending requests; call run() once."""
         return BatchWorkflow(
             _prepare_chunks(requests, BatchAnalyticsRequest, chunk_size), self.analytics_batch
+        )
+
+    def pricing_models(self) -> PricingModelCatalog:
+        """Discover compiled models without a key, execution, or CU charge."""
+        return self._request(
+            "GET", "v1/pricing/models", None, PricingModelCatalog, billable=False, public=True
         )
 
     def cost_schedule(
@@ -386,12 +435,18 @@ class MorphIQ:
         params: dict[str, str] | None = None,
         max_cu: int | None = None,
         billable: bool = True,
+        public: bool = False,
     ) -> _ResponseType:
+        if not public:
+            self._config.require_auth()
         headers = _cost_headers(max_cu)
         try:
-            response = self._http.request(
+            request = self._http.build_request(
                 method, path, json=payload, params=params, headers=headers
             )
+            if public:
+                request.headers.pop("Authorization", None)
+            response = self._http.send(request)
         except httpx.TimeoutException:
             raise RequestTimeout(_transport_message("timed out", billable)) from None
         except httpx.RequestError:
@@ -448,6 +503,14 @@ class AsyncMorphIQ:
         """Identify regime heads; preserve scores, applicability and provenance."""
         return await self._post("v1/regime", request.to_wire(), RegimeResponse, max_cu=max_cu)
 
+    async def greeks_standard(
+        self, request: GreeksStandardRequest, *, max_cu: int | None = None
+    ) -> GreeksStandardResponse:
+        """Return the option price and standard five Greeks, preserving the API's units."""
+        return await self._post(
+            "v1/greeks/standard", request.to_wire(), GreeksStandardResponse, max_cu=max_cu
+        )
+
     async def greeks(self, request: GreeksRequest, *, max_cu: int | None = None) -> GreeksResponse:
         """Return the option price and all ten Greeks, preserving the API's units."""
         return await self._post("v1/greeks", request.to_wire(), GreeksResponse, max_cu=max_cu)
@@ -472,6 +535,16 @@ class AsyncMorphIQ:
         """Submit one batch; preserve ordered outcomes and count its charge once."""
         payload = request.to_wire()
         response = await self._post("v1/price:batch", payload, BatchPriceResponse, max_cu=max_cu)
+        return _check_batch(response, len(payload["requests"]))
+
+    async def greeks_standard_batch(
+        self, request: BatchGreeksStandardRequest, *, max_cu: int | None = None
+    ) -> BatchGreeksStandardResponse:
+        """Submit one batch; preserve ordered outcomes and count its charge once."""
+        payload = request.to_wire()
+        response = await self._post(
+            "v1/greeks/standard:batch", payload, BatchGreeksStandardResponse, max_cu=max_cu
+        )
         return _check_batch(response, len(payload["requests"]))
 
     async def greeks_batch(
@@ -512,6 +585,20 @@ class AsyncMorphIQ:
             max_concurrency=max_concurrency,
         )
 
+    def greeks_standard_workflow(
+        self,
+        requests: Sequence[GreeksStandardRequest],
+        *,
+        chunk_size: int,
+        max_concurrency: int = 1,
+    ) -> AsyncBatchWorkflow[BatchGreeksStandardRequest, BatchGreeksStandardResponse]:
+        """Prepare chunks without HTTP; max_concurrency explicitly bounds async execution."""
+        return AsyncBatchWorkflow(
+            _prepare_chunks(requests, BatchGreeksStandardRequest, chunk_size),
+            self.greeks_standard_batch,
+            max_concurrency=max_concurrency,
+        )
+
     def greeks_workflow(
         self, requests: Sequence[GreeksRequest], *, chunk_size: int, max_concurrency: int = 1
     ) -> AsyncBatchWorkflow[BatchGreeksRequest, BatchGreeksResponse]:
@@ -544,6 +631,12 @@ class AsyncMorphIQ:
             _prepare_chunks(requests, BatchAnalyticsRequest, chunk_size),
             self.analytics_batch,
             max_concurrency=max_concurrency,
+        )
+
+    async def pricing_models(self) -> PricingModelCatalog:
+        """Discover compiled models without a key, execution, or CU charge."""
+        return await self._request(
+            "GET", "v1/pricing/models", None, PricingModelCatalog, billable=False, public=True
         )
 
     async def cost_schedule(
@@ -585,12 +678,18 @@ class AsyncMorphIQ:
         params: dict[str, str] | None = None,
         max_cu: int | None = None,
         billable: bool = True,
+        public: bool = False,
     ) -> _ResponseType:
+        if not public:
+            self._config.require_auth()
         headers = _cost_headers(max_cu)
         try:
-            response = await self._http.request(
+            request = self._http.build_request(
                 method, path, json=payload, params=params, headers=headers
             )
+            if public:
+                request.headers.pop("Authorization", None)
+            response = await self._http.send(request)
         except httpx.TimeoutException:
             raise RequestTimeout(_transport_message("timed out", billable)) from None
         except httpx.RequestError:

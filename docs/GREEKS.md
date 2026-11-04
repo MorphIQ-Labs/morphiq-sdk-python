@@ -1,5 +1,8 @@
 # Option price and Greeks
 
+See [API v0.5.0 model capabilities](MODELS.md) for supported operations,
+100-item batch limits and unavailable-Greek semantics.
+
 `MorphIQ.greeks()` and `AsyncMorphIQ.greeks()` call `POST /v1/greeks`. One request
 returns the option price and all ten Greeks at the supplied volatility. The SDK
 does not calculate derivatives, choose the numerical model, or rescale values.
@@ -87,3 +90,15 @@ example retries automatically.
 
 See the [client/model reference](API.md) for shared configuration and errors,
 and the [documentation index](README.md) for related features.
+
+## Standard five
+
+`GreeksStandardRequest` and `client.greeks_standard(request)` return price,
+delta, gamma, theta, vega and rho from `/v1/greeks/standard`. The request fields
+match `GreeksRequest`; `max_cu` is supported. Use `BatchGreeksStandardRequest`
+with `greeks_standard_batch()` for a single synchronous batch, or explicitly
+chunk with `greeks_standard_workflow(..., chunk_size=100)`. Both clients expose
+these methods; async client calls use `await` and do not create server jobs.
+
+Run `python examples/greeks_standard.py` or open
+`notebooks/pricing/standard-five.ipynb` for an explicit single-request analysis.

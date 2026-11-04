@@ -1,10 +1,14 @@
 # Batch operations
 
+See [API v0.5.0 model capabilities](MODELS.md) for supported operations,
+100-item batch limits and unavailable-Greek semantics.
+
 Submit one explicit ordered batch with either `MorphIQ` or `AsyncMorphIQ`:
 
 | Method | Request | Response |
 | --- | --- | --- |
 | `price_batch()` | `BatchPriceRequest` | `BatchPriceResponse` |
+| `greeks_standard_batch()` | `BatchGreeksStandardRequest` | `BatchGreeksStandardResponse` |
 | `greeks_batch()` | `BatchGreeksRequest` | `BatchGreeksResponse` |
 | `implied_volatility_batch()` | `BatchImpliedVolatilityRequest` | `BatchImpliedVolatilityResponse` |
 | `analytics_batch()` | `BatchAnalyticsRequest` | `BatchAnalyticsResponse` |
@@ -14,7 +18,7 @@ request models. One call sends one HTTP request. These methods do not split batc
 create concurrent work, retry rejected requests, or replay failed items.
 For caller-sized chunks, optional async concurrency and per-request costs, use an
 explicit [batch workflow](WORKFLOWS.md).
-The reviewed wire schema allows 1–1024 items; the service applies the account's
+The reviewed wire schema allows 1–100 items; the service applies the account's
 actual limit, which may be lower. The SDK does not hardcode plan limits.
 
 Set `MORPHIQ_API_KEY`, then run a self-contained example:
@@ -30,7 +34,7 @@ For async calls, use `async with AsyncMorphIQ()` and await the same method name.
 
 ## Constructing each batch type
 
-This builds all four envelope types without sending requests, then submits **one
+This builds all five envelope types without sending requests, then submits **one
 analytics batch**. The single item is a synthetic European call. Add explicitly
 constructed items to each list to send more contracts in that batch.
 
@@ -39,9 +43,11 @@ from morphiq_sdk import (
     AnalyticsRequest,
     BatchAnalyticsRequest,
     BatchGreeksRequest,
+    BatchGreeksStandardRequest,
     BatchImpliedVolatilityRequest,
     BatchPriceRequest,
     GreeksRequest,
+    GreeksStandardRequest,
     ImpliedVolatilityRequest,
     MorphIQ,
     PriceRequest,
@@ -59,6 +65,9 @@ option = {
 }
 price_batch = BatchPriceRequest(requests=[PriceRequest(**option, volatility=0.20)])
 greeks_batch = BatchGreeksRequest(requests=[GreeksRequest(**option, volatility=0.20)])
+standard_batch = BatchGreeksStandardRequest(
+    requests=[GreeksStandardRequest(**option, volatility=0.2)]
+)
 iv_batch = BatchImpliedVolatilityRequest(
     requests=[ImpliedVolatilityRequest(**option, market_price=10.450583572185538)]
 )
@@ -80,6 +89,7 @@ print("Request ID:", response.metadata.request_id)
 ```
 
 The other calls are `client.price_batch(price_batch)`,
+`client.greeks_standard_batch(standard_batch)`,
 `client.greeks_batch(greeks_batch)` and `client.implied_volatility_batch(iv_batch)`.
 Each sends a separate request if executed. Each operation keeps the corresponding
 [single-request fields and units](API.md#option-request-fields).
@@ -151,3 +161,9 @@ remain unknown; use the request ID and account records to reconcile them.
 Use the optional [pandas adapter](PANDAS.md) to convert batch results into ordered
 analysis rows and a separate per-request charge table. Core SDK calls do not
 require pandas.
+
+Standard-five batching uses `BatchGreeksStandardRequest(requests=[...])` and
+`client.greeks_standard_batch(...)` (or `await` with `AsyncMorphIQ`). The batch
+contains `GreeksStandardRequest` items; ordering, error and charge handling match
+the other batch families. Public `client.pricing_models()` returns a typed
+`PricingModelCatalog` without authentication; see [model discovery](MODELS.md).

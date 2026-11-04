@@ -19,7 +19,13 @@ from morphiq_sdk import (
 @pytest.mark.parametrize("operation", range(4))
 def test_out_of_order_completions_keep_indices_and_exact_charges(operation, batch_cases):
     factory, request_type = OPERATIONS[operation]
-    case = batch_cases[operation]
+    case = copy.deepcopy(batch_cases[operation])
+    # Explicit synthetic item error; native IV validation now rejects the whole request.
+    case["response"]["results"][1] = {
+        "index": 1,
+        "status": "error",
+        "error": {"code": "pricing_failed", "message": "Synthetic failure"},
+    }
     requests = (
         request_type(**case["request"]).requests * 5 + request_type(**case["request"]).requests[:1]
     )

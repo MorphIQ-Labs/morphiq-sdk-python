@@ -51,13 +51,13 @@ semantics; the SDK does not adjust inputs or prices.
 | --- | --- |
 | `implied_volatility` | Decimal volatility: 0.2 is 20%. |
 | `iterations` | Solver iteration count as reported by the service. |
-| `used_fallback` | Algorithm provenance, not a solution-quality flag. American bisection reports true for live solves. |
+| `used_fallback` | Algorithm provenance, not a solution-quality flag. The value depends on the model and solver path; do not infer it from exercise style. |
 | `residual` | Solver error in the units named by `residual_basis`. |
 | `residual_basis` | `forward_normalised_price` or `option_price`; values on different bases are not directly comparable. |
 | `pricing_model`, `model_version` | Resolved model and version used for the solve. |
 
-The pinned native European fixture solves to `0.20000000000000007`, with 2
-iterations, `used_fallback=false` and residual `1.3877787807814457e-17` on the
+The pinned native European fixture solves to `0.1999999999999992`, with 2
+iterations, `used_fallback=false` and residual `1.3200960109770371e-17` on the
 `forward_normalised_price` basis. Its American counterpart uses the `option_price`
 basis. Full native results and provenance are retained in
 [the fixture](../tests/fixtures/implied_volatility.json).

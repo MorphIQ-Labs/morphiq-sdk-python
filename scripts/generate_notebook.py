@@ -72,6 +72,9 @@ def notebook() -> dict[str, Any]:
 
 ## Choose an analysis
 
+- [Available models](pricing/models.ipynb): inspect public model capabilities and constraints.
+- [Standard-five Greeks](pricing/standard-five.ipynb): price an option and inspect
+  its five primary sensitivities.
 - [Cost quotation](cost/quotation.ipynb): inspect active rates, quote a synthetic
   option, and explicitly execute with a maximum CU charge.
 - [Option pricing](pricing/options.ipynb): value European or American calls and puts,
@@ -113,6 +116,8 @@ def notebooks() -> dict[str, dict[str, Any]]:
     # Analysis notebooks are authored directly; tests verify their SDK requests.
     for filename in (
         "pricing/options.ipynb",
+        "pricing/models.ipynb",
+        "pricing/standard-five.ipynb",
         "regime/identification.ipynb",
         "cost/quotation.ipynb",
     ):

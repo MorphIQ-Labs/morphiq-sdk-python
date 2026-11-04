@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 METADATA = {
     "request_id": "cost-fixture",
     "api_version": "v1",
-    "service_version": "0.4.1",
+    "service_version": "0.5.0",
     "fcu_charged": 0,
 }
 QUOTE = {
@@ -66,6 +66,7 @@ def cases():
         ("pricing", sdk.PriceRequest, "price"),
         ("regime", sdk.RegimeRequest, "regime"),
         ("greeks", sdk.GreeksRequest, "greeks"),
+        ("greeks_standard", sdk.GreeksStandardRequest, "greeks_standard"),
         ("implied_volatility", sdk.ImpliedVolatilityRequest, "implied_volatility"),
         ("analytics", sdk.AnalyticsRequest, "analytics"),
     ]:
@@ -81,6 +82,23 @@ def cases():
         ]
     ):
         yield model.model_validate(batches[index]["request"]), operation, batches[index]
+
+    case = json.loads((ROOT / "tests/fixtures/greeks_standard.json").read_text())["cases"][0]
+    request = sdk.BatchGreeksStandardRequest(requests=[case["request"]])
+    yield (
+        request,
+        "greeks_standard_batch",
+        {
+            "path": "/v1/greeks/standard:batch",
+            "request": request.to_wire(),
+            "response": {
+                "metadata": case["response"]["metadata"],
+                "results": [
+                    {"index": 0, "status": "success", "result": case["response"]["result"]}
+                ],
+            },
+        },
+    )
 
 
 @pytest.mark.parametrize("mode", ["sync", "async"])
