@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MorphIQ · Spot solver</title>
+  <link rel="stylesheet" href="/style.css"><script src="/app.js" defer></script>
+</head>
+<body>
+<header><span class="brand">MORPHIQ <span>SDK EXAMPLES</span></span><span class="badge">LOCAL APP · API COMPUTE</span></header>
+<main>
+  <section class="intro"><p class="eyebrow">OPTIONS / INVERSE PRICING</p><h1>Find the underlying price.</h1>
+    <p>Choose a target option price or position P&amp;L. The API searches your spot range and returns boundaries, coverage and a charge receipt.</p>
+  </section>
+  <div class="layout">
+    <form id="controls">
+      <section class="card"><h2><span class="step">01</span> Base option</h2>
+        <div class="fields">
+          <label>Model<select id="model"><option value="bsm">BSM · European</option><option value="bs1993">BS1993 · American</option></select></label>
+          <label>Option<select id="option_type"><option value="call">Call</option><option value="put">Put</option></select></label>
+          <label>Underlying spot<input id="spot" type="number" step="any" value="100" required></label>
+          <label>Strike<input id="strike" type="number" step="any" value="100" required></label>
+          <label>Time to expiry · years<input id="time_to_expiry_years" type="number" step="any" value="1" required></label>
+          <label>Volatility · %<input id="volatility" type="number" step="any" value="20" required></label>
+          <label>Risk-free rate · %<input id="risk_free_rate" type="number" step="any" value="5" required></label>
+          <label>Dividend yield · %<input id="dividend_yield" type="number" step="any" value="0" required></label>
+        </div>
+      </section>
+      <section class="card"><h2><span class="step">02</span> Target &amp; search range</h2>
+        <div class="fields">
+          <label>Solve for<select id="target_kind"><option value="option_price">Option price</option><option value="position_pnl">Position P&amp;L</option></select></label>
+          <label>Target value<input id="target_value" type="number" step="any" value="15" required></label>
+          <label>Minimum spot<input id="min_spot" type="number" step="any" value="50" required></label>
+          <label>Maximum spot<input id="max_spot" type="number" step="any" value="150" required></label>
+        </div>
+        <div id="position" class="fields" hidden>
+          <label>Signed quantity<input id="quantity" type="number" step="any" value="2" required></label>
+          <label>Contract multiplier<input id="multiplier" type="number" step="any" value="100" required></label>
+        </div>
+        <p id="target-help" class="hint">Price is per underlying unit in the contract's currency.</p>
+        <details><summary>Scenario assumptions &amp; tolerances</summary><div class="fields">
+          <label>Elapsed time · years<input id="elapsed_time_years" type="number" step="any" value="0" required></label>
+          <label>Scenario volatility · %<input id="scenario_volatility" type="number" step="any" placeholder="Use base volatility"></label>
+          <label>Spot tolerance<input id="spot_tolerance" type="number" step="any" value="0.000000001" required></label>
+          <label>Target value tolerance<input id="value_tolerance" type="number" step="any" value="0.000001" required></label>
+        </div></details>
+        <p class="hint">Spot varies; strike, rates and yield stay fixed. Volatility stays fixed at the base or explicit scenario value. Time advances only by the elapsed years above. P&amp;L uses the base model mark, signed quantity and multiplier.</p>
+      </section>
+      <section class="card"><h2><span class="step">03</span> Quote, then solve</h2>
+        <p class="hint">Flat rate per complete solve: BSM 100 CU · BS1993 200 CU. Your authenticated quote is authoritative and does not reserve funds.</p>
+        <div class="fields"><label>Maximum CU per solve<input id="max_cu" type="text" inputmode="numeric" pattern="[0-9]+" value="100" required></label><div class="quoted"><span>QUOTED CU</span><strong id="quoted-cu">—</strong></div></div>
+        <div class="actions"><button type="button" id="quote">Get quote · 1 free request</button><button type="button" id="solve" class="primary" disabled>Solve · 1 paid request</button></div>
+        <p class="hint">Loading or changing inputs sends no API requests. Each solve requires a fresh quote and an explicit click. No automatic retries.</p>
+      </section>
+    </form>
+    <div class="results">
+      <section class="card" aria-live="polite"><p class="eyebrow">API RESULT</p><h2 id="result-title">Ready when you are.</h2><p id="status">Start with the synthetic option, or change the inputs. Get a quote to begin.</p>
+        <div id="outcome" hidden>
+          <div id="metrics" class="metrics"></div>
+          <h3>Target boundaries</h3><div id="boundaries"></div>
+          <h3>Sign regions</h3><div id="regions"></div>
+          <h3>Unresolved cells</h3><div id="cells"></div>
+          <p class="hint">Coverage is limited to the reported scan resolution and search range. An empty boundary list does not prove that no root exists globally.</p>
+          <details><summary>Base valuation &amp; fixed scenario inputs</summary><pre id="assumptions"></pre></details>
+        </div>
+      </section>
+      <section class="card"><h2>Request receipts</h2><p class="hint">Kept for this page session. Missing charge evidence means unknown, never zero. Full API responses preserve exact numbers and provenance.</p><div id="history"><p class="empty">No requests submitted.</p></div></section>
+    </div>
+  </div>
+  <footer>Uses <code>MorphIQ.quote()</code> and <code>MorphIQ.solve_spot()</code>. Requires the compatible scenario API deployment and account permission. Numerical work stays in the API.</footer>
+</main>
+</body>
+</html>

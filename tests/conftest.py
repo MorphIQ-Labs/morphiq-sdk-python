@@ -38,6 +38,16 @@ def batch_cases():
     return json.loads((ROOT / "tests/fixtures/batch.json").read_text())["cases"]
 
 
+@pytest.fixture
+def scenario_cases():
+    return json.loads((ROOT / "tests/fixtures/scenarios.json").read_text())["cases"]
+
+
+@pytest.fixture
+def scenario_quote_cases():
+    return json.loads((ROOT / "tests/fixtures/scenario_quotes.json").read_text())["cases"]
+
+
 @pytest.fixture(autouse=True)
 def isolate_credentials(monkeypatch):
     monkeypatch.delenv("MORPHIQ_API_KEY", raising=False)
@@ -45,10 +55,28 @@ def isolate_credentials(monkeypatch):
 
 
 @pytest.fixture
-def fixture_api(cases, regime_cases, greeks_cases, iv_cases, analytics_cases, batch_cases):
+def fixture_api(
+    cases,
+    regime_cases,
+    greeks_cases,
+    iv_cases,
+    analytics_cases,
+    batch_cases,
+    scenario_cases,
+    scenario_quote_cases,
+):
     """Loopback replay of contract fixtures; no numerical implementation or external calls."""
     received = []
-    cases = cases + regime_cases + greeks_cases + iv_cases + analytics_cases + batch_cases
+    cases = (
+        cases
+        + regime_cases
+        + greeks_cases
+        + iv_cases
+        + analytics_cases
+        + batch_cases
+        + scenario_cases
+        + scenario_quote_cases
+    )
 
     class Handler(BaseHTTPRequestHandler):
         def do_POST(self):
@@ -65,7 +93,7 @@ def fixture_api(cases, regime_cases, greeks_cases, iv_cases, analytics_cases, ba
             if match is None or self.path != match.get("path", "/v1/price"):
                 self.send_error(422)
                 return
-            self.send_response(200)
+            self.send_response(match.get("status", 200))
             self.send_header("Content-Type", "application/json")
             self.end_headers()
             self.wfile.write(json.dumps(match["response"]).encode())

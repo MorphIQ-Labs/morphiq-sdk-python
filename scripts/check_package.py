@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import shutil
 import subprocess
 import sys
 import tarfile
@@ -98,6 +99,25 @@ def main() -> None:
             cwd=temporary,
             check=True,
         )
+
+        # The browser example is shipped in the sdist, uses no optional extras,
+        # and can run outside the checkout with only the installed SDK wheel.
+        app_path = temporary / "solver_app"
+        shutil.copytree(
+            root / "examples/solver_app", app_path, ignore=shutil.ignore_patterns("__pycache__")
+        )
+        with tarfile.open(sources[0]) as source:
+            for name in ("app.py", "index.html", "app.js", "style.css", "README.md"):
+                member = source.extractfile(
+                    f"morphiq_sdk-{expected_version}/examples/solver_app/{name}"
+                )
+                assert member is not None and member.read() == (app_path / name).read_bytes()
+        subprocess.run(
+            [str(python), "-I", str(app_path / "app.py"), "--help"],
+            cwd=temporary,
+            check=True,
+        )
+        print("Standalone solver app and sdist assets verified with installed wheel")
 
         # Check the optional extra independently of the notebook/Yahoo environment.
         subprocess.run(

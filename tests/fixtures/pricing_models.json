@@ -2,7 +2,7 @@
   "models": [
     {
       "id": "black_scholes_merton",
-      "name": "Black\u2013Scholes\u2013Merton",
+      "name": "Black–Scholes–Merton",
       "version": "1",
       "model_version": "black_scholes_merton/1",
       "aliases": [],
@@ -20,6 +20,10 @@
         "greeks_standard",
         "greeks",
         "analytics"
+      ],
+      "scenario_operations": [
+        "evaluate",
+        "solve_spot"
       ],
       "batch_operations": [
         "price",
@@ -46,7 +50,7 @@
     },
     {
       "id": "black_scholes_merton_qdfp",
-      "name": "American Black\u2013Scholes\u2013Merton \u2014 QdFp",
+      "name": "American Black–Scholes–Merton — QdFp",
       "version": "1",
       "model_version": "qd_fixed_point/1",
       "aliases": [
@@ -64,6 +68,7 @@
         "price",
         "implied_volatility"
       ],
+      "scenario_operations": [],
       "batch_operations": [],
       "greeks": [],
       "guidance": "American calls and puts with a continuous dividend yield.",
@@ -72,7 +77,7 @@
     },
     {
       "id": "black_scholes_merton_fd",
-      "name": "Black\u2013Scholes finite difference (cash dividends)",
+      "name": "Black–Scholes finite difference (cash dividends)",
       "version": "1",
       "model_version": "cash_dividend_american/1",
       "aliases": [
@@ -91,6 +96,7 @@
         "price",
         "implied_volatility"
       ],
+      "scenario_operations": [],
       "batch_operations": [],
       "greeks": [],
       "guidance": "American options with scheduled cash dividends.",
@@ -140,7 +146,7 @@
     },
     {
       "id": "bjerksund_stensland_1993",
-      "name": "Bjerksund\u2013Stensland 1993",
+      "name": "Bjerksund–Stensland 1993",
       "version": "1",
       "model_version": "bjerksund_stensland_1993/1",
       "aliases": [],
@@ -158,6 +164,10 @@
         "greeks_standard",
         "greeks",
         "analytics"
+      ],
+      "scenario_operations": [
+        "evaluate",
+        "solve_spot"
       ],
       "batch_operations": [
         "price",
@@ -191,15 +201,15 @@
     }
   ],
   "greek_units": {
-    "charm": "`d\u00b2V/(dS dt)`, **per year**.",
-    "color": "`d\u00b3V/(dS\u00b2 dt)`, **per year**.",
+    "charm": "`d²V/(dS dt)`, **per year**.",
+    "color": "`d³V/(dS² dt)`, **per year**.",
     "delta": "`dV/dS`.",
-    "gamma": "`d\u00b2V/dS\u00b2`.",
+    "gamma": "`d²V/dS²`.",
     "rho": "`dV/dr`, per unit rate.",
     "theta": "`dV/dt`, **per year**.",
-    "vanna": "`d\u00b2V/(dS d\u03c3)`, per unit volatility.",
-    "vega": "`dV/d\u03c3`, per unit volatility.",
-    "veta": "`d\u00b2V/(d\u03c3 dt)`, **per year** per unit volatility.",
-    "volga": "`d\u00b2V/d\u03c3\u00b2`, per unit volatility squared."
+    "vanna": "`d²V/(dS dσ)`, per unit volatility.",
+    "vega": "`dV/dσ`, per unit volatility.",
+    "veta": "`d²V/(dσ dt)`, **per year** per unit volatility.",
+    "volga": "`d²V/dσ²`, per unit volatility squared."
   }
 }

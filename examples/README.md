@@ -110,3 +110,17 @@ python examples/tabular_price.py
 
 See [the pandas adapter guide](../docs/PANDAS.md) for partial results, identifiers,
 units and exact charge totals. Pandas is optional and conversion makes no API calls.
+
+## Scenario API
+
+`scenario_evaluate.py` quotes a +5 move or 3×3 grid. `solve_spot.py` and
+`solve_spot_async.py` quote a target price or signed position P&L. These scripts
+use synthetic inputs and require a compatible scenario deployment. Add
+`--max-cu` to explicitly execute once; otherwise they only quote. Use
+`--model bs1993` for American options. See [the guide](../docs/SCENARIOS.md).
+
+The [solver example app](solver_app/README.md) provides a local browser UI for
+BSM/BS1993 target price and position P&L solves. Run
+`python examples/solver_app/app.py` after configuring the same environment.
+Get a quote, choose a CU limit, then explicitly solve. All pricing and searching
+run through the SDK against the API; the app shows coverage and request receipts.

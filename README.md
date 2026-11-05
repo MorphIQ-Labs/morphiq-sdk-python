@@ -11,7 +11,9 @@ valuation, sensitivity analysis and market-regime identification.
 See the [documentation index](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/docs/README.md) for all feature guides and the
 [Python API reference](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/docs/API.md) for methods, models and errors.
 
-This client targets API **v0.5.0**, including public model discovery,
+This branch includes candidate [scenario evaluation and spot solving](docs/SCENARIOS.md)
+for API MR !209; SDK merge/release is held until the API is deployed.
+Its existing baseline is API **v0.5.0**, including public model discovery,
 standard-five Greeks, cost utilities and spend caps. SDK 0.1.x lacks these
 additions; use the release containing this contract update or install this checkout.
 See [model capabilities and migration](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/docs/MODELS.md): BSM/BS1993 support batches

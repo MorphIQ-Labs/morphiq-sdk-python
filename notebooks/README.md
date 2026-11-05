@@ -5,6 +5,8 @@ Use the controls to load data and run an analysis; no code edits are required.
 
 | Workspace | Tools | API requests per action |
 | --- | --- | --- |
+| [Scenario evaluation](scenarios/evaluate.ipynb) | Absolute underlying move or explicit grid, signed P&L, ordered results/errors and receipts | Quote: 1 free utility; execute: 1 capped request |
+| [Spot-target solve](scenarios/solve-spot.ipynb) | BSM/BS1993 target price/P&L, bounded search, all boundaries and unresolved cells | Quote: 1 free utility; execute: 1 capped solve |
 | [Available models](pricing/models.ipynb) | Public capabilities, aliases, constraints and engine versions; no key needed | Load: 1 free request |
 | [Standard-five Greeks](pricing/standard-five.ipynb) | BSM/BS1993 inputs, price, five primary sensitivities, unavailable reasons and CU | Calculate: 1 |
 | [Cost quotation](cost/quotation.ipynb) | Account rates, synthetic option inputs, conditional quote, editable execution ceiling | Schedule: 1 utility; quote: 1 utility; execute: 1 capped pricing request |

@@ -588,6 +588,7 @@ class PricingModelDescriptor(_Response):
     dividend_support: list[str]
     operations: list[str]
     batch_operations: list[str]
+    scenario_operations: list[str]
     greeks: list[str]
     guidance: str
     constraints: list[ModelConstraint]
@@ -600,3 +601,190 @@ class PricingModelCatalog(_EvidenceResponse):
     models: list[PricingModelDescriptor]
     engines: list[EngineIdentity]
     greek_units: dict[str, str]
+
+
+class ScenarioPosition(_Request):
+    """Signed contracts and positive underlying units per contract; no currency conversion."""
+
+    quantity: FiniteFloat
+    multiplier: FiniteFloat
+
+
+class ScenarioPoint(_Request):
+    """Independent changes from the base; spot_change=5 means five currency units."""
+
+    spot: FiniteFloat | None = None
+    spot_change: FiniteFloat | None = None
+    volatility: FiniteFloat | None = None
+    elapsed_time_years: FiniteFloat = 0.0
+
+
+class _ScenarioRequest(_Request):
+    contract: PriceRequest
+
+    def to_wire(self) -> dict[str, Any]:
+        """Revalidate nested edits and retain explicit nulls and omitted defaults."""
+        values = self.model_dump(exclude={"contract"}, exclude_unset=True)
+        values["contract"] = self.contract.to_wire()
+        validated = type(self).model_validate(values)
+        return validated.model_dump(mode="json", exclude_unset=True)
+
+
+class ScenarioRequest(_ScenarioRequest):
+    """Reprice 1–99 ordered points; account limits and model domains are server-owned."""
+
+    scenarios: list[ScenarioPoint] = Field(min_length=1, max_length=99)
+    position: ScenarioPosition | None = None
+
+
+class ScenarioOptionPriceTarget(_Request):
+    kind: Literal["option_price"]
+    value: FiniteFloat
+
+
+class ScenarioPositionPnlTarget(_Request):
+    kind: Literal["position_pnl"]
+    value: FiniteFloat
+    position: ScenarioPosition
+
+
+ScenarioSolveTarget = Annotated[
+    ScenarioOptionPriceTarget | ScenarioPositionPnlTarget, Field(discriminator="kind")
+]
+
+
+class ScenarioSpotSolveRequest(_ScenarioRequest):
+    """Bounded server-owned spot solve for an option price or base-relative position P&L."""
+
+    target: ScenarioSolveTarget
+    min_spot: FiniteFloat
+    max_spot: FiniteFloat
+    volatility: FiniteFloat | None = None
+    elapsed_time_years: FiniteFloat = 0.0
+    spot_tolerance: FiniteFloat = 1e-9
+    value_tolerance: FiniteFloat = 1e-6
+
+
+class ScenarioPriceInputs(PriceRequest):
+    """Echoed price inputs, retaining additive server fields without inventing values."""
+
+    model_config = ConfigDict(extra="allow", strict=True, allow_inf_nan=False, frozen=True)
+
+
+class ScenarioValuation(_Response):
+    inputs: ScenarioPriceInputs
+    result: PriceResult
+
+
+class ScenarioSuccess(_Response):
+    index: int = Field(ge=0, le=2**32 - 1)
+    inputs: ScenarioPriceInputs
+    status: Literal["success"]
+    result: PriceResult
+    price_change: FiniteFloat
+    position_pnl: FiniteFloat | None = None
+
+
+class ScenarioFailure(_Response):
+    index: int = Field(ge=0, le=2**32 - 1)
+    inputs: ScenarioPriceInputs
+    status: Literal["error"]
+    error: ErrorDetails
+
+
+ScenarioItem = Annotated[ScenarioSuccess | ScenarioFailure, Field(discriminator="status")]
+
+
+class ScenarioResponse(_EvidenceResponse):
+    base: ScenarioValuation
+    results: list[ScenarioItem]
+    position: ScenarioPosition | None = None
+    metadata: ResponseMetadata
+
+
+class ScenarioSolvePoint(_Response):
+    kind: Literal["point"]
+    spot: FiniteFloat
+    value: FiniteFloat
+    crossing: bool
+    refinements: int = Field(ge=0, le=2**32 - 1)
+    bracket_width: FiniteFloat
+
+
+class ScenarioSolveInterval(_Response):
+    kind: Literal["interval"]
+    min_spot: FiniteFloat
+    max_spot: FiniteFloat
+    value: FiniteFloat
+
+
+ScenarioSolveBoundary = Annotated[
+    ScenarioSolvePoint | ScenarioSolveInterval, Field(discriminator="kind")
+]
+ScenarioSolveSign = Literal["above_target", "below_target", "at_target"]
+ScenarioSolveUnresolvedReason = Literal[
+    "refinement_budget_exhausted",
+    "bracket_collapsed_above_tolerance",
+    "spot_tolerance_reached",
+    "representative_out_of_band",
+]
+
+
+class ScenarioSolveRegion(_Response):
+    min_spot: FiniteFloat
+    max_spot: FiniteFloat
+    sign: ScenarioSolveSign
+
+
+class ScenarioSolveUnresolvedCell(_Response):
+    lower_spot: FiniteFloat
+    upper_spot: FiniteFloat
+    best_spot: FiniteFloat
+    best_abs_value_error: FiniteFloat
+    reason: ScenarioSolveUnresolvedReason
+
+
+class ScenarioSolveResolved(_Response):
+    """Resolved at the declared scan resolution; not a global-completeness guarantee."""
+
+    status: Literal["resolved"]
+
+
+class ScenarioSolveUnresolved(_Response):
+    status: Literal["unresolved"]
+    cells: list[ScenarioSolveUnresolvedCell]
+
+
+ScenarioSolveCoverage = Annotated[
+    ScenarioSolveResolved | ScenarioSolveUnresolved, Field(discriminator="status")
+]
+
+
+class ScenarioSolveProfile(_Response):
+    id: str
+    scan_intervals: int = Field(ge=0, le=2**32 - 1)
+    max_refinements: int = Field(ge=0, le=2**32 - 1)
+    max_price_evaluations: int = Field(ge=0, le=2**64 - 1)
+
+
+class ScenarioSpotSolveResult(_Response):
+    pricing_model: str
+    model_version: str
+    base: ScenarioValuation
+    inputs: ScenarioPriceInputs
+    target: ScenarioSolveTarget
+    min_spot: FiniteFloat
+    max_spot: FiniteFloat
+    spot_tolerance: FiniteFloat
+    value_tolerance: FiniteFloat
+    profile: ScenarioSolveProfile
+    reference_net_value: FiniteFloat
+    boundaries: list[ScenarioSolveBoundary]
+    regions: list[ScenarioSolveRegion]
+    coverage: ScenarioSolveCoverage
+    price_evaluations: int = Field(ge=0, le=2**64 - 1)
+
+
+class ScenarioSpotSolveResponse(_EvidenceResponse):
+    result: ScenarioSpotSolveResult
+    metadata: ResponseMetadata

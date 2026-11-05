@@ -15,6 +15,22 @@ import nbformat
 from nbclient import NotebookClient
 
 NOTEBOOK_CASES = {
+    "scenarios/evaluate.ipynb": (
+        "scenario-bsm-point-quote",
+        "scenario-bsm-point",
+        "scenario-bsm-grid-quote",
+        "scenario-bsm-grid",
+        "scenario-bs1993-point-quote",
+        "scenario-bs1993-point",
+    ),
+    "scenarios/solve-spot.ipynb": (
+        "solve-bsm-price-quote",
+        "solve-bsm-price",
+        "solve-bsm-pnl-quote",
+        "solve-bsm-pnl",
+        "solve-bs1993-pnl-quote",
+        "solve-bs1993-pnl",
+    ),
     "start-here.ipynb": (),
     "pricing/models.ipynb": (),  # Explicit actions tested in test_api_v050.
     "pricing/standard-five.ipynb": (),
@@ -36,6 +52,70 @@ NOTEBOOK_CASES = {
 
 def workspace_exercise(filename: str, prices: list[float]) -> str:
     """Exercise real widget actions with explicit synthetic market data in offline checks."""
+    if filename == "scenarios/evaluate.ipynb":
+        return """
+assert history == [] and last_response is None and run_button.disabled
+quote_button.click()
+assert last_quote.quote.total_fcu == 2 and len(history) == 1
+max_cu.value = 1
+run_button.click()
+assert len(history) == 1 and last_response is None
+max_cu.value = 2
+run_button.click()
+assert last_response.results[0].status == 'success'
+assert last_response.results[0].inputs.spot == 105
+assert len(history) == 2 and history[-1]['cu_charged'] == 2
+spot_change.value = 10
+assert last_response is None and last_quote is None and run_button.disabled
+assert history[-1]['request']['scenarios'][0]['spot_change'] == 5
+mode.value = 'grid'
+quote_button.click()
+max_cu.value = 10
+run_button.click()
+assert len(last_response.results) == 9 and history[-1]['cu_charged'] == 10
+model.value = 'bs1993'
+mode.value = 'point'
+spot_change.value = 5
+quote_button.click()
+max_cu.value = 4
+run_button.click()
+assert last_response.base.result.pricing_model == 'bjerksund_stensland_1993'
+assert len(history) == 6 and history[-1]['cu_charged'] == 4
+mode.value = 'grid'
+grid_spots.value = 'invalid'
+quote_button.click()
+assert len(history) == 6 and last_response is None
+assert not quote_button.disabled and run_button.disabled
+"""
+    if filename == "scenarios/solve-spot.ipynb":
+        return """
+assert history == [] and last_response is None and run_button.disabled
+quote_button.click()
+assert last_quote.quote.total_fcu == 100 and history[-1]['cu_charged'] == 0
+run_button.click()
+assert last_response.result.coverage.status == 'resolved'
+assert last_response.result.boundaries[0].kind == 'point'
+assert last_response.metadata.fcu_charged == 100
+assert history[-1]['request']['target']['kind'] == 'option_price'
+target_kind.value = 'position_pnl'
+target_value.value = 500
+assert last_response is None and run_button.disabled
+quote_button.click()
+run_button.click()
+assert last_response.result.target.kind == 'position_pnl'
+assert history[-1]['cu_charged'] == 100
+model.value = 'bs1993'
+quote_button.click()
+max_cu.value = 199
+run_button.click()
+assert len(history) == 5 and last_response is None
+max_cu.value = 200
+run_button.click()
+assert len(history) == 6 and history[-1]['cu_charged'] == 200
+assert last_response.result.pricing_model == 'bjerksund_stensland_1993'
+assert '400 CU' in usage.value and '0 unknown' in usage.value
+assert not quote_button.disabled and run_button.disabled
+"""
     if filename == "pricing/options.ipynb":
         return """
 assert price_history == []
