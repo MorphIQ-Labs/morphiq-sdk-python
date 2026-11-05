@@ -188,8 +188,10 @@ no real credentials; native API integration is opt-in. See
 [CONTRIBUTING.md](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/CONTRIBUTING.md) and [RELEASE.md](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/RELEASE.md).
 
 Clients make no automatic retries and do not follow redirects. A timeout
-may leave work charged. Missing `fcu_charged` means unreported, not zero; internal
-`units_charged` is not a commercial CU charge.
+may leave work charged. Only `fcu_quoted` and `fcu_charged` report commercial CUs.
+Missing `fcu_charged` means unreported, not zero. The retired `units_charged` and
+`compute_schedule_version` fields are optional; they remain accepted from older
+deployments and are never used to calculate a charge.
 
 The SDK preserves server results, numerical diagnostics, request IDs, engine
 provenance and commercial Compute Units (CU). Numerical engines, model selection,
