@@ -183,3 +183,8 @@ They quote only unless you supply `--max-cu`. Interactive workspaces:
 [evaluation](../notebooks/scenarios/evaluate.ipynb) and
 [spot targeting](../notebooks/scenarios/solve-spot.ipynb). Setup and control edits
 send no requests; action buttons state request counts and require an explicit ceiling.
+
+For a complete client demonstration, run the [solver example app](../examples/solver_app/README.md).
+It supplies a browser form, a Python SDK adapter, explicit quote/solve actions,
+boundary/coverage tables and session receipts. Its acceptance walkthrough covers
+both models, both target types, cap refusal and incomplete/non-unique outcomes.

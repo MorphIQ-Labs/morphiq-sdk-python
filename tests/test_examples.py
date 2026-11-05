@@ -26,7 +26,7 @@ def test_examples_import_without_credentials_or_requests():
             sys.executable,
             "-c",
             "import examples.cost_quote, examples.price_european, examples.price_american, "
-            "examples.price_async, examples.quickstart, "
+            "examples.price_async, examples.quickstart, examples.solver_app.app, "
             "examples.identify_regime, examples.identify_regime_async, "
             "examples.greeks, examples.greeks_async, "
             "examples.implied_volatility, examples.implied_volatility_async, "
