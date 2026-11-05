@@ -1,0 +1,87 @@
+{
+  "api_source_commit": "7b4f233b2222fbb95b2492d5c57dbde1ac32e571",
+  "sdk_base_commit": "043287a",
+  "platform": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+  "merge_hold": "SDK main merge/release requires verified deployment of the matching API. Draft PR, auto-merge off.",
+  "checks": [
+    {
+      "command": ".venv/bin/python -m pytest -q",
+      "python": "3.14",
+      "passed": 647,
+      "skipped": 19,
+      "note": "Native integration intentionally opt-in; six subsequently added notebook outcome tests validated separately."
+    },
+    {
+      "command": ".venv311/bin/python -m pytest -q",
+      "python": "3.11",
+      "passed": 647,
+      "skipped": 19,
+      "note": "Same scope as Python 3.14."
+    },
+    {
+      "command": "python -m pytest -q tests/test_scenario_notebooks.py tests/test_examples.py -k \"workspace_preserves or generated_notebook\"",
+      "python": [
+        "3.11",
+        "3.14"
+      ],
+      "passed_each": 14,
+      "note": "Final notebook code: six additional outcome/error tests plus all eight notebook setup/action cases."
+    },
+    {
+      "command": "MORPHIQ_TEST_API_URL=<controlled open native release API> python -m pytest -q -m integration",
+      "passed": 19
+    },
+    {
+      "command": "MORPHIQ_TEST_API_URL=<controlled protected preview> MORPHIQ_TEST_API_KEY=<synthetic key> python -m pytest -q tests/test_scenarios.py -m integration",
+      "passed": 1,
+      "note": "Exact 100/200 CU quote/receipt parity and below-cap refusals; ephemeral ledger."
+    },
+    {
+      "command": "python -m ruff check .",
+      "status": "passed"
+    },
+    {
+      "command": "python -m ruff format --check .",
+      "status": "passed"
+    },
+    {
+      "command": "python -m mypy",
+      "status": "passed"
+    },
+    {
+      "command": "python scripts/generate_notebook.py --check",
+      "status": "passed"
+    },
+    {
+      "command": "python scripts/check_package.py",
+      "status": "passed",
+      "note": "Built sdist/wheel and exercised isolated wheel installs outside checkout."
+    },
+    {
+      "command": "docker build -t morphiq-sdk-scenario:test . && python scripts/check_notebook_container.py --image morphiq-sdk-scenario:test",
+      "status": "passed",
+      "note": "All eight workspaces, token authentication and persistence; test container and volume removed."
+    }
+  ],
+  "limitations": [
+    "No production calls, deployment, package publication or merge.",
+    "Initial debug native integration hit the unchanged 10-second deadline on existing cash-dividend IV; optimized build passed all 19 cases.",
+    "Historical fixtures retain original capture provenance and separate candidate validation identity."
+  ],
+  "sha256": {
+    "contracts/openapi.json": "38a0c933ea805f132bc4245867c3130c5a1db94e23cb4837872abf8c27e33ccc",
+    "contracts/provenance.json": "4d13d4054a2cde8216a0a82663ecbdfd9428ec7ddccf5992130ed6f319f027ff",
+    "src/morphiq_sdk/client.py": "65bbbdc601690ea2ee3efab17b10f05def726b2866d4e174ce133c23ff136213",
+    "src/morphiq_sdk/models.py": "a20f9493c5792cb9cc05458d030523c4851590aa56b68250cb00fd24a5ef451d",
+    "src/morphiq_sdk/__init__.py": "833ffea18e1e918fb423b655499e88c5003ad7d7d522cf16a6be7fac9ae8e628",
+    "tests/fixtures/scenarios.json": "c73be677e7387deac573d20bb233d6f2ee68277b1b1143466f46a5ad9fd40fc6",
+    "tests/fixtures/scenario_quotes.json": "f392059067bb801d810645952ce9ff48ad6a3dc4d5b8f88119e43e2cc3b47275",
+    "tests/fixtures/pricing_models.json": "9f717398d875d2fe0d04a93e176d6a0412cbc128e693e52a5c9a991765cc572e",
+    "requirements-dev.txt": "9240428b0b2867b99af7aa790842f79d67591396ffd240f958da741092a5451f",
+    "notebooks/scenarios/evaluate.ipynb": "6c6fb051ec319d47b43c95911b3a0b2d168863b8056f773c08184acef613ee27",
+    "notebooks/scenarios/solve-spot.ipynb": "e55a09f267d21e8ea67132dd3d01ea54d9db8ef9a2d6c170c55f2d1e7921e938"
+  },
+  "native_release_binary_sha256": "9f68e648f5fbbcce122cf46d1f685fc57896d37fb823ba93a09c5f4b6d95c543",
+  "native_preview_binary_sha256": "485ca13ab77fe174443d17620e419af1f6032f95af407304a8393566f2b275d3",
+  "docker_image_id": "sha256:001b7706e0254876b0f1d54339273b9227b1cd9ceef2553792133658fa1cd04a"
+}

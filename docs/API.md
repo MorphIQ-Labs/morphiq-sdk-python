@@ -37,6 +37,8 @@ All request/response classes below are exported from `morphiq_sdk`.
 
 | Method | Request type | Response type | Route |
 | --- | --- | --- | --- |
+| `evaluate_scenarios(request)` | `ScenarioRequest` | `ScenarioResponse` | `/v1/scenarios/evaluate` |
+| `solve_spot(request)` | `ScenarioSpotSolveRequest` | `ScenarioSpotSolveResponse` | `/v1/scenarios/solve-spot` |
 | `price(request)` | `PriceRequest` | `PriceResponse` | `/v1/price` |
 | `greeks_standard(request)` | `GreeksStandardRequest` | `GreeksStandardResponse` | `/v1/greeks/standard` |
 | `greeks(request)` | `GreeksRequest` | `GreeksResponse` | `/v1/greeks` |
@@ -205,3 +207,7 @@ Standard-five batching uses `BatchGreeksStandardRequest(requests=[...])` and
 contains `GreeksStandardRequest` items; ordering, error and charge handling match
 the other batch families. Public `client.pricing_models()` returns a typed
 `PricingModelCatalog` without authentication; see [model discovery](MODELS.md).
+
+See [scenarios and spot-target solving](SCENARIOS.md) for BSM/BS1993 inputs, typed
+point/interval boundaries, unresolved coverage, flat solve charges and examples.
+Both methods accept an optional `max_cu`; `quote()` accepts both request types.

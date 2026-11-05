@@ -44,8 +44,8 @@ def test_greeks_contract_and_native_fixture_identity(greeks_cases):
     schema = json.loads((ROOT / "contracts/openapi.json").read_text())
     fixture = json.loads((ROOT / "tests/fixtures/greeks.json").read_text())
     pin = json.loads((ROOT / "contracts/provenance.json").read_text())
-    assert fixture["source_commit"] == pin["source_commit"]
-    assert fixture["contract_sha256"] == pin["sha256"]
+    assert fixture["validation"]["source_commit"] == pin["source_commit"]
+    assert fixture["validation"]["contract_sha256"] == pin["sha256"]
     assert schema["paths"]["/v1/greeks"]["post"]["operationId"] == "greeksAllTen"
     for model, name in [
         (GreeksRequest, "GreeksAllTenRequest"),

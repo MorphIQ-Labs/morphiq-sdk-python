@@ -297,3 +297,11 @@ Inspect the error code, the current quote and your budget before choosing a new
 ceiling. Other admission errors, including funding refusals, can occur before
 the ceiling check. Malformed or duplicate HTTP ceilings return 422; the SDK
 rejects invalid `max_cu` values locally before sending a request.
+
+## Scenario requests
+
+`quote()` accepts `ScenarioRequest` and `ScenarioSpotSolveRequest`. Evaluation
+uses the existing base-plus-points price-batch charge. A complete solve uses the
+approved flat request rate: BSM 100 CU or BS1993 200 CU, independent of internal
+evaluation count. Quotes perform no solving. See [scenario billing and receipts](SCENARIOS.md#flat-charges-and-receipts).
+Solver access requires the matching deployment, signed schedule and permission.

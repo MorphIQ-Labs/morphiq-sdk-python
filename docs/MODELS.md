@@ -41,3 +41,8 @@ reasons available in the `result.greeks.unavailable` column and full `outcome`.
 The API owns these capabilities and may evolve them. Query discovery for current
 capabilities and preserve actionable server errors instead of copying this table
 into client admission logic.
+
+The candidate catalog adds `scenario_operations`: BSM and BS1993 expose
+`evaluate` and `solve_spot`; other models expose an empty list. This describes
+compiled capability, not account entitlement or live deployment. See
+[scenario availability and usage](SCENARIOS.md).

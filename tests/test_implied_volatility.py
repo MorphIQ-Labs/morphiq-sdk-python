@@ -45,8 +45,8 @@ def test_implied_volatility_contract_and_native_fixture_identity(iv_cases):
     schema = json.loads((ROOT / "contracts/openapi.json").read_text())
     fixture = json.loads((ROOT / "tests/fixtures/implied_volatility.json").read_text())
     pin = json.loads((ROOT / "contracts/provenance.json").read_text())
-    assert fixture["source_commit"] == pin["source_commit"]
-    assert fixture["contract_sha256"] == pin["sha256"]
+    assert fixture["validation"]["source_commit"] == pin["source_commit"]
+    assert fixture["validation"]["contract_sha256"] == pin["sha256"]
     assert schema["paths"]["/v1/implied-volatility"]["post"]["operationId"] == "impliedVolatility"
     for model, name in [
         (ImpliedVolatilityRequest, "ImpliedVolatilityRequest"),

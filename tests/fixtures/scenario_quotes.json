@@ -1,0 +1,1336 @@
+{
+  "source": {
+    "api_commit": "7b4f233b2222fbb95b2492d5c57dbde1ac32e571",
+    "schema_sha256": "38a0c933ea805f132bc4245867c3130c5a1db94e23cb4837872abf8c27e33ccc",
+    "binary_sha256": "485ca13ab77fe174443d17620e419af1f6032f95af407304a8393566f2b275d3",
+    "inputs": "Synthetic local protected preview, plans.pro@8, schedule v5; no production account or key."
+  },
+  "cases": [
+    {
+      "name": "scenario-bsm-point-quote",
+      "path": "/v1/cost/quote",
+      "request": {
+        "operation": "scenario_evaluate",
+        "request": {
+          "contract": {
+            "exercise_style": "european",
+            "pricing_model": "black_scholes_merton",
+            "option_type": "call",
+            "spot": 100.0,
+            "strike": 100.0,
+            "time_to_expiry_years": 1.0,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0.0,
+            "volatility": 0.2
+          },
+          "scenarios": [
+            {
+              "spot_change": 5.0
+            }
+          ],
+          "position": {
+            "quantity": 1.0,
+            "multiplier": 100.0
+          }
+        }
+      },
+      "response": {
+        "quote": {
+          "total_fcu": 2,
+          "fixed_fcu": 0,
+          "variable_fcu": 2,
+          "minimum_charge_fcu": 0,
+          "lines": [
+            {
+              "operation": "price",
+              "model": "black_scholes_merton/1",
+              "billing_unit": "contract",
+              "quantity": 2,
+              "fcu_per_unit": 1,
+              "variable_fcu": 2
+            }
+          ]
+        },
+        "resolved_models": [
+          {
+            "model": "black_scholes_merton/1",
+            "quantity": 2
+          }
+        ],
+        "metadata": {
+          "request_id": "fr-18e50409e8d4af06-0000000000000002",
+          "api_version": "v1",
+          "service_version": "0.5.0",
+          "fcu_charged": 0,
+          "fcu_schedule_id": "fcu-qdfp-v1",
+          "fcu_schedule_version": "2026-11-05-flat-solves",
+          "policy": {
+            "snapshot_id": "safety.envelope@1+plans.pro@8+entitlements.qdfp-v1@4+limits.pro@1+schedules.fcu-qdfp-v1@5+budgets.pro-monthly@1+overage.hard-stop@1+auth.standard-api-key@1+data-policy.standard@1",
+            "revision": "0daf1a62614196b2089f51acdbf1b5c3d1ce6fe828b663cb1e395f7e23313ef0",
+            "plan": "plans.pro@8",
+            "records": [
+              "safety.envelope@1",
+              "plans.pro@8",
+              "entitlements.qdfp-v1@4",
+              "limits.pro@1",
+              "schedules.fcu-qdfp-v1@5",
+              "budgets.pro-monthly@1",
+              "overage.hard-stop@1",
+              "auth.standard-api-key@1",
+              "data-policy.standard@1"
+            ]
+          },
+          "remaining_fcu_instance_estimate": 100000,
+          "budget_period": "utc_calendar_month"
+        }
+      }
+    },
+    {
+      "name": "scenario-bsm-grid-quote",
+      "path": "/v1/cost/quote",
+      "request": {
+        "operation": "scenario_evaluate",
+        "request": {
+          "contract": {
+            "exercise_style": "european",
+            "pricing_model": "black_scholes_merton",
+            "option_type": "call",
+            "spot": 100.0,
+            "strike": 100.0,
+            "time_to_expiry_years": 1.0,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0.0,
+            "volatility": 0.2
+          },
+          "scenarios": [
+            {
+              "spot": 95.0,
+              "volatility": 0.15
+            },
+            {
+              "spot": 95.0,
+              "volatility": 0.2
+            },
+            {
+              "spot": 95.0,
+              "volatility": 0.25
+            },
+            {
+              "spot": 100.0,
+              "volatility": 0.15
+            },
+            {
+              "spot": 100.0,
+              "volatility": 0.2
+            },
+            {
+              "spot": 100.0,
+              "volatility": 0.25
+            },
+            {
+              "spot": 105.0,
+              "volatility": 0.15
+            },
+            {
+              "spot": 105.0,
+              "volatility": 0.2
+            },
+            {
+              "spot": 105.0,
+              "volatility": 0.25
+            }
+          ],
+          "position": {
+            "quantity": 1.0,
+            "multiplier": 100.0
+          }
+        }
+      },
+      "response": {
+        "quote": {
+          "total_fcu": 10,
+          "fixed_fcu": 0,
+          "variable_fcu": 10,
+          "minimum_charge_fcu": 0,
+          "lines": [
+            {
+              "operation": "price",
+              "model": "black_scholes_merton/1",
+              "billing_unit": "contract",
+              "quantity": 10,
+              "fcu_per_unit": 1,
+              "variable_fcu": 10
+            }
+          ]
+        },
+        "resolved_models": [
+          {
+            "model": "black_scholes_merton/1",
+            "quantity": 10
+          }
+        ],
+        "metadata": {
+          "request_id": "fr-18e50409e8d4af06-0000000000000004",
+          "api_version": "v1",
+          "service_version": "0.5.0",
+          "fcu_charged": 0,
+          "fcu_schedule_id": "fcu-qdfp-v1",
+          "fcu_schedule_version": "2026-11-05-flat-solves",
+          "policy": {
+            "snapshot_id": "safety.envelope@1+plans.pro@8+entitlements.qdfp-v1@4+limits.pro@1+schedules.fcu-qdfp-v1@5+budgets.pro-monthly@1+overage.hard-stop@1+auth.standard-api-key@1+data-policy.standard@1",
+            "revision": "0daf1a62614196b2089f51acdbf1b5c3d1ce6fe828b663cb1e395f7e23313ef0",
+            "plan": "plans.pro@8",
+            "records": [
+              "safety.envelope@1",
+              "plans.pro@8",
+              "entitlements.qdfp-v1@4",
+              "limits.pro@1",
+              "schedules.fcu-qdfp-v1@5",
+              "budgets.pro-monthly@1",
+              "overage.hard-stop@1",
+              "auth.standard-api-key@1",
+              "data-policy.standard@1"
+            ]
+          },
+          "remaining_fcu_instance_estimate": 99998,
+          "budget_period": "utc_calendar_month"
+        }
+      }
+    },
+    {
+      "name": "scenario-bsm-partial-quote",
+      "path": "/v1/cost/quote",
+      "request": {
+        "operation": "scenario_evaluate",
+        "request": {
+          "contract": {
+            "exercise_style": "european",
+            "pricing_model": "black_scholes_merton",
+            "option_type": "call",
+            "spot": 100.0,
+            "strike": 100.0,
+            "time_to_expiry_years": 1.0,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0.0,
+            "volatility": 0.2
+          },
+          "scenarios": [
+            {
+              "spot_change": 5.0
+            },
+            {
+              "volatility": -1.0
+            },
+            {
+              "spot_change": 5.0
+            }
+          ],
+          "position": {
+            "quantity": 1.0,
+            "multiplier": 100.0
+          }
+        }
+      },
+      "response": {
+        "quote": {
+          "total_fcu": 4,
+          "fixed_fcu": 0,
+          "variable_fcu": 4,
+          "minimum_charge_fcu": 0,
+          "lines": [
+            {
+              "operation": "price",
+              "model": "black_scholes_merton/1",
+              "billing_unit": "contract",
+              "quantity": 4,
+              "fcu_per_unit": 1,
+              "variable_fcu": 4
+            }
+          ]
+        },
+        "resolved_models": [
+          {
+            "model": "black_scholes_merton/1",
+            "quantity": 4
+          }
+        ],
+        "metadata": {
+          "request_id": "fr-18e50409e8d4af06-0000000000000006",
+          "api_version": "v1",
+          "service_version": "0.5.0",
+          "fcu_charged": 0,
+          "fcu_schedule_id": "fcu-qdfp-v1",
+          "fcu_schedule_version": "2026-11-05-flat-solves",
+          "policy": {
+            "snapshot_id": "safety.envelope@1+plans.pro@8+entitlements.qdfp-v1@4+limits.pro@1+schedules.fcu-qdfp-v1@5+budgets.pro-monthly@1+overage.hard-stop@1+auth.standard-api-key@1+data-policy.standard@1",
+            "revision": "0daf1a62614196b2089f51acdbf1b5c3d1ce6fe828b663cb1e395f7e23313ef0",
+            "plan": "plans.pro@8",
+            "records": [
+              "safety.envelope@1",
+              "plans.pro@8",
+              "entitlements.qdfp-v1@4",
+              "limits.pro@1",
+              "schedules.fcu-qdfp-v1@5",
+              "budgets.pro-monthly@1",
+              "overage.hard-stop@1",
+              "auth.standard-api-key@1",
+              "data-policy.standard@1"
+            ]
+          },
+          "remaining_fcu_instance_estimate": 99988,
+          "budget_period": "utc_calendar_month"
+        }
+      }
+    },
+    {
+      "name": "solve-bsm-price-quote",
+      "path": "/v1/cost/quote",
+      "request": {
+        "operation": "scenario_spot_solve",
+        "request": {
+          "contract": {
+            "exercise_style": "european",
+            "pricing_model": "black_scholes_merton",
+            "option_type": "call",
+            "spot": 100.0,
+            "strike": 100.0,
+            "time_to_expiry_years": 1.0,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0.0,
+            "volatility": 0.2
+          },
+          "target": {
+            "kind": "option_price",
+            "value": 15.0
+          },
+          "min_spot": 50.0,
+          "max_spot": 150.0
+        }
+      },
+      "response": {
+        "quote": {
+          "total_fcu": 100,
+          "fixed_fcu": 0,
+          "variable_fcu": 100,
+          "minimum_charge_fcu": 0,
+          "lines": [
+            {
+              "operation": "scenario_spot_solve",
+              "model": "black_scholes_merton/1",
+              "billing_unit": "solve",
+              "quantity": 1,
+              "fcu_per_unit": 100,
+              "variable_fcu": 100
+            }
+          ]
+        },
+        "resolved_models": [
+          {
+            "model": "black_scholes_merton/1",
+            "quantity": 1
+          }
+        ],
+        "metadata": {
+          "request_id": "fr-18e50409e8d4af06-0000000000000008",
+          "api_version": "v1",
+          "service_version": "0.5.0",
+          "fcu_charged": 0,
+          "fcu_schedule_id": "fcu-qdfp-v1",
+          "fcu_schedule_version": "2026-11-05-flat-solves",
+          "policy": {
+            "snapshot_id": "safety.envelope@1+plans.pro@8+entitlements.qdfp-v1@4+limits.pro@1+schedules.fcu-qdfp-v1@5+budgets.pro-monthly@1+overage.hard-stop@1+auth.standard-api-key@1+data-policy.standard@1",
+            "revision": "0daf1a62614196b2089f51acdbf1b5c3d1ce6fe828b663cb1e395f7e23313ef0",
+            "plan": "plans.pro@8",
+            "records": [
+              "safety.envelope@1",
+              "plans.pro@8",
+              "entitlements.qdfp-v1@4",
+              "limits.pro@1",
+              "schedules.fcu-qdfp-v1@5",
+              "budgets.pro-monthly@1",
+              "overage.hard-stop@1",
+              "auth.standard-api-key@1",
+              "data-policy.standard@1"
+            ]
+          },
+          "remaining_fcu_instance_estimate": 99984,
+          "budget_period": "utc_calendar_month"
+        }
+      }
+    },
+    {
+      "name": "solve-bsm-pnl-quote",
+      "path": "/v1/cost/quote",
+      "request": {
+        "operation": "scenario_spot_solve",
+        "request": {
+          "contract": {
+            "exercise_style": "european",
+            "pricing_model": "black_scholes_merton",
+            "option_type": "call",
+            "spot": 100.0,
+            "strike": 100.0,
+            "time_to_expiry_years": 1.0,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0.0,
+            "volatility": 0.2
+          },
+          "target": {
+            "kind": "position_pnl",
+            "value": 500.0,
+            "position": {
+              "quantity": 2.0,
+              "multiplier": 100.0
+            }
+          },
+          "min_spot": 50.0,
+          "max_spot": 150.0
+        }
+      },
+      "response": {
+        "quote": {
+          "total_fcu": 100,
+          "fixed_fcu": 0,
+          "variable_fcu": 100,
+          "minimum_charge_fcu": 0,
+          "lines": [
+            {
+              "operation": "scenario_spot_solve",
+              "model": "black_scholes_merton/1",
+              "billing_unit": "solve",
+              "quantity": 1,
+              "fcu_per_unit": 100,
+              "variable_fcu": 100
+            }
+          ]
+        },
+        "resolved_models": [
+          {
+            "model": "black_scholes_merton/1",
+            "quantity": 1
+          }
+        ],
+        "metadata": {
+          "request_id": "fr-18e50409e8d4af06-000000000000000a",
+          "api_version": "v1",
+          "service_version": "0.5.0",
+          "fcu_charged": 0,
+          "fcu_schedule_id": "fcu-qdfp-v1",
+          "fcu_schedule_version": "2026-11-05-flat-solves",
+          "policy": {
+            "snapshot_id": "safety.envelope@1+plans.pro@8+entitlements.qdfp-v1@4+limits.pro@1+schedules.fcu-qdfp-v1@5+budgets.pro-monthly@1+overage.hard-stop@1+auth.standard-api-key@1+data-policy.standard@1",
+            "revision": "0daf1a62614196b2089f51acdbf1b5c3d1ce6fe828b663cb1e395f7e23313ef0",
+            "plan": "plans.pro@8",
+            "records": [
+              "safety.envelope@1",
+              "plans.pro@8",
+              "entitlements.qdfp-v1@4",
+              "limits.pro@1",
+              "schedules.fcu-qdfp-v1@5",
+              "budgets.pro-monthly@1",
+              "overage.hard-stop@1",
+              "auth.standard-api-key@1",
+              "data-policy.standard@1"
+            ]
+          },
+          "remaining_fcu_instance_estimate": 99884,
+          "budget_period": "utc_calendar_month"
+        }
+      }
+    },
+    {
+      "name": "solve-bsm-no-root-quote",
+      "path": "/v1/cost/quote",
+      "request": {
+        "operation": "scenario_spot_solve",
+        "request": {
+          "contract": {
+            "exercise_style": "european",
+            "pricing_model": "black_scholes_merton",
+            "option_type": "call",
+            "spot": 100.0,
+            "strike": 100.0,
+            "time_to_expiry_years": 1.0,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0.0,
+            "volatility": 0.2
+          },
+          "target": {
+            "kind": "option_price",
+            "value": 1000.0
+          },
+          "min_spot": 50.0,
+          "max_spot": 150.0
+        }
+      },
+      "response": {
+        "quote": {
+          "total_fcu": 100,
+          "fixed_fcu": 0,
+          "variable_fcu": 100,
+          "minimum_charge_fcu": 0,
+          "lines": [
+            {
+              "operation": "scenario_spot_solve",
+              "model": "black_scholes_merton/1",
+              "billing_unit": "solve",
+              "quantity": 1,
+              "fcu_per_unit": 100,
+              "variable_fcu": 100
+            }
+          ]
+        },
+        "resolved_models": [
+          {
+            "model": "black_scholes_merton/1",
+            "quantity": 1
+          }
+        ],
+        "metadata": {
+          "request_id": "fr-18e50409e8d4af06-000000000000000c",
+          "api_version": "v1",
+          "service_version": "0.5.0",
+          "fcu_charged": 0,
+          "fcu_schedule_id": "fcu-qdfp-v1",
+          "fcu_schedule_version": "2026-11-05-flat-solves",
+          "policy": {
+            "snapshot_id": "safety.envelope@1+plans.pro@8+entitlements.qdfp-v1@4+limits.pro@1+schedules.fcu-qdfp-v1@5+budgets.pro-monthly@1+overage.hard-stop@1+auth.standard-api-key@1+data-policy.standard@1",
+            "revision": "0daf1a62614196b2089f51acdbf1b5c3d1ce6fe828b663cb1e395f7e23313ef0",
+            "plan": "plans.pro@8",
+            "records": [
+              "safety.envelope@1",
+              "plans.pro@8",
+              "entitlements.qdfp-v1@4",
+              "limits.pro@1",
+              "schedules.fcu-qdfp-v1@5",
+              "budgets.pro-monthly@1",
+              "overage.hard-stop@1",
+              "auth.standard-api-key@1",
+              "data-policy.standard@1"
+            ]
+          },
+          "remaining_fcu_instance_estimate": 99784,
+          "budget_period": "utc_calendar_month"
+        }
+      }
+    },
+    {
+      "name": "solve-bsm-interval-quote",
+      "path": "/v1/cost/quote",
+      "request": {
+        "operation": "scenario_spot_solve",
+        "request": {
+          "contract": {
+            "exercise_style": "european",
+            "pricing_model": "black_scholes_merton",
+            "option_type": "call",
+            "spot": 100.0,
+            "strike": 100.0,
+            "time_to_expiry_years": 1.0,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0.0,
+            "volatility": 0.2
+          },
+          "target": {
+            "kind": "option_price",
+            "value": 0.0
+          },
+          "min_spot": 50.0,
+          "max_spot": 150.0,
+          "elapsed_time_years": 1.0
+        }
+      },
+      "response": {
+        "quote": {
+          "total_fcu": 100,
+          "fixed_fcu": 0,
+          "variable_fcu": 100,
+          "minimum_charge_fcu": 0,
+          "lines": [
+            {
+              "operation": "scenario_spot_solve",
+              "model": "black_scholes_merton/1",
+              "billing_unit": "solve",
+              "quantity": 1,
+              "fcu_per_unit": 100,
+              "variable_fcu": 100
+            }
+          ]
+        },
+        "resolved_models": [
+          {
+            "model": "black_scholes_merton/1",
+            "quantity": 1
+          }
+        ],
+        "metadata": {
+          "request_id": "fr-18e50409e8d4af06-000000000000000e",
+          "api_version": "v1",
+          "service_version": "0.5.0",
+          "fcu_charged": 0,
+          "fcu_schedule_id": "fcu-qdfp-v1",
+          "fcu_schedule_version": "2026-11-05-flat-solves",
+          "policy": {
+            "snapshot_id": "safety.envelope@1+plans.pro@8+entitlements.qdfp-v1@4+limits.pro@1+schedules.fcu-qdfp-v1@5+budgets.pro-monthly@1+overage.hard-stop@1+auth.standard-api-key@1+data-policy.standard@1",
+            "revision": "0daf1a62614196b2089f51acdbf1b5c3d1ce6fe828b663cb1e395f7e23313ef0",
+            "plan": "plans.pro@8",
+            "records": [
+              "safety.envelope@1",
+              "plans.pro@8",
+              "entitlements.qdfp-v1@4",
+              "limits.pro@1",
+              "schedules.fcu-qdfp-v1@5",
+              "budgets.pro-monthly@1",
+              "overage.hard-stop@1",
+              "auth.standard-api-key@1",
+              "data-policy.standard@1"
+            ]
+          },
+          "remaining_fcu_instance_estimate": 99684,
+          "budget_period": "utc_calendar_month"
+        }
+      }
+    },
+    {
+      "name": "solve-bsm-unresolved-quote",
+      "path": "/v1/cost/quote",
+      "request": {
+        "operation": "scenario_spot_solve",
+        "request": {
+          "contract": {
+            "exercise_style": "european",
+            "pricing_model": "black_scholes_merton",
+            "option_type": "call",
+            "spot": 100.0,
+            "strike": 100.0,
+            "time_to_expiry_years": 1.0,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0.0,
+            "volatility": 0.2
+          },
+          "target": {
+            "kind": "option_price",
+            "value": 15.0
+          },
+          "min_spot": 50.0,
+          "max_spot": 150.0,
+          "spot_tolerance": 1000.0,
+          "value_tolerance": 1e-15
+        }
+      },
+      "response": {
+        "quote": {
+          "total_fcu": 100,
+          "fixed_fcu": 0,
+          "variable_fcu": 100,
+          "minimum_charge_fcu": 0,
+          "lines": [
+            {
+              "operation": "scenario_spot_solve",
+              "model": "black_scholes_merton/1",
+              "billing_unit": "solve",
+              "quantity": 1,
+              "fcu_per_unit": 100,
+              "variable_fcu": 100
+            }
+          ]
+        },
+        "resolved_models": [
+          {
+            "model": "black_scholes_merton/1",
+            "quantity": 1
+          }
+        ],
+        "metadata": {
+          "request_id": "fr-18e50409e8d4af06-0000000000000010",
+          "api_version": "v1",
+          "service_version": "0.5.0",
+          "fcu_charged": 0,
+          "fcu_schedule_id": "fcu-qdfp-v1",
+          "fcu_schedule_version": "2026-11-05-flat-solves",
+          "policy": {
+            "snapshot_id": "safety.envelope@1+plans.pro@8+entitlements.qdfp-v1@4+limits.pro@1+schedules.fcu-qdfp-v1@5+budgets.pro-monthly@1+overage.hard-stop@1+auth.standard-api-key@1+data-policy.standard@1",
+            "revision": "0daf1a62614196b2089f51acdbf1b5c3d1ce6fe828b663cb1e395f7e23313ef0",
+            "plan": "plans.pro@8",
+            "records": [
+              "safety.envelope@1",
+              "plans.pro@8",
+              "entitlements.qdfp-v1@4",
+              "limits.pro@1",
+              "schedules.fcu-qdfp-v1@5",
+              "budgets.pro-monthly@1",
+              "overage.hard-stop@1",
+              "auth.standard-api-key@1",
+              "data-policy.standard@1"
+            ]
+          },
+          "remaining_fcu_instance_estimate": 99584,
+          "budget_period": "utc_calendar_month"
+        }
+      }
+    },
+    {
+      "name": "scenario-bs1993-point-quote",
+      "path": "/v1/cost/quote",
+      "request": {
+        "operation": "scenario_evaluate",
+        "request": {
+          "contract": {
+            "exercise_style": "american",
+            "pricing_model": "bjerksund_stensland_1993",
+            "option_type": "call",
+            "spot": 100.0,
+            "strike": 100.0,
+            "time_to_expiry_years": 1.0,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0.0,
+            "volatility": 0.2
+          },
+          "scenarios": [
+            {
+              "spot_change": 5.0
+            }
+          ],
+          "position": {
+            "quantity": 1.0,
+            "multiplier": 100.0
+          }
+        }
+      },
+      "response": {
+        "quote": {
+          "total_fcu": 4,
+          "fixed_fcu": 0,
+          "variable_fcu": 4,
+          "minimum_charge_fcu": 0,
+          "lines": [
+            {
+              "operation": "price",
+              "model": "bjerksund_stensland_1993/1",
+              "billing_unit": "contract",
+              "quantity": 2,
+              "fcu_per_unit": 2,
+              "variable_fcu": 4
+            }
+          ]
+        },
+        "resolved_models": [
+          {
+            "model": "bjerksund_stensland_1993/1",
+            "quantity": 2
+          }
+        ],
+        "metadata": {
+          "request_id": "fr-18e50409e8d4af06-0000000000000014",
+          "api_version": "v1",
+          "service_version": "0.5.0",
+          "fcu_charged": 0,
+          "fcu_schedule_id": "fcu-qdfp-v1",
+          "fcu_schedule_version": "2026-11-05-flat-solves",
+          "policy": {
+            "snapshot_id": "safety.envelope@1+plans.pro@8+entitlements.qdfp-v1@4+limits.pro@1+schedules.fcu-qdfp-v1@5+budgets.pro-monthly@1+overage.hard-stop@1+auth.standard-api-key@1+data-policy.standard@1",
+            "revision": "0daf1a62614196b2089f51acdbf1b5c3d1ce6fe828b663cb1e395f7e23313ef0",
+            "plan": "plans.pro@8",
+            "records": [
+              "safety.envelope@1",
+              "plans.pro@8",
+              "entitlements.qdfp-v1@4",
+              "limits.pro@1",
+              "schedules.fcu-qdfp-v1@5",
+              "budgets.pro-monthly@1",
+              "overage.hard-stop@1",
+              "auth.standard-api-key@1",
+              "data-policy.standard@1"
+            ]
+          },
+          "remaining_fcu_instance_estimate": 99384,
+          "budget_period": "utc_calendar_month"
+        }
+      }
+    },
+    {
+      "name": "scenario-bs1993-grid-quote",
+      "path": "/v1/cost/quote",
+      "request": {
+        "operation": "scenario_evaluate",
+        "request": {
+          "contract": {
+            "exercise_style": "american",
+            "pricing_model": "bjerksund_stensland_1993",
+            "option_type": "call",
+            "spot": 100.0,
+            "strike": 100.0,
+            "time_to_expiry_years": 1.0,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0.0,
+            "volatility": 0.2
+          },
+          "scenarios": [
+            {
+              "spot": 95.0,
+              "volatility": 0.15
+            },
+            {
+              "spot": 95.0,
+              "volatility": 0.2
+            },
+            {
+              "spot": 95.0,
+              "volatility": 0.25
+            },
+            {
+              "spot": 100.0,
+              "volatility": 0.15
+            },
+            {
+              "spot": 100.0,
+              "volatility": 0.2
+            },
+            {
+              "spot": 100.0,
+              "volatility": 0.25
+            },
+            {
+              "spot": 105.0,
+              "volatility": 0.15
+            },
+            {
+              "spot": 105.0,
+              "volatility": 0.2
+            },
+            {
+              "spot": 105.0,
+              "volatility": 0.25
+            }
+          ],
+          "position": {
+            "quantity": 1.0,
+            "multiplier": 100.0
+          }
+        }
+      },
+      "response": {
+        "quote": {
+          "total_fcu": 20,
+          "fixed_fcu": 0,
+          "variable_fcu": 20,
+          "minimum_charge_fcu": 0,
+          "lines": [
+            {
+              "operation": "price",
+              "model": "bjerksund_stensland_1993/1",
+              "billing_unit": "contract",
+              "quantity": 10,
+              "fcu_per_unit": 2,
+              "variable_fcu": 20
+            }
+          ]
+        },
+        "resolved_models": [
+          {
+            "model": "bjerksund_stensland_1993/1",
+            "quantity": 10
+          }
+        ],
+        "metadata": {
+          "request_id": "fr-18e50409e8d4af06-0000000000000016",
+          "api_version": "v1",
+          "service_version": "0.5.0",
+          "fcu_charged": 0,
+          "fcu_schedule_id": "fcu-qdfp-v1",
+          "fcu_schedule_version": "2026-11-05-flat-solves",
+          "policy": {
+            "snapshot_id": "safety.envelope@1+plans.pro@8+entitlements.qdfp-v1@4+limits.pro@1+schedules.fcu-qdfp-v1@5+budgets.pro-monthly@1+overage.hard-stop@1+auth.standard-api-key@1+data-policy.standard@1",
+            "revision": "0daf1a62614196b2089f51acdbf1b5c3d1ce6fe828b663cb1e395f7e23313ef0",
+            "plan": "plans.pro@8",
+            "records": [
+              "safety.envelope@1",
+              "plans.pro@8",
+              "entitlements.qdfp-v1@4",
+              "limits.pro@1",
+              "schedules.fcu-qdfp-v1@5",
+              "budgets.pro-monthly@1",
+              "overage.hard-stop@1",
+              "auth.standard-api-key@1",
+              "data-policy.standard@1"
+            ]
+          },
+          "remaining_fcu_instance_estimate": 99380,
+          "budget_period": "utc_calendar_month"
+        }
+      }
+    },
+    {
+      "name": "scenario-bs1993-partial-quote",
+      "path": "/v1/cost/quote",
+      "request": {
+        "operation": "scenario_evaluate",
+        "request": {
+          "contract": {
+            "exercise_style": "american",
+            "pricing_model": "bjerksund_stensland_1993",
+            "option_type": "call",
+            "spot": 100.0,
+            "strike": 100.0,
+            "time_to_expiry_years": 1.0,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0.0,
+            "volatility": 0.2
+          },
+          "scenarios": [
+            {
+              "spot_change": 5.0
+            },
+            {
+              "volatility": -1.0
+            },
+            {
+              "spot_change": 5.0
+            }
+          ],
+          "position": {
+            "quantity": 1.0,
+            "multiplier": 100.0
+          }
+        }
+      },
+      "response": {
+        "quote": {
+          "total_fcu": 8,
+          "fixed_fcu": 0,
+          "variable_fcu": 8,
+          "minimum_charge_fcu": 0,
+          "lines": [
+            {
+              "operation": "price",
+              "model": "bjerksund_stensland_1993/1",
+              "billing_unit": "contract",
+              "quantity": 4,
+              "fcu_per_unit": 2,
+              "variable_fcu": 8
+            }
+          ]
+        },
+        "resolved_models": [
+          {
+            "model": "bjerksund_stensland_1993/1",
+            "quantity": 4
+          }
+        ],
+        "metadata": {
+          "request_id": "fr-18e50409e8d4af06-0000000000000018",
+          "api_version": "v1",
+          "service_version": "0.5.0",
+          "fcu_charged": 0,
+          "fcu_schedule_id": "fcu-qdfp-v1",
+          "fcu_schedule_version": "2026-11-05-flat-solves",
+          "policy": {
+            "snapshot_id": "safety.envelope@1+plans.pro@8+entitlements.qdfp-v1@4+limits.pro@1+schedules.fcu-qdfp-v1@5+budgets.pro-monthly@1+overage.hard-stop@1+auth.standard-api-key@1+data-policy.standard@1",
+            "revision": "0daf1a62614196b2089f51acdbf1b5c3d1ce6fe828b663cb1e395f7e23313ef0",
+            "plan": "plans.pro@8",
+            "records": [
+              "safety.envelope@1",
+              "plans.pro@8",
+              "entitlements.qdfp-v1@4",
+              "limits.pro@1",
+              "schedules.fcu-qdfp-v1@5",
+              "budgets.pro-monthly@1",
+              "overage.hard-stop@1",
+              "auth.standard-api-key@1",
+              "data-policy.standard@1"
+            ]
+          },
+          "remaining_fcu_instance_estimate": 99360,
+          "budget_period": "utc_calendar_month"
+        }
+      }
+    },
+    {
+      "name": "solve-bs1993-price-quote",
+      "path": "/v1/cost/quote",
+      "request": {
+        "operation": "scenario_spot_solve",
+        "request": {
+          "contract": {
+            "exercise_style": "american",
+            "pricing_model": "bjerksund_stensland_1993",
+            "option_type": "call",
+            "spot": 100.0,
+            "strike": 100.0,
+            "time_to_expiry_years": 1.0,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0.0,
+            "volatility": 0.2
+          },
+          "target": {
+            "kind": "option_price",
+            "value": 15.0
+          },
+          "min_spot": 50.0,
+          "max_spot": 150.0
+        }
+      },
+      "response": {
+        "quote": {
+          "total_fcu": 200,
+          "fixed_fcu": 0,
+          "variable_fcu": 200,
+          "minimum_charge_fcu": 0,
+          "lines": [
+            {
+              "operation": "scenario_spot_solve",
+              "model": "bjerksund_stensland_1993/1",
+              "billing_unit": "solve",
+              "quantity": 1,
+              "fcu_per_unit": 200,
+              "variable_fcu": 200
+            }
+          ]
+        },
+        "resolved_models": [
+          {
+            "model": "bjerksund_stensland_1993/1",
+            "quantity": 1
+          }
+        ],
+        "metadata": {
+          "request_id": "fr-18e50409e8d4af06-000000000000001a",
+          "api_version": "v1",
+          "service_version": "0.5.0",
+          "fcu_charged": 0,
+          "fcu_schedule_id": "fcu-qdfp-v1",
+          "fcu_schedule_version": "2026-11-05-flat-solves",
+          "policy": {
+            "snapshot_id": "safety.envelope@1+plans.pro@8+entitlements.qdfp-v1@4+limits.pro@1+schedules.fcu-qdfp-v1@5+budgets.pro-monthly@1+overage.hard-stop@1+auth.standard-api-key@1+data-policy.standard@1",
+            "revision": "0daf1a62614196b2089f51acdbf1b5c3d1ce6fe828b663cb1e395f7e23313ef0",
+            "plan": "plans.pro@8",
+            "records": [
+              "safety.envelope@1",
+              "plans.pro@8",
+              "entitlements.qdfp-v1@4",
+              "limits.pro@1",
+              "schedules.fcu-qdfp-v1@5",
+              "budgets.pro-monthly@1",
+              "overage.hard-stop@1",
+              "auth.standard-api-key@1",
+              "data-policy.standard@1"
+            ]
+          },
+          "remaining_fcu_instance_estimate": 99352,
+          "budget_period": "utc_calendar_month"
+        }
+      }
+    },
+    {
+      "name": "solve-bs1993-pnl-quote",
+      "path": "/v1/cost/quote",
+      "request": {
+        "operation": "scenario_spot_solve",
+        "request": {
+          "contract": {
+            "exercise_style": "american",
+            "pricing_model": "bjerksund_stensland_1993",
+            "option_type": "call",
+            "spot": 100.0,
+            "strike": 100.0,
+            "time_to_expiry_years": 1.0,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0.0,
+            "volatility": 0.2
+          },
+          "target": {
+            "kind": "position_pnl",
+            "value": 500.0,
+            "position": {
+              "quantity": 2.0,
+              "multiplier": 100.0
+            }
+          },
+          "min_spot": 50.0,
+          "max_spot": 150.0
+        }
+      },
+      "response": {
+        "quote": {
+          "total_fcu": 200,
+          "fixed_fcu": 0,
+          "variable_fcu": 200,
+          "minimum_charge_fcu": 0,
+          "lines": [
+            {
+              "operation": "scenario_spot_solve",
+              "model": "bjerksund_stensland_1993/1",
+              "billing_unit": "solve",
+              "quantity": 1,
+              "fcu_per_unit": 200,
+              "variable_fcu": 200
+            }
+          ]
+        },
+        "resolved_models": [
+          {
+            "model": "bjerksund_stensland_1993/1",
+            "quantity": 1
+          }
+        ],
+        "metadata": {
+          "request_id": "fr-18e50409e8d4af06-000000000000001c",
+          "api_version": "v1",
+          "service_version": "0.5.0",
+          "fcu_charged": 0,
+          "fcu_schedule_id": "fcu-qdfp-v1",
+          "fcu_schedule_version": "2026-11-05-flat-solves",
+          "policy": {
+            "snapshot_id": "safety.envelope@1+plans.pro@8+entitlements.qdfp-v1@4+limits.pro@1+schedules.fcu-qdfp-v1@5+budgets.pro-monthly@1+overage.hard-stop@1+auth.standard-api-key@1+data-policy.standard@1",
+            "revision": "0daf1a62614196b2089f51acdbf1b5c3d1ce6fe828b663cb1e395f7e23313ef0",
+            "plan": "plans.pro@8",
+            "records": [
+              "safety.envelope@1",
+              "plans.pro@8",
+              "entitlements.qdfp-v1@4",
+              "limits.pro@1",
+              "schedules.fcu-qdfp-v1@5",
+              "budgets.pro-monthly@1",
+              "overage.hard-stop@1",
+              "auth.standard-api-key@1",
+              "data-policy.standard@1"
+            ]
+          },
+          "remaining_fcu_instance_estimate": 99152,
+          "budget_period": "utc_calendar_month"
+        }
+      }
+    },
+    {
+      "name": "solve-bs1993-no-root-quote",
+      "path": "/v1/cost/quote",
+      "request": {
+        "operation": "scenario_spot_solve",
+        "request": {
+          "contract": {
+            "exercise_style": "american",
+            "pricing_model": "bjerksund_stensland_1993",
+            "option_type": "call",
+            "spot": 100.0,
+            "strike": 100.0,
+            "time_to_expiry_years": 1.0,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0.0,
+            "volatility": 0.2
+          },
+          "target": {
+            "kind": "option_price",
+            "value": 1000.0
+          },
+          "min_spot": 50.0,
+          "max_spot": 150.0
+        }
+      },
+      "response": {
+        "quote": {
+          "total_fcu": 200,
+          "fixed_fcu": 0,
+          "variable_fcu": 200,
+          "minimum_charge_fcu": 0,
+          "lines": [
+            {
+              "operation": "scenario_spot_solve",
+              "model": "bjerksund_stensland_1993/1",
+              "billing_unit": "solve",
+              "quantity": 1,
+              "fcu_per_unit": 200,
+              "variable_fcu": 200
+            }
+          ]
+        },
+        "resolved_models": [
+          {
+            "model": "bjerksund_stensland_1993/1",
+            "quantity": 1
+          }
+        ],
+        "metadata": {
+          "request_id": "fr-18e50409e8d4af06-000000000000001e",
+          "api_version": "v1",
+          "service_version": "0.5.0",
+          "fcu_charged": 0,
+          "fcu_schedule_id": "fcu-qdfp-v1",
+          "fcu_schedule_version": "2026-11-05-flat-solves",
+          "policy": {
+            "snapshot_id": "safety.envelope@1+plans.pro@8+entitlements.qdfp-v1@4+limits.pro@1+schedules.fcu-qdfp-v1@5+budgets.pro-monthly@1+overage.hard-stop@1+auth.standard-api-key@1+data-policy.standard@1",
+            "revision": "0daf1a62614196b2089f51acdbf1b5c3d1ce6fe828b663cb1e395f7e23313ef0",
+            "plan": "plans.pro@8",
+            "records": [
+              "safety.envelope@1",
+              "plans.pro@8",
+              "entitlements.qdfp-v1@4",
+              "limits.pro@1",
+              "schedules.fcu-qdfp-v1@5",
+              "budgets.pro-monthly@1",
+              "overage.hard-stop@1",
+              "auth.standard-api-key@1",
+              "data-policy.standard@1"
+            ]
+          },
+          "remaining_fcu_instance_estimate": 98952,
+          "budget_period": "utc_calendar_month"
+        }
+      }
+    },
+    {
+      "name": "solve-bs1993-interval-quote",
+      "path": "/v1/cost/quote",
+      "request": {
+        "operation": "scenario_spot_solve",
+        "request": {
+          "contract": {
+            "exercise_style": "american",
+            "pricing_model": "bjerksund_stensland_1993",
+            "option_type": "call",
+            "spot": 100.0,
+            "strike": 100.0,
+            "time_to_expiry_years": 1.0,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0.0,
+            "volatility": 0.2
+          },
+          "target": {
+            "kind": "option_price",
+            "value": 0.0
+          },
+          "min_spot": 50.0,
+          "max_spot": 150.0,
+          "elapsed_time_years": 1.0
+        }
+      },
+      "response": {
+        "quote": {
+          "total_fcu": 200,
+          "fixed_fcu": 0,
+          "variable_fcu": 200,
+          "minimum_charge_fcu": 0,
+          "lines": [
+            {
+              "operation": "scenario_spot_solve",
+              "model": "bjerksund_stensland_1993/1",
+              "billing_unit": "solve",
+              "quantity": 1,
+              "fcu_per_unit": 200,
+              "variable_fcu": 200
+            }
+          ]
+        },
+        "resolved_models": [
+          {
+            "model": "bjerksund_stensland_1993/1",
+            "quantity": 1
+          }
+        ],
+        "metadata": {
+          "request_id": "fr-18e50409e8d4af06-0000000000000020",
+          "api_version": "v1",
+          "service_version": "0.5.0",
+          "fcu_charged": 0,
+          "fcu_schedule_id": "fcu-qdfp-v1",
+          "fcu_schedule_version": "2026-11-05-flat-solves",
+          "policy": {
+            "snapshot_id": "safety.envelope@1+plans.pro@8+entitlements.qdfp-v1@4+limits.pro@1+schedules.fcu-qdfp-v1@5+budgets.pro-monthly@1+overage.hard-stop@1+auth.standard-api-key@1+data-policy.standard@1",
+            "revision": "0daf1a62614196b2089f51acdbf1b5c3d1ce6fe828b663cb1e395f7e23313ef0",
+            "plan": "plans.pro@8",
+            "records": [
+              "safety.envelope@1",
+              "plans.pro@8",
+              "entitlements.qdfp-v1@4",
+              "limits.pro@1",
+              "schedules.fcu-qdfp-v1@5",
+              "budgets.pro-monthly@1",
+              "overage.hard-stop@1",
+              "auth.standard-api-key@1",
+              "data-policy.standard@1"
+            ]
+          },
+          "remaining_fcu_instance_estimate": 98752,
+          "budget_period": "utc_calendar_month"
+        }
+      }
+    },
+    {
+      "name": "solve-bs1993-unresolved-quote",
+      "path": "/v1/cost/quote",
+      "request": {
+        "operation": "scenario_spot_solve",
+        "request": {
+          "contract": {
+            "exercise_style": "american",
+            "pricing_model": "bjerksund_stensland_1993",
+            "option_type": "call",
+            "spot": 100.0,
+            "strike": 100.0,
+            "time_to_expiry_years": 1.0,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0.0,
+            "volatility": 0.2
+          },
+          "target": {
+            "kind": "option_price",
+            "value": 15.0
+          },
+          "min_spot": 50.0,
+          "max_spot": 150.0,
+          "spot_tolerance": 1000.0,
+          "value_tolerance": 1e-15
+        }
+      },
+      "response": {
+        "quote": {
+          "total_fcu": 200,
+          "fixed_fcu": 0,
+          "variable_fcu": 200,
+          "minimum_charge_fcu": 0,
+          "lines": [
+            {
+              "operation": "scenario_spot_solve",
+              "model": "bjerksund_stensland_1993/1",
+              "billing_unit": "solve",
+              "quantity": 1,
+              "fcu_per_unit": 200,
+              "variable_fcu": 200
+            }
+          ]
+        },
+        "resolved_models": [
+          {
+            "model": "bjerksund_stensland_1993/1",
+            "quantity": 1
+          }
+        ],
+        "metadata": {
+          "request_id": "fr-18e50409e8d4af06-0000000000000022",
+          "api_version": "v1",
+          "service_version": "0.5.0",
+          "fcu_charged": 0,
+          "fcu_schedule_id": "fcu-qdfp-v1",
+          "fcu_schedule_version": "2026-11-05-flat-solves",
+          "policy": {
+            "snapshot_id": "safety.envelope@1+plans.pro@8+entitlements.qdfp-v1@4+limits.pro@1+schedules.fcu-qdfp-v1@5+budgets.pro-monthly@1+overage.hard-stop@1+auth.standard-api-key@1+data-policy.standard@1",
+            "revision": "0daf1a62614196b2089f51acdbf1b5c3d1ce6fe828b663cb1e395f7e23313ef0",
+            "plan": "plans.pro@8",
+            "records": [
+              "safety.envelope@1",
+              "plans.pro@8",
+              "entitlements.qdfp-v1@4",
+              "limits.pro@1",
+              "schedules.fcu-qdfp-v1@5",
+              "budgets.pro-monthly@1",
+              "overage.hard-stop@1",
+              "auth.standard-api-key@1",
+              "data-policy.standard@1"
+            ]
+          },
+          "remaining_fcu_instance_estimate": 98552,
+          "budget_period": "utc_calendar_month"
+        }
+      }
+    }
+  ]
+}
