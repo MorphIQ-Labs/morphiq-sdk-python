@@ -229,7 +229,8 @@ class _CommercialMetadata(_Response):
 class ResponseMetadata(_CommercialMetadata):
     """Server provenance and optional commercial CU evidence.
 
-    ``units_charged`` is an internal compute weight, not a commercial CU charge.
+    Only ``fcu_quoted`` and ``fcu_charged`` are commercial CU evidence.
+    Retired capacity fields are optional for compatibility with older deployments.
     Missing ``fcu_charged`` means unreported, not zero.
     """
 
@@ -237,8 +238,8 @@ class ResponseMetadata(_CommercialMetadata):
     api_version: str
     engine_version: str
     engines: list[EngineIdentity]
-    units_charged: int = Field(ge=0)
-    compute_schedule_version: str
+    units_charged: int | None = Field(default=None, ge=0, deprecated=True)
+    compute_schedule_version: str | None = Field(default=None, deprecated=True)
 
 
 class ServiceErrorMetadata(_CommercialMetadata):

@@ -460,3 +460,16 @@ def test_async_cancellation_closes_transport_without_retry():
         assert transport.closed
 
     asyncio.run(run())
+
+
+@pytest.mark.parametrize("mode", ["sync", "async"])
+def test_retired_capacity_fields_are_not_required_or_used_as_cu(mode, cases):
+    body = copy.deepcopy(cases[0]["response"])
+    body["metadata"].pop("units_charged")
+    body["metadata"].pop("compute_schedule_version")
+    body["metadata"].update(fcu_quoted=50, fcu_charged=50)
+    result = invoke(mode, httpx.MockTransport(lambda _: httpx.Response(200, json=body)))
+    assert result.metadata.fcu_quoted == 50
+    assert result.metadata.fcu_charged == 50
+    assert result.model_dump()["metadata"]["units_charged"] is None
+    assert result.model_dump()["metadata"]["compute_schedule_version"] is None
