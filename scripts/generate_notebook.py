@@ -72,6 +72,8 @@ def notebook() -> dict[str, Any]:
 
 ## Choose an analysis
 
+- [Scenario evaluation](scenarios/evaluate.ipynb): reprice a move or a spot/volatility grid.
+- [Spot-target solving](scenarios/solve-spot.ipynb): quote and solve a target option price or P&L.
 - [Available models](pricing/models.ipynb): inspect public model capabilities and constraints.
 - [Standard-five Greeks](pricing/standard-five.ipynb): price an option and inspect
   its five primary sensitivities.
@@ -120,6 +122,8 @@ def notebooks() -> dict[str, dict[str, Any]]:
         "pricing/standard-five.ipynb",
         "regime/identification.ipynb",
         "cost/quotation.ipynb",
+        "scenarios/evaluate.ipynb",
+        "scenarios/solve-spot.ipynb",
     ):
         content = json.loads((ROOT / "notebooks" / filename).read_text())
         if "widgets" in content["metadata"]:

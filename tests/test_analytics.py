@@ -43,8 +43,8 @@ def test_analytics_contract_and_native_identity(analytics_cases):
     schema = json.loads((ROOT / "contracts/openapi.json").read_text())
     fixture = json.loads((ROOT / "tests/fixtures/analytics.json").read_text())
     pin = json.loads((ROOT / "contracts/provenance.json").read_text())
-    assert fixture["source_commit"] == pin["source_commit"]
-    assert fixture["contract_sha256"] == pin["sha256"]
+    assert fixture["validation"]["source_commit"] == pin["source_commit"]
+    assert fixture["validation"]["contract_sha256"] == pin["sha256"]
     assert schema["paths"]["/v1/analytics"]["post"]["operationId"] == "fusedAnalytics"
     for model, name in [
         (AnalyticsRequest, "FusedAnalyticsRequest"),

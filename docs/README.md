@@ -9,6 +9,7 @@ response types, configuration and errors.
 
 | Task | Guide | Executable examples |
 | --- | --- | --- |
+| Explore option scenarios and solve targets | [Scenarios and flat solve charges](SCENARIOS.md) | [Evaluation](../examples/scenario_evaluate.py), [sync solve](../examples/solve_spot.py), [async solve](../examples/solve_spot_async.py) |
 | Discover models | [Model capabilities](MODELS.md) | [Public discovery](../examples/pricing_models.py) |
 | Calculate standard-five Greeks | [Greeks and units](GREEKS.md) | [Standard five](../examples/greeks_standard.py) |
 | Discover rates and quote requests | [Cost utilities](COST.md) | [Quote and optional capped execution](../examples/cost_quote.py) |

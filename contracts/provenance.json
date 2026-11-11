@@ -1,10 +1,10 @@
 {
   "repository": "https://gitlab.com/prophetizo/morphiq-labs/sites/morphiq-api",
-  "source_commit": "2284d802b5ac0b37b43ee269bbf4bfeec3777776",
+  "source_commit": "7b4f233b2222fbb95b2492d5c57dbde1ac32e571",
   "source_path": "services/api/openapi.json",
   "contract_version": "0.1.0",
-  "sha256": "e206327e13aee32c02dbfa22e1d8e8a80ea2d549083971a1cc87aa2b67f401e7",
-  "import_method": "Reviewed API v0.5.0 source snapshot copied byte-for-byte from the deployed immutable main commit; the release tag has the identical source tree. Public API and developer-site schema digests verified at adoption.",
+  "sha256": "38a0c933ea805f132bc4245867c3130c5a1db94e23cb4837872abf8c27e33ccc",
+  "import_method": "Immutable draft API MR !209 source snapshot copied byte-for-byte. Candidate contract: not yet deployed. SDK merge/release held until deployment of the matching API and verification of live schema, solve quotes and receipts.",
   "covered_operations": [
     "POST /v1/price",
     "POST /v1/regime",
@@ -19,6 +19,8 @@
     "POST /v1/cost/quote",
     "GET /v1/pricing/models",
     "POST /v1/greeks/standard",
-    "POST /v1/greeks/standard:batch"
+    "POST /v1/greeks/standard:batch",
+    "POST /v1/scenarios/evaluate",
+    "POST /v1/scenarios/solve-spot"
   ]
 }

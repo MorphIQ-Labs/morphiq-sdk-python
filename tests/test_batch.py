@@ -56,8 +56,8 @@ def test_batch_contract_identity_and_native_fixtures(batch_cases):
     schema = json.loads((ROOT / "contracts/openapi.json").read_text())
     fixture = json.loads((ROOT / "tests/fixtures/batch.json").read_text())
     pin = json.loads((ROOT / "contracts/provenance.json").read_text())
-    assert fixture["source_commit"] == pin["source_commit"]
-    assert fixture["contract_sha256"] == pin["sha256"]
+    assert fixture["validation"]["source_commit"] == pin["source_commit"]
+    assert fixture["validation"]["contract_sha256"] == pin["sha256"]
     for case, (_, request, response, wire) in zip(batch_cases, OPERATIONS, strict=False):
         for name, value in [
             (wire + "Request", request(**case["request"]).to_wire()),

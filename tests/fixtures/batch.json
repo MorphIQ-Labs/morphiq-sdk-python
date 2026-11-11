@@ -747,5 +747,10 @@
         ]
       }
     }
-  ]
+  ],
+  "validation": {
+    "source_commit": "7b4f233b2222fbb95b2492d5c57dbde1ac32e571",
+    "contract_sha256": "38a0c933ea805f132bc4245867c3130c5a1db94e23cb4837872abf8c27e33ccc",
+    "method": "Historical native responses retained with original capture identity; requests/results revalidated against this candidate in controlled native integration. Original request IDs and metadata are not rewritten."
+  }
 }

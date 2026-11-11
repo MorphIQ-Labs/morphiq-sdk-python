@@ -40,12 +40,18 @@ from .models import (
     RegimeRequest,
     RegimeResponse,
     ResponseMetadata,
+    ScenarioRequest,
+    ScenarioResponse,
+    ScenarioSpotSolveRequest,
+    ScenarioSpotSolveResponse,
     _BatchResponse,
 )
 from .workflows import AsyncBatchWorkflow, BatchWorkflow, _prepare_chunks
 
 _ResponseType = TypeVar(
     "_ResponseType",
+    ScenarioResponse,
+    ScenarioSpotSolveResponse,
     BatchPriceResponse,
     BatchGreeksResponse,
     BatchGreeksStandardResponse,
@@ -68,6 +74,17 @@ _BatchResponseType = TypeVar("_BatchResponseType", bound=_BatchResponse[Any])
 
 def _check_batch(response: _BatchResponseType, expected: int) -> _BatchResponseType:
     # Never silently sort, drop or misassociate outcomes with submitted options.
+    if [item.index for item in response.results] != list(range(expected)):
+        raise ResponseError(
+            request_id=response.metadata.request_id,
+            body=response.raw_body,
+            headers=response.headers,
+            metadata=response.metadata,
+        )
+    return response
+
+
+def _check_scenarios(response: ScenarioResponse, expected: int) -> ScenarioResponse:
     if [item.index for item in response.results] != list(range(expected)):
         raise ResponseError(
             request_id=response.metadata.request_id,
@@ -103,7 +120,9 @@ def _redact_body(body: bytes, key: str) -> bytes:
 
 
 QuoteInput = (
-    PriceRequest
+    ScenarioRequest
+    | ScenarioSpotSolveRequest
+    | PriceRequest
     | RegimeRequest
     | GreeksRequest
     | GreeksStandardRequest
@@ -116,6 +135,8 @@ QuoteInput = (
     | BatchAnalyticsRequest
 )
 _QUOTE_OPERATIONS = {
+    ScenarioRequest: "scenario_evaluate",
+    ScenarioSpotSolveRequest: "scenario_spot_solve",
     PriceRequest: "price",
     RegimeRequest: "regime",
     GreeksRequest: "greeks",
@@ -268,6 +289,22 @@ class MorphIQ:
             transport=transport,
             follow_redirects=False,
             trust_env=False,
+        )
+
+    def evaluate_scenarios(
+        self, request: ScenarioRequest, *, max_cu: int | None = None
+    ) -> ScenarioResponse:
+        """Reprice ordered points once; preserve partial errors and one request charge."""
+        payload = request.to_wire()
+        response = self._post("v1/scenarios/evaluate", payload, ScenarioResponse, max_cu=max_cu)
+        return _check_scenarios(response, len(payload["scenarios"]))
+
+    def solve_spot(
+        self, request: ScenarioSpotSolveRequest, *, max_cu: int | None = None
+    ) -> ScenarioSpotSolveResponse:
+        """Solve on the server; retain all boundaries, coverage and the flat charge receipt."""
+        return self._post(
+            "v1/scenarios/solve-spot", request.to_wire(), ScenarioSpotSolveResponse, max_cu=max_cu
         )
 
     def price(self, request: PriceRequest, *, max_cu: int | None = None) -> PriceResponse:
@@ -493,6 +530,24 @@ class AsyncMorphIQ:
             transport=transport,
             follow_redirects=False,
             trust_env=False,
+        )
+
+    async def evaluate_scenarios(
+        self, request: ScenarioRequest, *, max_cu: int | None = None
+    ) -> ScenarioResponse:
+        """Reprice ordered points once; preserve partial errors and one request charge."""
+        payload = request.to_wire()
+        response = await self._post(
+            "v1/scenarios/evaluate", payload, ScenarioResponse, max_cu=max_cu
+        )
+        return _check_scenarios(response, len(payload["scenarios"]))
+
+    async def solve_spot(
+        self, request: ScenarioSpotSolveRequest, *, max_cu: int | None = None
+    ) -> ScenarioSpotSolveResponse:
+        """Solve on the server; retain all boundaries, coverage and the flat charge receipt."""
+        return await self._post(
+            "v1/scenarios/solve-spot", request.to_wire(), ScenarioSpotSolveResponse, max_cu=max_cu
         )
 
     async def price(self, request: PriceRequest, *, max_cu: int | None = None) -> PriceResponse:

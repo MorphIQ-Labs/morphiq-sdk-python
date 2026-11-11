@@ -26,7 +26,7 @@ def test_examples_import_without_credentials_or_requests():
             sys.executable,
             "-c",
             "import examples.cost_quote, examples.price_european, examples.price_american, "
-            "examples.price_async, examples.quickstart, "
+            "examples.price_async, examples.quickstart, examples.solver_app.app, "
             "examples.identify_regime, examples.identify_regime_async, "
             "examples.greeks, examples.greeks_async, "
             "examples.implied_volatility, examples.implied_volatility_async, "
@@ -152,6 +152,8 @@ def test_generated_notebook_executes_without_source_tree(
     iv_cases,
     analytics_cases,
     batch_cases,
+    scenario_cases,
+    scenario_quote_cases,
     tmp_path,
     filename,
 ):
@@ -189,7 +191,14 @@ def test_generated_notebook_executes_without_source_tree(
     )
     by_name = {
         case["name"]: case
-        for case in cases + regime_cases + greeks_cases + iv_cases + analytics_cases + batch_cases
+        for case in cases
+        + regime_cases
+        + greeks_cases
+        + iv_cases
+        + analytics_cases
+        + batch_cases
+        + scenario_cases
+        + scenario_quote_cases
     }
     assert [item[2] for item in received] == [
         by_name[name]["request"] for name in NOTEBOOK_CASES[filename]

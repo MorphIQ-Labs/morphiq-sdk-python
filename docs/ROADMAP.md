@@ -40,3 +40,13 @@ evaluates a browser experience built from the cookbook, including runtime choice
 credentials, CU visibility, session isolation, costs and download/local-run support.
 It is outside the initial SDK milestone. A prototype and a decision come before
 an implementation/hosting commitment.
+
+## Scenario API adoption
+
+[#45 Scenario evaluation and spot solving](https://github.com/MorphIQ-Labs/morphiq-sdk-python/issues/45)
+tracks SDK adoption of API MR !209. The candidate includes typed sync/async
+methods, quotes/ceilings, examples and two scenario workspaces. **Owner hold:**
+keep the SDK PR draft with auto-merge off; do not merge to main or release until
+the matching API has been deployed and its schema, permissions and 100/200-CU
+solve quotes/receipts are verified. This work does not authorize API deployment.
+See [local validation](validation/2026-11-05-scenarios.json).

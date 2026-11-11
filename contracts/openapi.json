@@ -4243,6 +4243,638 @@
           }
         ]
       }
+    },
+    "/v1/scenarios/evaluate": {
+      "post": {
+        "tags": [
+          "scenarios"
+        ],
+        "description": "Reprice one option at explicit points using BSM or BS1993. JSON only. Requires price-batch entitlement. Base plus scenarios counts against the batch limit and is charged as one price batch. Validation rejects the entire request before reservation; numerical failures at individual points are returned in order. Base pricing failure fails the request. No target solver, portfolio aggregation or live market data is included.",
+        "operationId": "evaluateOptionScenarios",
+        "parameters": [
+          {
+            "name": "x-morphiq-max-cu",
+            "in": "header",
+            "description": "Optional maximum commercial CU charge for this whole request. An actual quote above this ceiling is refused before commitment with 409 cost_limit_exceeded and zero charged CUs. Applies equally to JSON, Protobuf and gRPC metadata. Zero is allowed; duplicate or malformed values are rejected.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 18446744073709551615,
+              "minimum": 0
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScenarioRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Base valuation and ordered scenario results",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScenarioResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed request",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Credential missing or invalid",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Funding exhausted",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Price batch not permitted",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "Response media type not acceptable",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "408": {
+            "description": "Body deadline exceeded",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Reservation expired, or the quote exceeds x-morphiq-max-cu; check error.code. Zero commercial charge.",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request too large",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "JSON required",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid contract, scenarios or account limits",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate or concurrency allowance exhausted",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Minimum retry delay in seconds"
+              },
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Pricing or encoding failed",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Capacity, funding or admission unavailable",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Minimum retry delay in seconds"
+              },
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Compute deadline exceeded",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/scenarios/solve-spot": {
+      "post": {
+        "tags": [
+          "scenarios"
+        ],
+        "description": "Bounded engine-owned target solve for explicit BSM/BS1993 options. JSON only. Returns evaluated points, sampled intervals and unresolved coverage, never an assumed unique/global root. The fixed spot_target/1 profile uses 32 scan intervals and 64 refinements per candidate. The approved flat rate is 100 CU per BSM request or 200 CU per BS1993 request, independent of pricing evaluations, target kind or returned boundaries. A free quote determines the exact conditional charge before reservation without running the solver. Requires an account with the matching signed solve schedule; documentation does not imply live availability. Price-batch entitlement alone does not grant solver access. Numerical failure at any trial aborts the solve.",
+        "operationId": "solveScenarioSpot",
+        "parameters": [
+          {
+            "name": "x-morphiq-max-cu",
+            "in": "header",
+            "description": "Optional maximum commercial CU charge for this whole request. An actual quote above this ceiling is refused before commitment with 409 cost_limit_exceeded and zero charged CUs. Applies equally to JSON, Protobuf and gRPC metadata. Zero is allowed; duplicate or malformed values are rejected.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 18446744073709551615,
+              "minimum": 0
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScenarioSpotSolveRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Boundaries and explicit coverage, possibly no roots or unresolved regions",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScenarioSpotSolveResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed request",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Credential missing or invalid",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Funding exhausted",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Solver is not entitled",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "Response media type not acceptable",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "408": {
+            "description": "Body deadline exceeded",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Reservation expired, or the quote exceeds x-morphiq-max-cu; check error.code. Zero commercial charge.",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request too large",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "JSON required",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid inputs, unrepresentable values or numerical refusal",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate or concurrency allowance exhausted",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Minimum retry delay in seconds"
+              },
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Numerical or encoding failure",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Capacity, policy or rollout unavailable",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Minimum retry delay in seconds"
+              },
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Compute deadline exceeded",
+            "headers": {
+              "x-request-id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Unique service-generated request identifier"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -4855,6 +5487,42 @@
               },
               "request": {
                 "$ref": "#/components/schemas/BatchPriceRequest"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "request",
+              "operation"
+            ],
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "scenario_evaluate"
+                ]
+              },
+              "request": {
+                "$ref": "#/components/schemas/ScenarioRequest"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "request",
+              "operation"
+            ],
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "scenario_spot_solve"
+                ]
+              },
+              "request": {
+                "$ref": "#/components/schemas/ScenarioSpotSolveRequest"
               }
             }
           },
@@ -6054,6 +6722,7 @@
           "exercise_styles",
           "dividend_support",
           "operations",
+          "scenario_operations",
           "batch_operations",
           "greeks",
           "guidance",
@@ -6127,6 +6796,13 @@
               "type": "string"
             },
             "description": "Operation identifiers supported as single requests."
+          },
+          "scenario_operations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Scenario operations over one contract; HTTP JSON only."
           },
           "underlying_model": {
             "type": "string"
@@ -7041,6 +7717,628 @@
           }
         }
       },
+      "ScenarioItem": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ScenarioOutcome"
+          },
+          {
+            "type": "object",
+            "required": [
+              "index",
+              "inputs"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "format": "int32",
+                "description": "Zero-based index in the submitted scenarios array, including duplicate points.",
+                "minimum": 0
+              },
+              "inputs": {
+                "$ref": "#/components/schemas/PriceRequest"
+              }
+            }
+          }
+        ]
+      },
+      "ScenarioOutcome": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "result",
+              "price_change",
+              "status"
+            ],
+            "properties": {
+              "position_pnl": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "format": "double",
+                "description": "price_change * signed quantity * multiplier; absent without a position."
+              },
+              "price_change": {
+                "type": "number",
+                "format": "double",
+                "description": "Scenario option price minus base option price, per underlying unit."
+              },
+              "result": {
+                "$ref": "#/components/schemas/PriceResult"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "success"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "error",
+              "status"
+            ],
+            "properties": {
+              "error": {
+                "$ref": "#/components/schemas/ErrorBody"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "error"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "ScenarioPoint": {
+        "type": "object",
+        "description": "Changes applied independently to the base contract. Monetary values use the\ncontract's quote currency; volatility is annualized decimal volatility.",
+        "properties": {
+          "elapsed_time_years": {
+            "type": "number",
+            "format": "double",
+            "description": "Subtract from base time to expiry. Zero holds expiry fixed; cannot exceed it."
+          },
+          "spot": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "Absolute underlying price; mutually exclusive with spot_change."
+          },
+          "spot_change": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "Add this amount to the base underlying price (5 means five currency units)."
+          },
+          "volatility": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "Absolute annualized volatility; omitted means hold base volatility fixed."
+          }
+        },
+        "additionalProperties": false
+      },
+      "ScenarioPosition": {
+        "type": "object",
+        "description": "Optional signed position scaling. P&L is relative to the base model value,\nnot trade entry cost. No currency conversion, fees or financing are applied.",
+        "required": [
+          "quantity",
+          "multiplier"
+        ],
+        "properties": {
+          "multiplier": {
+            "type": "number",
+            "format": "double",
+            "description": "Positive number of underlying units per contract; e.g. 100 for equity options."
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double",
+            "description": "Signed contract quantity: positive for long, negative for short."
+          }
+        },
+        "additionalProperties": false
+      },
+      "ScenarioRequest": {
+        "type": "object",
+        "description": "Independently reprice a base option at explicit points. Send a curve or a\nflattened grid in the desired order. Only explicit BSM and BS1993 are supported.",
+        "required": [
+          "contract",
+          "scenarios"
+        ],
+        "properties": {
+          "contract": {
+            "$ref": "#/components/schemas/PriceRequest"
+          },
+          "position": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ScenarioPosition"
+              }
+            ]
+          },
+          "scenarios": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScenarioPoint"
+            },
+            "description": "1–99 points; base plus points must fit the account's price batch limit.",
+            "maxItems": 99,
+            "minItems": 1
+          }
+        },
+        "additionalProperties": false
+      },
+      "ScenarioResponse": {
+        "type": "object",
+        "required": [
+          "metadata",
+          "base",
+          "results"
+        ],
+        "properties": {
+          "base": {
+            "$ref": "#/components/schemas/ScenarioValuation"
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/ResponseMetadata"
+          },
+          "position": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ScenarioPosition"
+              }
+            ]
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScenarioItem"
+            }
+          }
+        }
+      },
+      "ScenarioSolveBoundary": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "spot",
+              "value",
+              "crossing",
+              "refinements",
+              "bracket_width",
+              "kind"
+            ],
+            "properties": {
+              "bracket_width": {
+                "type": "number",
+                "format": "double"
+              },
+              "crossing": {
+                "type": "boolean"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "point"
+                ]
+              },
+              "refinements": {
+                "type": "integer",
+                "format": "int32",
+                "minimum": 0
+              },
+              "spot": {
+                "type": "number",
+                "format": "double"
+              },
+              "value": {
+                "type": "number",
+                "format": "double"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "min_spot",
+              "max_spot",
+              "value",
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "interval"
+                ]
+              },
+              "max_spot": {
+                "type": "number",
+                "format": "double"
+              },
+              "min_spot": {
+                "type": "number",
+                "format": "double"
+              },
+              "value": {
+                "type": "number",
+                "format": "double"
+              }
+            }
+          }
+        ],
+        "description": "Evaluated target boundaries. Intervals are certified at half-cell sampling\nresolution, not a proof for every real number in the interval."
+      },
+      "ScenarioSolveCoverage": {
+        "oneOf": [
+          {
+            "type": "object",
+            "description": "Every candidate resolved at the declared scan resolution; smaller\nstructures can be missed. Empty boundaries mean no root at this resolution.",
+            "required": [
+              "status"
+            ],
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "resolved"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "cells",
+              "status"
+            ],
+            "properties": {
+              "cells": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ScenarioSolveUnresolvedCell"
+                }
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "unresolved"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "ScenarioSolveProfile": {
+        "type": "object",
+        "description": "Fixed bounded work profile, independent of user tolerances and target.",
+        "required": [
+          "id",
+          "scan_intervals",
+          "max_refinements",
+          "max_price_evaluations"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "max_price_evaluations": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "max_refinements": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "scan_intervals": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
+        }
+      },
+      "ScenarioSolveRegion": {
+        "type": "object",
+        "required": [
+          "min_spot",
+          "max_spot",
+          "sign"
+        ],
+        "properties": {
+          "max_spot": {
+            "type": "number",
+            "format": "double"
+          },
+          "min_spot": {
+            "type": "number",
+            "format": "double"
+          },
+          "sign": {
+            "$ref": "#/components/schemas/ScenarioSolveSign"
+          }
+        }
+      },
+      "ScenarioSolveSign": {
+        "type": "string",
+        "enum": [
+          "above_target",
+          "below_target",
+          "at_target"
+        ]
+      },
+      "ScenarioSolveTarget": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "value",
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "option_price"
+                ]
+              },
+              "value": {
+                "type": "number",
+                "format": "double"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "value",
+              "position",
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "position_pnl"
+                ]
+              },
+              "position": {
+                "$ref": "#/components/schemas/ScenarioPosition"
+              },
+              "value": {
+                "type": "number",
+                "format": "double"
+              }
+            }
+          }
+        ],
+        "description": "Target of a bounded spot solve. Position P&L is relative to the original\nbase model valuation, with signed quantity and explicit multiplier."
+      },
+      "ScenarioSolveUnresolvedCell": {
+        "type": "object",
+        "required": [
+          "lower_spot",
+          "upper_spot",
+          "best_spot",
+          "best_abs_value_error",
+          "reason"
+        ],
+        "properties": {
+          "best_abs_value_error": {
+            "type": "number",
+            "format": "double"
+          },
+          "best_spot": {
+            "type": "number",
+            "format": "double"
+          },
+          "lower_spot": {
+            "type": "number",
+            "format": "double"
+          },
+          "reason": {
+            "$ref": "#/components/schemas/ScenarioSolveUnresolvedReason"
+          },
+          "upper_spot": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "ScenarioSolveUnresolvedReason": {
+        "type": "string",
+        "enum": [
+          "refinement_budget_exhausted",
+          "bracket_collapsed_above_tolerance",
+          "spot_tolerance_reached",
+          "representative_out_of_band"
+        ]
+      },
+      "ScenarioSpotSolveRequest": {
+        "type": "object",
+        "required": [
+          "contract",
+          "target",
+          "min_spot",
+          "max_spot"
+        ],
+        "properties": {
+          "contract": {
+            "$ref": "#/components/schemas/PriceRequest"
+          },
+          "elapsed_time_years": {
+            "type": "number",
+            "format": "double"
+          },
+          "max_spot": {
+            "type": "number",
+            "format": "double"
+          },
+          "min_spot": {
+            "type": "number",
+            "format": "double",
+            "description": "Positive finite search bounds, min_spot strictly below max_spot."
+          },
+          "spot_tolerance": {
+            "type": "number",
+            "format": "double",
+            "description": "Positive absolute spot localization tolerance; default 1e-9."
+          },
+          "target": {
+            "$ref": "#/components/schemas/ScenarioSolveTarget"
+          },
+          "value_tolerance": {
+            "type": "number",
+            "format": "double",
+            "description": "Positive absolute tolerance in the target's units; default 1e-6."
+          },
+          "volatility": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "Absolute volatility; omitted holds base volatility fixed."
+          }
+        },
+        "additionalProperties": false
+      },
+      "ScenarioSpotSolveResponse": {
+        "type": "object",
+        "required": [
+          "metadata",
+          "result"
+        ],
+        "properties": {
+          "metadata": {
+            "$ref": "#/components/schemas/ResponseMetadata"
+          },
+          "result": {
+            "$ref": "#/components/schemas/ScenarioSpotSolveResult"
+          }
+        }
+      },
+      "ScenarioSpotSolveResult": {
+        "type": "object",
+        "required": [
+          "pricing_model",
+          "model_version",
+          "base",
+          "inputs",
+          "target",
+          "min_spot",
+          "max_spot",
+          "spot_tolerance",
+          "value_tolerance",
+          "profile",
+          "reference_net_value",
+          "boundaries",
+          "regions",
+          "coverage",
+          "price_evaluations"
+        ],
+        "properties": {
+          "base": {
+            "$ref": "#/components/schemas/ScenarioValuation"
+          },
+          "boundaries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScenarioSolveBoundary"
+            }
+          },
+          "coverage": {
+            "$ref": "#/components/schemas/ScenarioSolveCoverage"
+          },
+          "inputs": {
+            "$ref": "#/components/schemas/PriceRequest",
+            "description": "Full fixed assumptions for repricing boundaries; replace spot with the boundary spot."
+          },
+          "max_spot": {
+            "type": "number",
+            "format": "double"
+          },
+          "min_spot": {
+            "type": "number",
+            "format": "double"
+          },
+          "model_version": {
+            "type": "string"
+          },
+          "price_evaluations": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Actual pricing calls, including the base and the engine's reference valuation.",
+            "minimum": 0
+          },
+          "pricing_model": {
+            "$ref": "#/components/schemas/ResolvedPricingModel"
+          },
+          "profile": {
+            "$ref": "#/components/schemas/ScenarioSolveProfile"
+          },
+          "reference_net_value": {
+            "type": "number",
+            "format": "double"
+          },
+          "regions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScenarioSolveRegion"
+            }
+          },
+          "spot_tolerance": {
+            "type": "number",
+            "format": "double"
+          },
+          "target": {
+            "$ref": "#/components/schemas/ScenarioSolveTarget"
+          },
+          "value_tolerance": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "ScenarioValuation": {
+        "type": "object",
+        "required": [
+          "inputs",
+          "result"
+        ],
+        "properties": {
+          "inputs": {
+            "$ref": "#/components/schemas/PriceRequest",
+            "description": "Full resolved assumptions, in the same units as /v1/price."
+          },
+          "result": {
+            "$ref": "#/components/schemas/PriceResult"
+          }
+        }
+      },
       "ServiceErrorEnvelope": {
         "type": "object",
         "description": "Errors for the regime route and router-level 404/405 refusals. No model or\nengine execution is claimed, including before authentication and on timeout.",
@@ -7164,6 +8462,10 @@
     }
   },
   "tags": [
+    {
+      "name": "scenarios",
+      "description": "BSM/BS1993 point and grid repricing"
+    },
     {
       "name": "cost",
       "description": "Authenticated cost schedules and non-billable request quotes"
