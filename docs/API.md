@@ -145,12 +145,16 @@ and engine versions in response metadata.
 Pricing-family metadata contains request/API/engine identities, `engines`,
 internal `units_charged` and `compute_schedule_version`. Regime metadata instead
 includes model provenance and consumed-window indices.
-Both preserve optional commercial fields: `fcu_quoted`, `fcu_charged`,
-`fcu_schedule_id`, `fcu_schedule_version`, `policy`,
-`remaining_fcu_instance_estimate`, `budget_period` and `budget_reset_at`.
+Both preserve optional commercial fields: `cu_quoted`, `cu_charged`,
+`cu_schedule_id`, `cu_schedule_version`, `policy`,
+`remaining_cu_instance_estimate`, `budget_period` and `budget_reset_at`.
 
-Count `fcu_charged` once per response, including a combined result or a batch.
-Missing/null means unreported, not zero. Neither `fcu_quoted` nor internal
+The deprecated `fcu_quoted`, `fcu_charged`, `fcu_schedule_id`, `fcu_schedule_version` and
+`remaining_fcu_instance_estimate` remain as aliases with equal values; the SDK fills each
+name from the other, so servers that send only the `fcu_*` names still work. A name the
+server did not send is not reported as sent by `model_dump(exclude_unset=True)`.
+Count `cu_charged` once per response, including a combined result or a batch.
+Missing/null means unreported, not zero. Neither `cu_quoted` nor internal
 `units_charged` is an additional commercial charge. The remaining estimate is
 not an authoritative account balance. See [CU accounting](ANALYTICS.md#commercial-cu).
 
@@ -194,7 +198,8 @@ and adjustment identity. See [provider setup and semantics](PRICE_PROVIDERS.md).
 `morphiq_sdk.pandas` provides `batch_to_frames(response, *, identifiers=None)`
 and `workflow_to_frames(workflow, *, identifiers=None)`. Both return `BatchFrames`
 with separate `results` and `requests` DataFrames, execution `state`,
-`reported_fcu_charged`, `unknown_charge_count` and `total_fcu_charged`.
+`reported_cu_charged`, `unknown_charge_count` and `total_cu_charged` (the `*_fcu_charged`
+names are deprecated aliases).
 The optional `pandas` extra is required only at conversion time. See the
 [table schema, units, missing-value and cost semantics](PANDAS.md).
 

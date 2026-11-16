@@ -53,7 +53,7 @@ with MorphIQ() as client:  # Reads MORPHIQ_API_KEY; defaults to https://api.morp
     finally:
         for attempt in workflow.attempts:
             print("Chunk:", attempt.start, attempt.stop, attempt.request_id)
-            print("Reported chunk CU:", attempt.fcu_charged)
+            print("Reported chunk CU:", attempt.cu_charged)
             if attempt.response is not None:
                 for item in attempt.response.results:
                     index = attempt.start + item.index
@@ -61,9 +61,9 @@ with MorphIQ() as client:  # Reads MORPHIQ_API_KEY; defaults to https://api.morp
                         print(index, item.result.model_dump(exclude_unset=True))
                     else:
                         print(index, item.error.code, item.error.message)
-        print("Reported CU subtotal:", workflow.reported_fcu_charged)
+        print("Reported CU subtotal:", workflow.reported_cu_charged)
         print("Unknown-charge attempts:", workflow.unknown_charge_count)
-        print("Whole-workflow CU:", workflow.total_fcu_charged)
+        print("Whole-workflow CU:", workflow.total_cu_charged)
         print("Unattempted input ranges:", workflow.unattempted_ranges)
 ```
 
@@ -98,12 +98,14 @@ Each script independently sends three requests on success. Running both sends si
 | `planned_chunk_count` | Total planned HTTP requests, known before execution |
 | `attempts` | Ordered tuple of `ChunkAttempt` records, including a failed/in-flight chunk |
 | `unattempted_ranges` | Original input `[start, stop)` ranges never submitted |
-| `reported_fcu_charged` | Exact integer subtotal of reported commercial charges |
+| `reported_cu_charged` | Exact integer subtotal of reported commercial charges |
 | `unknown_charge_count` | Attempted chunks with absent/null charge, including in-flight requests |
-| `total_fcu_charged` | Total only when completed and all charges are known; otherwise `None` |
+| `total_cu_charged` | Total only when completed and all charges are known; otherwise `None` |
 
 Each attempt retains its original input `start` and exclusive `stop`, full typed
-`response` or original `error`, `finished`, `request_id` and `fcu_charged`.
+`response` or original `error`, `finished`, `request_id` and `cu_charged`.
+The `fcu_charged` attribute and the `reported_fcu_charged` / `total_fcu_charged` properties
+are deprecated aliases.
 While in flight, both response and error are `None` and `finished` is false.
 A response preserves its original local item indices and raw response evidence;
 add `attempt.start` to an item index to locate the original input. Failed items

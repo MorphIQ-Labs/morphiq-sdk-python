@@ -9,6 +9,7 @@ from pydantic import (
     ConfigDict,
     Field,
     FiniteFloat,
+    ModelWrapValidatorHandler,
     PrivateAttr,
     ValidationInfo,
     field_validator,
@@ -91,6 +92,47 @@ class ImpliedVolatilityRequest(_OptionRequest):
 class _Response(BaseModel):
     # Retain additive fields. A new resolved model name must not break decoding.
     model_config = ConfigDict(extra="allow", strict=True, allow_inf_nan=False)
+
+    @model_validator(mode="wrap")
+    @classmethod
+    def _mirror_cu_names(cls, data: Any, handler: ModelWrapValidatorHandler[Any]) -> Any:
+        """Prefer ``cu_*`` wire names and fall back to the deprecated ``fcu_*`` names.
+
+        API 0.7.0 publishes both names with equal values; older servers publish
+        only ``fcu_*``. Each declared pair is filled from whichever name is present,
+        never overriding a value the server sent, so both attributes are populated.
+        A name the server did not send is not marked as set, so
+        ``model_dump(exclude_unset=True)`` still reproduces the wire payload.
+        """
+        if not isinstance(data, dict):
+            return handler(data)
+        names = cls.model_fields
+        filled: set[str] = set()
+        values = data
+        for legacy in names:
+            current = legacy.replace("fcu", "cu")
+            if legacy == current or current not in names:
+                continue
+            for target, source in ((current, legacy), (legacy, current)):
+                if values.get(target) is None and values.get(source) is not None:
+                    if target not in data:
+                        filled.add(target)
+                    values = {**values, target: values[source]}
+                    break
+        model = handler(values)
+        if filled and isinstance(model, BaseModel):
+            model.__pydantic_fields_set__.difference_update(filled)
+        return model
+        names = cls.model_fields
+        for legacy in names:
+            current = legacy.replace("fcu", "cu")
+            if legacy == current or current not in names:
+                continue
+            if data.get(current) is None and data.get(legacy) is not None:
+                data = {**data, current: data[legacy]}
+            elif data.get(legacy) is None and data.get(current) is not None:
+                data = {**data, legacy: data[current]}
+        return data
 
 
 class ErrorDetails(_Response):
@@ -216,11 +258,17 @@ class PolicyMetadata(_Response):
 
 
 class _CommercialMetadata(_Response):
+    cu_quoted: int | None = Field(default=None, ge=0)
+    cu_charged: int | None = Field(default=None, ge=0)
+    cu_schedule_id: str | None = None
+    cu_schedule_version: str | None = None
+    # Deprecated aliases with equal values; kept for older callers and servers.
     fcu_quoted: int | None = Field(default=None, ge=0)
     fcu_charged: int | None = Field(default=None, ge=0)
     fcu_schedule_id: str | None = None
     fcu_schedule_version: str | None = None
     policy: PolicyMetadata | None = None
+    remaining_cu_instance_estimate: int | None = Field(default=None, ge=0)
     remaining_fcu_instance_estimate: int | None = Field(default=None, ge=0)
     budget_period: str | None = None
     budget_reset_at: str | None = None
@@ -229,9 +277,10 @@ class _CommercialMetadata(_Response):
 class ResponseMetadata(_CommercialMetadata):
     """Server provenance and optional commercial CU evidence.
 
-    Only ``fcu_quoted`` and ``fcu_charged`` are commercial CU evidence.
+    Only ``cu_quoted`` and ``cu_charged`` are commercial CU evidence; the
+    ``fcu_*`` names are deprecated aliases with equal values.
     Retired capacity fields are optional for compatibility with older deployments.
-    Missing ``fcu_charged`` means unreported, not zero.
+    Missing ``cu_charged`` means unreported, not zero.
     """
 
     request_id: str
@@ -517,7 +566,8 @@ class CostRate(_Response):
     operation: str
     model: str
     billing_unit: str
-    fcu_per_unit: int
+    cu_per_unit: int
+    fcu_per_unit: int  # deprecated alias of cu_per_unit
     max_discrete_dividends: int
 
 
@@ -528,8 +578,10 @@ class CostSchedule(_Response):
     policy_revision: str
     effective_from: str
     effective_until: str | None
-    fixed_request_fcu: int
-    minimum_charge_fcu: int
+    fixed_request_cu: int
+    minimum_charge_cu: int
+    fixed_request_fcu: int  # deprecated alias of fixed_request_cu
+    minimum_charge_fcu: int  # deprecated alias of minimum_charge_cu
     rounding: str
     failure_charging: str
     rates: list[CostRate]
@@ -540,11 +592,18 @@ class CostLine(_Response):
     model: str
     billing_unit: str
     quantity: int
-    fcu_per_unit: int
-    variable_fcu: int
+    cu_per_unit: int
+    variable_cu: int
+    fcu_per_unit: int  # deprecated alias of cu_per_unit
+    variable_fcu: int  # deprecated alias of variable_cu
 
 
 class CostBreakdown(_Response):
+    total_cu: int
+    fixed_cu: int
+    variable_cu: int
+    minimum_charge_cu: int
+    # Deprecated aliases of the cu_* fields above.
     total_fcu: int
     fixed_fcu: int
     variable_fcu: int

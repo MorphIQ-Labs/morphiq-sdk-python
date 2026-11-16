@@ -28,7 +28,7 @@ from scripts.generate_notebook import regime_sources
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_regime_models_and_fixtures_cover_pinned_contract(regime_cases):
+def test_regime_models_and_fixtures_cover_pinned_contract(regime_cases, contract_fields):
     schema = json.loads((ROOT / "contracts/openapi.json").read_text())
     for name in (
         "RegimeRequest",
@@ -40,9 +40,8 @@ def test_regime_models_and_fixtures_cover_pinned_contract(regime_cases):
         "RegimeProvenance",
         "RegimeConsumedPriceRange",
     ):
-        assert set(getattr(models, name).model_fields) == set(
-            schema["components"]["schemas"][name]["properties"]
-        )
+        properties = schema["components"]["schemas"][name]["properties"]
+        assert contract_fields(getattr(models, name), properties) == set(properties)
     for case in regime_cases:
         for name, payload in [
             ("RegimeRequest", case["request"]),

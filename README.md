@@ -102,7 +102,7 @@ and prints the JSON response. Example response from the recorded synthetic fixtu
 
 Your request ID and engine metadata will reflect the live service. This fixture
 was recorded in open development mode; authenticated responses may also report
-commercial charges in `metadata.fcu_charged`. Keep the request ID for support.
+commercial charges in `metadata.cu_charged`. Keep the request ID for support.
 See [the quickstart guide](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/docs/QUICKSTART.md)
 for input units, async usage, configuration and errors.
 
@@ -188,8 +188,10 @@ no real credentials; native API integration is opt-in. See
 [CONTRIBUTING.md](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/CONTRIBUTING.md) and [RELEASE.md](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/RELEASE.md).
 
 Clients make no automatic retries and do not follow redirects. A timeout
-may leave work charged. Only `fcu_quoted` and `fcu_charged` report commercial CUs.
-Missing `fcu_charged` means unreported, not zero. The retired `units_charged` and
+may leave work charged. Only `cu_quoted` and `cu_charged` report commercial CUs.
+Missing `cu_charged` means unreported, not zero. The `fcu_*` names are deprecated
+aliases with equal values; the SDK fills each name from the other, so older servers
+that send only `fcu_*` still work. The retired `units_charged` and
 `compute_schedule_version` fields are optional; they remain accepted from older
 deployments and are never used to calculate a charge.
 
