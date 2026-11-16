@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/MorphIQ-Labs/morphiq-sdk-python/compare/v0.2.0...v0.2.1) (2026-11-16)
+
+
+### Features
+
+* **sdk:** align Python client with production API v0.7.0 ([#49](https://github.com/MorphIQ-Labs/morphiq-sdk-python/issues/49)) ([3807e36](https://github.com/MorphIQ-Labs/morphiq-sdk-python/commit/3807e36662e2a016b86c2658a82381ff2c862e3d))
+
 ## [0.2.0](https://github.com/MorphIQ-Labs/morphiq-sdk-python/compare/v0.1.1...v0.2.0) (2026-11-05)
 
 
