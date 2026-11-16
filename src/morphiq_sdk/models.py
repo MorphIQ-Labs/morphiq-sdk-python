@@ -114,7 +114,7 @@ class _Response(BaseModel):
             if legacy == current or current not in names:
                 continue
             for target, source in ((current, legacy), (legacy, current)):
-                if values.get(target) is None and values.get(source) is not None:
+                if target not in values and values.get(source) is not None:
                     if target not in data:
                         filled.add(target)
                     values = {**values, target: values[source]}
@@ -123,16 +123,6 @@ class _Response(BaseModel):
         if filled and isinstance(model, BaseModel):
             model.__pydantic_fields_set__.difference_update(filled)
         return model
-        names = cls.model_fields
-        for legacy in names:
-            current = legacy.replace("fcu", "cu")
-            if legacy == current or current not in names:
-                continue
-            if data.get(current) is None and data.get(legacy) is not None:
-                data = {**data, current: data[legacy]}
-            elif data.get(legacy) is None and data.get(current) is not None:
-                data = {**data, legacy: data[current]}
-        return data
 
 
 class ErrorDetails(_Response):
@@ -428,7 +418,97 @@ class RegimeScoreContract(_Response):
     sum_tolerance: FiniteFloat
 
 
+RegimeVolatilityLabel = Literal["low", "high", "crisis"]
+RegimeCrisisUnavailableReason = Literal["short_reference", "degenerate_reference"]
+
+
+class RegimeVolatilityBasis(_Response):
+    target: Literal["current_volatility"]
+
+
+class RegimeVolatilityPrediction(_Response):
+    label: RegimeVolatilityLabel
+
+
+class RegimeVolatilityAvailable(_Response):
+    status: Literal["available"]
+    basis: RegimeVolatilityBasis
+    prediction: RegimeVolatilityPrediction
+
+
+class RegimeVolatilityNotApplicable(_Response):
+    status: Literal["not_applicable"]
+    basis: RegimeVolatilityBasis
+    prediction: None
+    reason_code: Literal["predicted_not_eligible"]
+
+
+class RegimeVolatilityUnavailable(_Response):
+    status: Literal["unavailable"]
+    basis: RegimeVolatilityBasis
+    prediction: None
+    reason_code: Literal["prediction_unavailable"]
+
+
+RegimeVolatilityHead = Annotated[
+    RegimeVolatilityAvailable | RegimeVolatilityNotApplicable | RegimeVolatilityUnavailable,
+    Field(discriminator="status"),
+]
+
+
+class RegimeCrisisActive(_Response):
+    status: Literal["crisis"]
+    score: FiniteFloat
+    episode_start_price_index: int = Field(ge=0)
+
+
+class RegimeNotCrisis(_Response):
+    status: Literal["not_crisis"]
+    score: FiniteFloat
+    episode_start_price_index: None
+
+
+class RegimeCrisisUnavailable(_Response):
+    status: Literal["unavailable"]
+    score: None
+    episode_start_price_index: None
+    reason_code: RegimeCrisisUnavailableReason
+
+
+RegimeCrisis = Annotated[
+    RegimeCrisisActive | RegimeNotCrisis | RegimeCrisisUnavailable,
+    Field(discriminator="status"),
+]
+
+
+class RegimeCrisisScoreContract(_Response):
+    """Unbounded linear readout; neither a probability nor a softmax score."""
+
+    kind: Literal["linear_readout"]
+    version: str
+    theta_in: FiniteFloat
+    theta_out: FiniteFloat
+
+
+class RegimeCrisisProvenance(_Response):
+    method: str
+    parameters_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    features: str
+
+
+class RegimeVolatilityLabelProvenance(_Response):
+    method: str
+    model_id: str
+    model_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    crisis_method: str
+    crisis_parameters_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+
 class RegimeResult(_Response):
+    # Production supplies these fields; optional only for older server responses.
+    volatility: RegimeVolatilityHead | None = None
+    crisis: RegimeCrisis | None = None
+    crisis_score_contract: RegimeCrisisScoreContract | None = None
     score_contract: RegimeScoreContract
     decision: Annotated[
         RegimeAvailable[RegimeDecisionPrediction] | RegimeNotApplicable | RegimeUnavailable,
@@ -445,6 +525,8 @@ class RegimeResult(_Response):
 
 
 class RegimeProvenance(_Response):
+    crisis: RegimeCrisisProvenance | None = None
+    volatility_label: RegimeVolatilityLabelProvenance | None = None
     model_id: str
     model_status: str
     model_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
@@ -475,6 +557,7 @@ class RegimeMetadata(_CommercialMetadata):
     return_type: Literal["log"]
     return_unit: Literal["fraction"]
     inference_time_us: int = Field(ge=0)
+    crisis_time_us: int | None = Field(default=None, ge=0)
     all_prices_consumed: bool
 
 

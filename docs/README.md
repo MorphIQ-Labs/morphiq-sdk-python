@@ -1,6 +1,6 @@
 # SDK documentation
 
-See [API v0.5.0 model capabilities](MODELS.md) for supported operations,
+See [API v0.7.0 model capabilities](MODELS.md) for supported operations,
 100-item batch limits and unavailable-Greek semantics.
 
 Start with [API access, installation and your first request](QUICKSTART.md).

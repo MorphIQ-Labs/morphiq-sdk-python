@@ -40,21 +40,11 @@ def batch_cases():
 
 @pytest.fixture
 def contract_fields():
-    """Model fields to compare with a pinned contract schema.
-
-    ``cu_*`` names are additive mirrors of the ``fcu_*`` names (API 0.7.0). The pinned
-    0.5.0 contract predates them, so a ``cu_*`` field is excluded only when it is absent
-    from the schema and its deprecated ``fcu_*`` counterpart is present. Refreshing the
-    contract to 0.7.0 makes the exclusion vacuous.
-    """
+    """Ignore only the two intentionally retained, retired metadata attributes."""
 
     def fields(model, properties):
-        properties = set(properties)
-        return {
-            name
-            for name in model.model_fields
-            if name in properties or name.replace("cu", "fcu", 1) not in properties
-        }
+        retired = {"units_charged", "compute_schedule_version"}
+        return set(model.model_fields) - (retired - set(properties))
 
     return fields
 

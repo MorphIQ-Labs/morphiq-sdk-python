@@ -222,11 +222,12 @@ assert analyze_button.description == 'Show analysis'
 outputs = analysis_output.outputs
 tables = [o['data']['text/html'] for o in outputs if 'text/html' in o.get('data', {})]
 assert len(tables) == 2
-assert all(head in tables[0] for head in ['Decision', 'Direction', 'State'])
+assert all(head in tables[0] for head in ['Decision', 'Direction', 'State', 'Volatility'])
 assert 'Model SHA-256' in tables[1] and 'Engine(s)' in tables[1]
 assert sum('image/png' in o.get('data', {}) for o in outputs) == 1
 text = ''.join(o.get('text', '') for o in outputs)
 assert 'fixture-regime' in text and 'CU charged: not reported' in text
+assert 'Crisis: not_crisis' in text and 'Linear readout (not a probability): -1.25' in text
 assert not analyze_button.disabled and not ticker.disabled and not price_interval.disabled
 response = last_response
 analysis_output.outputs = ()

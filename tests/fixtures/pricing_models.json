@@ -68,7 +68,7 @@
       "greeks": [],
       "guidance": "American calls and puts with a continuous dividend yield.",
       "constraints": [],
-      "notes": "Risk v0.43.5 uses optimized fixed-work pricing with absolute error at most 1e-4 * max(spot, strike) against the independent American value, including reference uncertainty. The API accepts price and IV only. Standard-five, all-ten and analytics requests return HTTP 400 unsupported_operation, including Auto resolving to QdFp. Engine derivative implementations are retained but not exposed. IV inverts the served price; its residual is not an exact-American volatility error bound. Numerical values and inverse availability change from v0.42.x despite the unchanged model_version. Engine domains and per-input refusals remain authoritative."
+      "notes": "The pinned Risk engine uses optimized fixed-work pricing with absolute error at most 1e-4 * max(spot, strike) against the independent American value, including reference uncertainty. The API accepts price and IV only. Standard-five, all-ten and analytics requests return HTTP 400 unsupported_operation, for explicit QdFp selection. Engine derivative implementations are retained but not exposed. IV inverts the served price; its residual is not an exact-American volatility error bound. Numerical values and inverse availability change from v0.42.x despite the unchanged model_version. Engine domains and per-input refusals remain authoritative."
     },
     {
       "id": "black_scholes_merton_fd",
@@ -178,7 +178,7 @@
         "veta",
         "color"
       ],
-      "guidance": "American option pricing using the BS1993 approximation.",
+      "guidance": "American option pricing using the BS1993 approximation. Auto selects this model when no discrete cash-dividend schedule is supplied.",
       "constraints": [],
       "notes": "The engine enforces model-specific domains and accuracy regions. Implemented Greeks may be unavailable for particular inputs, including expiry, exercise-boundary kinks and unresolved derivatives. An empty constraints list does not imply an unrestricted domain."
     }
@@ -186,8 +186,8 @@
   "engines": [
     {
       "name": "morphiq-risk",
-      "version": "0.43.5",
-      "revision": "43ca7f93b9edda6078b49950de6a8b7d51a3e3ef"
+      "version": "0.45.0",
+      "revision": "a4df4da57ff2d53a1f1146f1c4310f0e980a497a"
     }
   ],
   "greek_units": {

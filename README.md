@@ -11,9 +11,10 @@ valuation, sensitivity analysis and market-regime identification.
 See the [documentation index](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/docs/README.md) for all feature guides and the
 [Python API reference](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/docs/API.md) for methods, models and errors.
 
-This client targets API **v0.5.0**, including public model discovery,
-standard-five Greeks, cost utilities and spend caps. SDK 0.1.x lacks these
-additions; use the release containing this contract update or install this checkout.
+This client targets API **v0.7.0**, including public model discovery,
+standard-five Greeks, cost utilities and spend caps, preferred CU fields, and
+typed regime crisis/volatility results. SDK 0.2.0 covers the routes but predates
+the typed CU and regime additions; install the release containing this update.
 See [model capabilities and migration](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/docs/MODELS.md): BSM/BS1993 support batches
 up to 100; QdFp and cash-dividend finite difference support single price and IV.
 
@@ -77,21 +78,19 @@ and prints the JSON response. Example response from the recorded synthetic fixtu
 ```json
 {
   "metadata": {
-    "request_id": "fr-18e4e90129262501-0000000000000003",
+    "request_id": "fr-18e88a7b3977d162-0000000000000002",
     "api_version": "v1",
-    "engine_version": "0.43.5",
+    "engine_version": "0.45.0",
     "engines": [
       {
         "name": "morphiq-risk",
-        "version": "0.43.5",
-        "revision": "43ca7f93b9edda6078b49950de6a8b7d51a3e3ef"
+        "version": "0.45.0",
+        "revision": "a4df4da57ff2d53a1f1146f1c4310f0e980a497a"
       }
-    ],
-    "units_charged": 1,
-    "compute_schedule_version": "2026-09-11"
+    ]
   },
   "result": {
-    "price": 10.45058357218557,
+    "price": 10.450583572185565,
     "exercise_style": "european",
     "option_type": "call",
     "pricing_model": "black_scholes_merton",
@@ -191,7 +190,7 @@ Clients make no automatic retries and do not follow redirects. A timeout
 may leave work charged. Only `cu_quoted` and `cu_charged` report commercial CUs.
 Missing `cu_charged` means unreported, not zero. The `fcu_*` names are deprecated
 aliases with equal values; the SDK fills each name from the other, so older servers
-that send only `fcu_*` still work. The retired `units_charged` and
+that send only `fcu_*` still work. Explicit nulls remain unreported. The retired `units_charged` and
 `compute_schedule_version` fields are optional; they remain accepted from older
 deployments and are never used to calculate a charge.
 

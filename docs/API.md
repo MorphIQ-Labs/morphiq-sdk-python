@@ -151,7 +151,7 @@ Both preserve optional commercial fields: `cu_quoted`, `cu_charged`,
 
 The deprecated `fcu_quoted`, `fcu_charged`, `fcu_schedule_id`, `fcu_schedule_version` and
 `remaining_fcu_instance_estimate` remain as aliases with equal values; the SDK fills each
-name from the other, so servers that send only the `fcu_*` names still work. A name the
+omitted name from the other, preserving explicit nulls, so servers that send only the `fcu_*` names still work. A name the
 server did not send is not reported as sent by `model_dump(exclude_unset=True)`.
 Count `cu_charged` once per response, including a combined result or a batch.
 Missing/null means unreported, not zero. Neither `cu_quoted` nor internal

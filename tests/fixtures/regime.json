@@ -598,6 +598,26 @@
                 }
               ]
             }
+          },
+          "volatility": {
+            "status": "available",
+            "basis": {
+              "target": "current_volatility"
+            },
+            "prediction": {
+              "label": "low"
+            }
+          },
+          "crisis": {
+            "status": "not_crisis",
+            "score": -1.25,
+            "episode_start_price_index": null
+          },
+          "crisis_score_contract": {
+            "kind": "linear_readout",
+            "version": "synthetic-v1",
+            "theta_in": 2.0,
+            "theta_out": 1.0
           }
         },
         "metadata": {
@@ -617,7 +637,19 @@
             "model_status": "fixture",
             "model_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
             "preprocessing": "fixture",
-            "teacher_executed": false
+            "teacher_executed": false,
+            "crisis": {
+              "method": "synthetic-crisis",
+              "parameters_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "features": "synthetic-features"
+            },
+            "volatility_label": {
+              "method": "three-label-v1",
+              "model_id": "synthetic-wire-fixture",
+              "model_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+              "crisis_method": "synthetic-crisis",
+              "crisis_parameters_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            }
           },
           "received_price_count": 512,
           "window_price_count": 512,
@@ -633,7 +665,8 @@
           "return_type": "log",
           "return_unit": "fraction",
           "inference_time_us": 123,
-          "all_prices_consumed": false
+          "all_prices_consumed": false,
+          "crisis_time_us": 7
         }
       }
     }

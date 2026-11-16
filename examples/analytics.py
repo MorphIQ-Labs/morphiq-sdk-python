@@ -35,7 +35,7 @@ def main() -> None:
     except APIError as error:
         print(f"HTTP {error.status_code}: {error.code}: {error.message}", file=sys.stderr)
         print(f"Request ID: {error.request_id}", file=sys.stderr)
-        charged = error.metadata.fcu_charged if error.metadata else None
+        charged = error.metadata.cu_charged if error.metadata else None
         print(
             f"Commercial CU charged: {charged if charged is not None else 'not reported'}",
             file=sys.stderr,
@@ -47,7 +47,7 @@ def main() -> None:
             "No complete response; execution and charges may be unknown. No retry."
         ) from None
     except ResponseError as error:
-        charged = error.metadata.fcu_charged if error.metadata else None
+        charged = error.metadata.cu_charged if error.metadata else None
         print(
             f"Commercial CU charged: {charged if charged is not None else 'not reported'}",
             file=sys.stderr,
@@ -84,7 +84,7 @@ def main() -> None:
     for engine in response.metadata.engines:
         print(f"Engine: {engine.name} {engine.version} ({engine.revision})")
     # Missing commercial CU is unreported, not zero.
-    charged = response.metadata.fcu_charged
+    charged = response.metadata.cu_charged
     print("Commercial CU charged:", charged if charged is not None else "not reported")
 
 

@@ -42,9 +42,9 @@ from morphiq_sdk.pandas import workflow_to_frames
 # workflow has finished or stopped; identifiers cover every original input,
 # including failed and unattempted inputs.
 frames = workflow_to_frames(workflow, identifiers=contract_ids)
-print(frames.reported_fcu_charged)
+print(frames.reported_cu_charged)
 print(frames.unknown_charge_count)
-print(frames.total_fcu_charged)
+print(frames.total_cu_charged)
 ```
 
 A running workflow is rejected to avoid presenting a partial moving view.
@@ -106,7 +106,7 @@ failed requests. Unattempted chunks have no receipt row.
 | `start`, `stop` | Original input range `[start, stop)` |
 | `status` | `completed` (validated response), `request_error`, or `interrupted` |
 | `request_id` | Server request ID when known |
-| `fcu_charged` | Reported commercial CU as a Python integer, or `None` |
+| `cu_charged` | Reported commercial CU as a Python integer, or `None` |
 | `metadata` | Full available API metadata, including engine provenance and optional commercial fields |
 | `response_extras` | Additive top-level response fields outside `metadata` and `results`, or `None` without a validated response |
 | `error` | Request error type, SDK message and available HTTP status/code/field/Retry-After; `None` for completed requests |
@@ -118,9 +118,9 @@ after joining the request table onto result rows: that duplicates receipts.
 The `BatchFrames` summary is captured at conversion time:
 
 - `state`: `completed` for an accepted batch, otherwise the workflow's state.
-- `reported_fcu_charged`: exact integer subtotal of reported charges.
+- `reported_cu_charged`: exact integer subtotal of reported charges.
 - `unknown_charge_count`: attempted requests without reported charges.
-- `total_fcu_charged`: total only when work completed and every attempted charge
+- `total_cu_charged`: total only when work completed and every attempted charge
   is known; otherwise `None`.
 
 A reported zero is known. Missing/null charges remain unknown. A normal pandas

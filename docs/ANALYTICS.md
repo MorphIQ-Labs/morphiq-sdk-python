@@ -51,11 +51,11 @@ a per-share currency basis. [Greek units](GREEKS.md) and
 
 ## Commercial CU
 
-The response's `metadata.fcu_charged` is the reported charge for the entire
+The response's `metadata.cu_charged` is the reported charge for the entire
 combined request. Count it **once**. Price, the ten Greeks and the nested IV result
 are components of that response, not separate billable responses to sum.
 Commercial policy and the calculation of this charge belong to the service.
-Do not add quotes (`fcu_quoted`) or internal compute weights (`units_charged`).
+Do not add quotes (`cu_quoted`) or internal compute weights (`units_charged`).
 
 The [pricing workspace](../notebooks/pricing/options.ipynb) records every request
 from Price option, Price + Greeks, Solve IV, Analyze premium and Spot sensitivity:

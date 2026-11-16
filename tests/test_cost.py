@@ -1,4 +1,5 @@
 import asyncio
+import copy
 import json
 from pathlib import Path
 
@@ -192,7 +193,20 @@ def test_quote_timeout_is_non_billable_and_not_retried():
 
 def test_cost_wire_contract():
     schema = json.loads((ROOT / "contracts/openapi.json").read_text())
+
+    def current_wire(value):
+        if isinstance(value, list):
+            return [current_wire(item) for item in value]
+        if not isinstance(value, dict):
+            return value
+        result = {key: current_wire(item) for key, item in value.items()}
+        for key, item in list(result.items()):
+            if "fcu" in key:
+                result[key.replace("fcu", "cu")] = item
+        return result
+
     for name, value in [("CostScheduleResponse", SCHEDULE), ("CostQuoteResponse", QUOTE)]:
+        value = current_wire(copy.deepcopy(value))
         Draft202012Validator(
             {"$ref": f"#/components/schemas/{name}", "components": schema["components"]}
         ).validate(value)

@@ -1,6 +1,6 @@
 # Batch operations
 
-See [API v0.5.0 model capabilities](MODELS.md) for supported operations,
+See [API v0.7.0 model capabilities](MODELS.md) for supported operations,
 100-item batch limits and unavailable-Greek semantics.
 
 Submit one explicit ordered batch with either `MorphIQ` or `AsyncMorphIQ`:
@@ -83,7 +83,7 @@ for item in response.results:
         print(item.index, item.result.model_dump(exclude_unset=True))
     else:
         print(item.index, item.error.code, item.error.message)
-charged = response.metadata.fcu_charged
+charged = response.metadata.cu_charged
 print("Batch CU:", charged if charged is not None else "not reported")
 print("Request ID:", response.metadata.request_id)
 ```
@@ -124,7 +124,7 @@ A missing/extra outcome, duplicate or reordered index, or malformed result raise
 `ResponseError`. Valid billing metadata remains accessible on that exception;
 the raw body and headers retain evidence. There is no automatic replay.
 
-`response.metadata.fcu_charged` covers the entire batch. Count it once, including
+`response.metadata.cu_charged` covers the entire batch. Count it once, including
 when some items fail. Do not multiply it by item count, add it once per row, or
 infer per-item costs. Missing/null means unreported, not zero. Quotes and internal
 `units_charged` are not charges. The pricing notebook's session ledger includes

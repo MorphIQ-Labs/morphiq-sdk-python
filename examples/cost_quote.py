@@ -43,10 +43,10 @@ def main() -> None:
         batch = BatchPriceRequest(requests=[request, request])
         quote = client.quote(batch if args.batch else request)
         print(quote.model_dump_json(indent=2))
-        print("Prospective execution CU:", quote.quote.total_fcu)
-        print("Utility CU charged:", quote.metadata.fcu_charged)
+        print("Prospective execution CU:", quote.quote.total_cu)
+        print("Utility CU charged:", quote.metadata.cu_charged)
         if args.execute:
-            ceiling = quote.quote.total_fcu if args.max_cu is None else args.max_cu
+            ceiling = quote.quote.total_cu if args.max_cu is None else args.max_cu
             response: PriceResponse | BatchPriceResponse
             try:
                 if args.batch:
@@ -56,8 +56,8 @@ def main() -> None:
             except APIError as error:
                 print(f"HTTP {error.status_code}: {error.code}", file=sys.stderr)
                 print("Request ID:", error.request_id, file=sys.stderr)
-                quoted = error.metadata.fcu_quoted if error.metadata else None
-                charged = error.metadata.fcu_charged if error.metadata else None
+                quoted = error.metadata.cu_quoted if error.metadata else None
+                charged = error.metadata.cu_charged if error.metadata else None
                 print(
                     "Execution quote CU:",
                     quoted if quoted is not None else "not reported",

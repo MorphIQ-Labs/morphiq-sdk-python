@@ -48,13 +48,13 @@ def main() -> None:
             print(frames.results[columns].to_string(index=False))
             # Charges belong to requests, never to individual option rows.
             print(
-                frames.requests[["request_index", "status", "request_id", "fcu_charged"]].to_string(
+                frames.requests[["request_index", "status", "request_id", "cu_charged"]].to_string(
                     index=False
                 )
             )
-            print("Reported CU subtotal:", frames.reported_fcu_charged)
+            print("Reported CU subtotal:", frames.reported_cu_charged)
             print("Attempts with unknown CU:", frames.unknown_charge_count)
-            total = frames.total_fcu_charged
+            total = frames.total_cu_charged
             print("Whole-workflow CU:", total if total is not None else "unknown or incomplete")
         if workflow.state != "completed":
             raise SystemExit(1)

@@ -40,7 +40,7 @@ def main() -> None:
             # Also runs on interruption; preserve partial results and unknown charges.
             for attempt in workflow.attempts:
                 print(f"Input range [{attempt.start}, {attempt.stop}): {attempt.request_id}")
-                charge = attempt.fcu_charged
+                charge = attempt.cu_charged
                 print("Chunk CU:", charge if charge is not None else "not reported")
                 if attempt.response is None:
                     print("No validated results for this chunk; do not replay automatically.")
@@ -57,9 +57,9 @@ def main() -> None:
                 for engine in attempt.response.metadata.engines:
                     print("Engine:", engine.name, engine.version, engine.revision)
             print("Workflow state:", workflow.state)
-            print("Reported CU subtotal:", workflow.reported_fcu_charged)
+            print("Reported CU subtotal:", workflow.reported_cu_charged)
             print("Attempts with unknown CU:", workflow.unknown_charge_count)
-            total = workflow.total_fcu_charged
+            total = workflow.total_cu_charged
             print("Whole-workflow CU:", total if total is not None else "unknown or incomplete")
             print("Unattempted input ranges:", workflow.unattempted_ranges)
         if workflow.state != "completed":

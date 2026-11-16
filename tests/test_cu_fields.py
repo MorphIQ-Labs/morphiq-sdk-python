@@ -78,12 +78,13 @@ def test_a_value_the_server_sent_is_never_overridden():
     assert (parsed.cu_charged, parsed.fcu_charged) == (5, 1)
 
 
-def test_explicit_null_charge_is_filled_from_the_other_name():
-    parsed = ServiceErrorMetadata.model_validate(
-        {**metadata(), "service_version": "0.7.0", "cu_charged": None, "fcu_charged": 3}
-    )
-    assert parsed.cu_charged == 3
-    assert "cu_charged" in parsed.model_fields_set  # sent as null, so it stays "set"
+@pytest.mark.parametrize("current,legacy", [(None, 3), (3, None), (None, None)])
+def test_explicit_null_charge_is_preserved(current, legacy):
+    wire = {**metadata(), "service_version": "0.7.0", "cu_charged": current, "fcu_charged": legacy}
+    parsed = ServiceErrorMetadata.model_validate(wire)
+    assert parsed.cu_charged == current
+    assert parsed.fcu_charged == legacy
+    assert parsed.model_dump(exclude_unset=True) == wire
 
 
 COST_TYPES = {
