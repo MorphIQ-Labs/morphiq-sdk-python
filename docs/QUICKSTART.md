@@ -107,7 +107,7 @@ They also run directly as `python examples/price_european.py` and
 
 The [native reference fixtures](../tests/fixtures/pricing.json) record about
 **10.45058357218557** for the European call (`black_scholes_merton/1`) and
-**7.6165316765775835** for the American put (`qd_fixed_point/1`). These
+**7.5298454349124135** for the American put (`bjerksund_stensland_1993/1`). These
 results belong to the recorded service/engine identity; they are not universal
 expectations for future models selected by `auto`. Request IDs vary. The fixture
 service ran in open mode and omitted commercial charges.
@@ -162,16 +162,16 @@ try:
 except RateLimitError as error:
     print("Rate limited:", error.code, error.request_id)
     print("Retry-After:", error.retry_after, "Delay in seconds:", error.retry_delay())
-    charged = error.metadata.fcu_charged if error.metadata else None
+    charged = error.metadata.cu_charged if error.metadata else None
     print("Commercial CU charge:", charged if charged is not None else "unreported")
     # Decide when to submit a new request; this handler does not retry.
 except APIError as error:
     print(error.status_code, error.code, error.request_id)
-    charged = error.metadata.fcu_charged if error.metadata else None
+    charged = error.metadata.cu_charged if error.metadata else None
     print("Commercial CU charge:", charged if charged is not None else "unreported")
 except ResponseError as error:
     print("Invalid response:", error.request_id)
-    charged = error.metadata.fcu_charged if error.metadata else None
+    charged = error.metadata.cu_charged if error.metadata else None
     print("Commercial CU charge:", charged if charged is not None else "unreported")
 except RequestTimeout:
     print("No complete response; execution and charges may be unknown.")
@@ -188,8 +188,8 @@ Use request IDs for support, not keys.
 
 Neither client automatically retries requests or follows redirects. A server can
 commit work before a client timeout; another submission can incur another charge.
-Missing `fcu_charged` means unreported, not zero. `units_charged` is an internal
-compute weight, and `remaining_fcu_instance_estimate` is not an authoritative balance.
+Missing `cu_charged` means unreported, not zero. The retired `units_charged` field is not commercial evidence.
+`remaining_cu_instance_estimate` is not an authoritative balance.
 
 Responses preserve additive fields through `model_dump(exclude_unset=True)`.
 `response.raw_body` and `response.headers` allow explicit response inspection

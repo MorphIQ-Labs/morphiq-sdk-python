@@ -38,6 +38,17 @@ def batch_cases():
     return json.loads((ROOT / "tests/fixtures/batch.json").read_text())["cases"]
 
 
+@pytest.fixture
+def contract_fields():
+    """Ignore only the two intentionally retained, retired metadata attributes."""
+
+    def fields(model, properties):
+        retired = {"units_charged", "compute_schedule_version"}
+        return set(model.model_fields) - (retired - set(properties))
+
+    return fields
+
+
 @pytest.fixture(autouse=True)
 def isolate_credentials(monkeypatch):
     monkeypatch.delenv("MORPHIQ_API_KEY", raising=False)

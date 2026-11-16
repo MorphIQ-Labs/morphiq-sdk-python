@@ -184,7 +184,7 @@
           }
         ],
         "requestBody": {
-          "description": "FusedAnalyticsRequest encoded as JSON or morphiq.ferro_risk.v1.FusedAnalyticsRequest",
+          "description": "FusedAnalyticsRequest encoded as JSON or morphiq.api.v1.FusedAnalyticsRequest",
           "content": {
             "application/json": {
               "schema": {
@@ -511,7 +511,7 @@
           }
         ],
         "requestBody": {
-          "description": "BatchFusedAnalyticsRequest encoded as JSON or morphiq.ferro_risk.v1.BatchFusedAnalyticsRequest",
+          "description": "BatchFusedAnalyticsRequest encoded as JSON or morphiq.api.v1.BatchFusedAnalyticsRequest",
           "content": {
             "application/json": {
               "schema": {
@@ -773,7 +773,7 @@
             }
           },
           "503": {
-            "description": "Ingress or weighted compute capacity exhausted, or funding, policy or admission temporarily unavailable",
+            "description": "Ingress or compute capacity exhausted, or funding, policy or admission temporarily unavailable",
             "headers": {
               "Retry-After": {
                 "schema": {
@@ -1299,7 +1299,7 @@
           }
         ],
         "requestBody": {
-          "description": "GreeksAllTenRequest encoded as JSON or morphiq.ferro_risk.v1.GreeksAllTenRequest",
+          "description": "GreeksAllTenRequest encoded as JSON or morphiq.api.v1.GreeksAllTenRequest",
           "content": {
             "application/json": {
               "schema": {
@@ -1625,7 +1625,7 @@
           }
         ],
         "requestBody": {
-          "description": "GreeksStandardRequest encoded as JSON or morphiq.ferro_risk.v1.GreeksStandardRequest",
+          "description": "GreeksStandardRequest encoded as JSON or morphiq.api.v1.GreeksStandardRequest",
           "content": {
             "application/json": {
               "schema": {
@@ -1952,7 +1952,7 @@
           }
         ],
         "requestBody": {
-          "description": "BatchGreeksStandardRequest encoded as JSON or morphiq.ferro_risk.v1.BatchGreeksStandardRequest",
+          "description": "BatchGreeksStandardRequest encoded as JSON or morphiq.api.v1.BatchGreeksStandardRequest",
           "content": {
             "application/json": {
               "schema": {
@@ -2214,7 +2214,7 @@
             }
           },
           "503": {
-            "description": "Ingress or weighted compute capacity exhausted, or funding, policy or admission temporarily unavailable",
+            "description": "Ingress or compute capacity exhausted, or funding, policy or admission temporarily unavailable",
             "headers": {
               "Retry-After": {
                 "schema": {
@@ -2279,7 +2279,7 @@
           }
         ],
         "requestBody": {
-          "description": "BatchGreeksAllTenRequest encoded as JSON or morphiq.ferro_risk.v1.BatchGreeksAllTenRequest",
+          "description": "BatchGreeksAllTenRequest encoded as JSON or morphiq.api.v1.BatchGreeksAllTenRequest",
           "content": {
             "application/json": {
               "schema": {
@@ -2541,7 +2541,7 @@
             }
           },
           "503": {
-            "description": "Ingress or weighted compute capacity exhausted, or funding, policy or admission temporarily unavailable",
+            "description": "Ingress or compute capacity exhausted, or funding, policy or admission temporarily unavailable",
             "headers": {
               "Retry-After": {
                 "schema": {
@@ -2605,7 +2605,7 @@
           }
         ],
         "requestBody": {
-          "description": "ImpliedVolatilityRequest encoded as JSON or morphiq.ferro_risk.v1.ImpliedVolatilityRequest",
+          "description": "ImpliedVolatilityRequest encoded as JSON or morphiq.api.v1.ImpliedVolatilityRequest",
           "content": {
             "application/json": {
               "schema": {
@@ -2932,7 +2932,7 @@
           }
         ],
         "requestBody": {
-          "description": "BatchImpliedVolatilityRequest encoded as JSON or morphiq.ferro_risk.v1.BatchImpliedVolatilityRequest",
+          "description": "BatchImpliedVolatilityRequest encoded as JSON or morphiq.api.v1.BatchImpliedVolatilityRequest",
           "content": {
             "application/json": {
               "schema": {
@@ -3194,7 +3194,7 @@
             }
           },
           "503": {
-            "description": "Ingress or weighted compute capacity exhausted, or funding, policy or admission temporarily unavailable",
+            "description": "Ingress or compute capacity exhausted, or funding, policy or admission temporarily unavailable",
             "headers": {
               "Retry-After": {
                 "schema": {
@@ -3258,7 +3258,7 @@
           }
         ],
         "requestBody": {
-          "description": "PriceRequest encoded as JSON or morphiq.ferro_risk.v1.PriceRequest",
+          "description": "PriceRequest encoded as JSON or morphiq.api.v1.PriceRequest",
           "content": {
             "application/json": {
               "schema": {
@@ -3585,7 +3585,7 @@
           }
         ],
         "requestBody": {
-          "description": "BatchPriceRequest encoded as JSON or morphiq.ferro_risk.v1.BatchPriceRequest",
+          "description": "BatchPriceRequest encoded as JSON or morphiq.api.v1.BatchPriceRequest",
           "content": {
             "application/json": {
               "schema": {
@@ -3847,7 +3847,7 @@
             }
           },
           "503": {
-            "description": "Ingress or weighted compute capacity exhausted, or funding, policy or admission temporarily unavailable",
+            "description": "Ingress or compute capacity exhausted, or funding, policy or admission temporarily unavailable",
             "headers": {
               "Retry-After": {
                 "schema": {
@@ -4751,12 +4751,23 @@
           "fixed_fcu",
           "variable_fcu",
           "minimum_charge_fcu",
+          "total_cu",
+          "fixed_cu",
+          "variable_cu",
+          "minimum_charge_cu",
           "lines"
         ],
         "properties": {
+          "fixed_cu": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Fixed CU component; same value as the deprecated `fixed_fcu`.",
+            "minimum": 0
+          },
           "fixed_fcu": {
             "type": "integer",
             "format": "int64",
+            "description": "Deprecated alias of `fixed_cu`, removed in a later beta change.",
             "minimum": 0
           },
           "lines": {
@@ -4765,19 +4776,40 @@
               "$ref": "#/components/schemas/CostLine"
             }
           },
+          "minimum_charge_cu": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Minimum CU charge; same value as the deprecated `minimum_charge_fcu`.",
+            "minimum": 0
+          },
           "minimum_charge_fcu": {
             "type": "integer",
             "format": "int64",
+            "description": "Deprecated alias of `minimum_charge_cu`, removed in a later beta change.",
+            "minimum": 0
+          },
+          "total_cu": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Exact CU the quoted request would commit; same value as the deprecated `total_fcu`.",
             "minimum": 0
           },
           "total_fcu": {
             "type": "integer",
             "format": "int64",
+            "description": "Deprecated alias of `total_cu`, removed in a later beta change.",
+            "minimum": 0
+          },
+          "variable_cu": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Variable CU component; same value as the deprecated `variable_fcu`.",
             "minimum": 0
           },
           "variable_fcu": {
             "type": "integer",
             "format": "int64",
+            "description": "Deprecated alias of `variable_cu`, removed in a later beta change.",
             "minimum": 0
           }
         }
@@ -4791,15 +4823,24 @@
           "billing_unit",
           "quantity",
           "fcu_per_unit",
-          "variable_fcu"
+          "variable_fcu",
+          "cu_per_unit",
+          "variable_cu"
         ],
         "properties": {
           "billing_unit": {
             "type": "string"
           },
+          "cu_per_unit": {
+            "type": "integer",
+            "format": "int64",
+            "description": "CU per billing unit; same value as the deprecated `fcu_per_unit`.",
+            "minimum": 0
+          },
           "fcu_per_unit": {
             "type": "integer",
             "format": "int64",
+            "description": "Deprecated alias of `cu_per_unit`, removed in a later beta change.",
             "minimum": 0
           },
           "model": {
@@ -4813,9 +4854,16 @@
             "format": "int64",
             "minimum": 0
           },
+          "variable_cu": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Variable CU for this line; same value as the deprecated `variable_fcu`.",
+            "minimum": 0
+          },
           "variable_fcu": {
             "type": "integer",
             "format": "int64",
+            "description": "Deprecated alias of `variable_cu`, removed in a later beta change.",
             "minimum": 0
           }
         }
@@ -5054,15 +5102,23 @@
           "model",
           "billing_unit",
           "fcu_per_unit",
+          "cu_per_unit",
           "max_discrete_dividends"
         ],
         "properties": {
           "billing_unit": {
             "type": "string"
           },
+          "cu_per_unit": {
+            "type": "integer",
+            "format": "int64",
+            "description": "CU charged per billing unit; same value as the deprecated `fcu_per_unit`.",
+            "minimum": 0
+          },
           "fcu_per_unit": {
             "type": "integer",
             "format": "int64",
+            "description": "Deprecated alias of `cu_per_unit`, removed in a later beta change.",
             "minimum": 0
           },
           "max_discrete_dividends": {
@@ -5089,6 +5145,8 @@
           "effective_from",
           "fixed_request_fcu",
           "minimum_charge_fcu",
+          "fixed_request_cu",
+          "minimum_charge_cu",
           "rounding",
           "failure_charging",
           "rates"
@@ -5106,14 +5164,28 @@
           "failure_charging": {
             "type": "string"
           },
+          "fixed_request_cu": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Fixed CU fee per request; same value as the deprecated `fixed_request_fcu`.",
+            "minimum": 0
+          },
           "fixed_request_fcu": {
             "type": "integer",
             "format": "int64",
+            "description": "Deprecated alias of `fixed_request_cu`, removed in a later beta change.",
+            "minimum": 0
+          },
+          "minimum_charge_cu": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Minimum CU charge per request; same value as the deprecated `minimum_charge_fcu`.",
             "minimum": 0
           },
           "minimum_charge_fcu": {
             "type": "integer",
             "format": "int64",
+            "description": "Deprecated alias of `minimum_charge_cu`, removed in a later beta change.",
             "minimum": 0
           },
           "policy_revision": {
@@ -5996,7 +6068,7 @@
       },
       "PricingModel": {
         "type": "string",
-        "description": "Canonical selectors are listed by GET /v1/pricing/models. qd_fixed_point and cash_dividend_american remain input aliases. BS2002 is retired and returns a migration error.",
+        "description": "Auto selects BSM for European exercise, BS1993 for American exercise without cash events, and cash_dividend_american for American exercise with a nonempty cash-dividend schedule. Canonical selectors are listed by GET /v1/pricing/models. qd_fixed_point and cash_dividend_american remain input aliases. BS2002 is retired and returns a migration error.",
         "enum": [
           "auto",
           "black_scholes_merton",
@@ -6172,6 +6244,152 @@
             "minimum": 0
           }
         }
+      },
+      "RegimeCrisis": {
+        "oneOf": [
+          {
+            "type": "object",
+            "description": "In an exceptional-volatility episode at the final price.",
+            "required": [
+              "score",
+              "episode_start_price_index",
+              "status"
+            ],
+            "properties": {
+              "episode_start_price_index": {
+                "type": "integer",
+                "description": "Original-array price index where the current episode began:\nconsumed_price_range.start_index + the detector's in-slice entry index.\nNever earlier than consumed_price_range.start_index.",
+                "minimum": 0
+              },
+              "score": {
+                "type": "number",
+                "format": "double",
+                "description": "Linear readout at the final price; see crisis_score_contract."
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "crisis"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "Not in an episode at the final price.",
+            "required": [
+              "score",
+              "episode_start_price_index",
+              "status"
+            ],
+            "properties": {
+              "episode_start_price_index": {
+                "type": "null"
+              },
+              "score": {
+                "type": "number",
+                "format": "double",
+                "description": "Linear readout at the final price; see crisis_score_contract."
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "not_crisis"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "No crisis statement is possible at the final price.",
+            "required": [
+              "score",
+              "episode_start_price_index",
+              "reason_code",
+              "status"
+            ],
+            "properties": {
+              "episode_start_price_index": {
+                "type": "null"
+              },
+              "reason_code": {
+                "$ref": "#/components/schemas/RegimeCrisisUnavailableReason"
+              },
+              "score": {
+                "type": "null"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "unavailable"
+                ]
+              }
+            }
+          }
+        ],
+        "description": "crisis-target-v1 detector state at the final supplied price, assessed over\nthe same consumed_price_range as the student. Unavailable never asserts\nnot-crisis. A per-session acute-shock signal, not a persistent regime; raw\nstatus with no debouncing or smoothing. Episodes are typically short and\nrecur: see the regime guide for expected rates."
+      },
+      "RegimeCrisisProvenance": {
+        "type": "object",
+        "description": "Identity of the crisis detector that produced result.crisis.",
+        "required": [
+          "method",
+          "parameters_sha256",
+          "features"
+        ],
+        "properties": {
+          "features": {
+            "type": "string",
+            "description": "Feature definition identity."
+          },
+          "method": {
+            "type": "string"
+          },
+          "parameters_sha256": {
+            "type": "string",
+            "description": "SHA-256 of the confirmed parameter file the detector constants transcribe.",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        }
+      },
+      "RegimeCrisisScoreContract": {
+        "type": "object",
+        "description": "Applies to result.crisis.score only. A ridge linear readout, monotone in\nevidence: not a probability, confidence or calibrated quantity, and not in\n[0,1]. Outside an episode the detector enters when score >= theta_in; inside\none it stays while score >= theta_out.",
+        "required": [
+          "kind",
+          "version",
+          "theta_in",
+          "theta_out"
+        ],
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/RegimeCrisisScoreKind"
+          },
+          "theta_in": {
+            "type": "number",
+            "format": "double"
+          },
+          "theta_out": {
+            "type": "number",
+            "format": "double"
+          },
+          "version": {
+            "type": "string"
+          }
+        }
+      },
+      "RegimeCrisisScoreKind": {
+        "type": "string",
+        "enum": [
+          "linear_readout"
+        ]
+      },
+      "RegimeCrisisUnavailableReason": {
+        "type": "string",
+        "enum": [
+          "short_reference",
+          "degenerate_reference"
+        ]
       },
       "RegimeDecisionLabel": {
         "type": "string",
@@ -6517,6 +6735,7 @@
           "return_type",
           "return_unit",
           "inference_time_us",
+          "crisis_time_us",
           "all_prices_consumed"
         ],
         "properties": {
@@ -6550,6 +6769,44 @@
           "consumed_price_range": {
             "$ref": "#/components/schemas/RegimeConsumedPriceRange"
           },
+          "crisis_time_us": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Monotonic elapsed microseconds, truncated to an integer. Starts\nimmediately before crisis assessment of the consumed slice; ends\nimmediately after it returns. Covers log returns, the episode replay and\nscoring only. Excludes inference_time_us, label combination, wire mapping,\nmetadata construction, serialization, HTTP and network time.",
+            "minimum": 0
+          },
+          "cu_charged": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Committed charge in CU; same value as the deprecated `fcu_charged`.",
+            "minimum": 0
+          },
+          "cu_quoted": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Commercial quote in Compute Units (CU); same value as the deprecated `fcu_quoted`.",
+            "minimum": 0
+          },
+          "cu_schedule_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Cost schedule id; same value as the deprecated `fcu_schedule_id`."
+          },
+          "cu_schedule_version": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Customer-facing cost schedule version; same value as the deprecated `fcu_schedule_version`."
+          },
           "engines": {
             "type": "array",
             "items": {
@@ -6563,6 +6820,7 @@
               "null"
             ],
             "format": "int64",
+            "description": "Deprecated alias of `cu_charged`, removed in a later beta change.",
             "minimum": 0
           },
           "fcu_quoted": {
@@ -6571,19 +6829,22 @@
               "null"
             ],
             "format": "int64",
+            "description": "Deprecated alias of `cu_quoted`, removed in a later beta change.",
             "minimum": 0
           },
           "fcu_schedule_id": {
             "type": [
               "string",
               "null"
-            ]
+            ],
+            "description": "Deprecated alias of `cu_schedule_id`, removed in a later beta change."
           },
           "fcu_schedule_version": {
             "type": [
               "string",
               "null"
-            ]
+            ],
+            "description": "Deprecated alias of `cu_schedule_version`, removed in a later beta change."
           },
           "inference_time_us": {
             "type": "integer",
@@ -6624,12 +6885,22 @@
             "description": "Number of prices received before cropping.",
             "minimum": 0
           },
+          "remaining_cu_instance_estimate": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Instance estimate in CU; same value as the deprecated `remaining_fcu_instance_estimate`.",
+            "minimum": 0
+          },
           "remaining_fcu_instance_estimate": {
             "type": [
               "integer",
               "null"
             ],
             "format": "int64",
+            "description": "Deprecated alias of `remaining_cu_instance_estimate`, removed in a later beta change.",
             "minimum": 0
           },
           "request_id": {
@@ -6673,9 +6944,14 @@
           "model_status",
           "model_sha256",
           "preprocessing",
-          "teacher_executed"
+          "teacher_executed",
+          "volatility_label",
+          "crisis"
         ],
         "properties": {
+          "crisis": {
+            "$ref": "#/components/schemas/RegimeCrisisProvenance"
+          },
           "model_id": {
             "type": "string",
             "description": "Immutable identity covering weights, preprocessing, reference procedure\nand label definitions; see the REGIME_MODEL_V1.md identity record."
@@ -6694,6 +6970,9 @@
           },
           "teacher_executed": {
             "type": "boolean"
+          },
+          "volatility_label": {
+            "$ref": "#/components/schemas/RegimeVolatilityLabelProvenance"
           }
         }
       },
@@ -6745,9 +7024,18 @@
           "score_contract",
           "decision",
           "direction",
-          "state"
+          "state",
+          "volatility",
+          "crisis_score_contract",
+          "crisis"
         ],
         "properties": {
+          "crisis": {
+            "$ref": "#/components/schemas/RegimeCrisis"
+          },
+          "crisis_score_contract": {
+            "$ref": "#/components/schemas/RegimeCrisisScoreContract"
+          },
           "decision": {
             "$ref": "#/components/schemas/RegimeHead_RegimeDecisionPrediction"
           },
@@ -6759,6 +7047,10 @@
           },
           "state": {
             "$ref": "#/components/schemas/RegimeHead_RegimeStatePrediction"
+          },
+          "volatility": {
+            "$ref": "#/components/schemas/RegimeVolatilityHead",
+            "description": "Served low/high/crisis label (three-label-v1)."
           }
         }
       },
@@ -6776,7 +7068,7 @@
       },
       "RegimeScoreContract": {
         "type": "object",
-        "description": "Applies separately to every available head; never multiply heads or interpret\ntheir scores as a joint probability. Identifies score semantics, not calibration.",
+        "description": "Applies separately to every available decision, direction and state head;\nnever multiply heads or interpret their scores as a joint probability.\nIdentifies score semantics, not calibration. The volatility head has no scores,\nand the crisis score has its own crisis_score_contract.",
         "required": [
           "kind",
           "version",
@@ -6904,6 +7196,154 @@
           "prediction_unavailable"
         ]
       },
+      "RegimeVolatilityBasis": {
+        "type": "object",
+        "description": "What the label states; neither component fits a model on this request.",
+        "required": [
+          "target"
+        ],
+        "properties": {
+          "target": {
+            "$ref": "#/components/schemas/RegimeVolatilityTarget"
+          }
+        }
+      },
+      "RegimeVolatilityHead": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "basis",
+              "prediction",
+              "status"
+            ],
+            "properties": {
+              "basis": {
+                "$ref": "#/components/schemas/RegimeVolatilityBasis"
+              },
+              "prediction": {
+                "$ref": "#/components/schemas/RegimeVolatilityPrediction"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "available"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "basis",
+              "prediction",
+              "reason_code",
+              "status"
+            ],
+            "properties": {
+              "basis": {
+                "$ref": "#/components/schemas/RegimeVolatilityBasis"
+              },
+              "prediction": {
+                "type": "null"
+              },
+              "reason_code": {
+                "$ref": "#/components/schemas/RegimeNotApplicableReason"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "not_applicable"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "basis",
+              "prediction",
+              "reason_code",
+              "status"
+            ],
+            "properties": {
+              "basis": {
+                "$ref": "#/components/schemas/RegimeVolatilityBasis"
+              },
+              "prediction": {
+                "type": "null"
+              },
+              "reason_code": {
+                "$ref": "#/components/schemas/RegimeUnavailableReason"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "unavailable"
+                ]
+              }
+            }
+          }
+        ],
+        "description": "Same envelope as the other heads. Available has a prediction and no\nreason_code. not_applicable (predicted_not_eligible) occurs exactly when the\ndetector is not in crisis and the decision is not_eligible; it does not\nassert not-crisis, which result.crisis states separately."
+      },
+      "RegimeVolatilityLabel": {
+        "type": "string",
+        "description": "Served current-volatility label under `three-label-v1`. Not a probability,\nforecast or historical-norm level.",
+        "enum": [
+          "low",
+          "high",
+          "crisis"
+        ]
+      },
+      "RegimeVolatilityLabelProvenance": {
+        "type": "object",
+        "description": "Identity of the served volatility label: its combination rule and both\npinned inputs. A different student, detector or rule has a different method.",
+        "required": [
+          "method",
+          "model_id",
+          "model_sha256",
+          "crisis_method",
+          "crisis_parameters_sha256"
+        ],
+        "properties": {
+          "crisis_method": {
+            "type": "string"
+          },
+          "crisis_parameters_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "method": {
+            "type": "string"
+          },
+          "model_id": {
+            "type": "string"
+          },
+          "model_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        }
+      },
+      "RegimeVolatilityPrediction": {
+        "type": "object",
+        "description": "Rule-selected label: crisis when result.crisis.status is crisis, otherwise\nthe student's state (LOWER_VOL is low, HIGHER_VOL is high). It has no scores;\nscore_contract does not apply to it.",
+        "required": [
+          "label"
+        ],
+        "properties": {
+          "label": {
+            "$ref": "#/components/schemas/RegimeVolatilityLabel"
+          }
+        }
+      },
+      "RegimeVolatilityTarget": {
+        "type": "string",
+        "enum": [
+          "current_volatility"
+        ]
+      },
       "ResidualBasis": {
         "type": "string",
         "description": "The basis a solved residual is expressed in.\n\nThe residual is not one quantity. European and Black paths report a\nforward-normalised price residual comparable against the engine's\nconvergence threshold; American models report a\nraw option-price residual. Publishing the number without its basis would\ninvite exactly the cross-model comparison it does not support, so the basis\ntravels with it and a client that ignores this field cannot silently get it\nwrong.",
@@ -6947,9 +7387,7 @@
           "request_id",
           "api_version",
           "engine_version",
-          "engines",
-          "units_charged",
-          "compute_schedule_version"
+          "engines"
         ],
         "properties": {
           "api_version": {
@@ -6968,8 +7406,37 @@
             ],
             "description": "UTC end of the budget period from the pinned account snapshot, when known."
           },
-          "compute_schedule_version": {
-            "type": "string"
+          "cu_charged": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Committed charge in CU; same value as the deprecated `fcu_charged`.",
+            "minimum": 0
+          },
+          "cu_quoted": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Commercial quote in Compute Units (CU); same value as the deprecated `fcu_quoted`.",
+            "minimum": 0
+          },
+          "cu_schedule_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Cost schedule id; same value as the deprecated `fcu_schedule_id`."
+          },
+          "cu_schedule_version": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Customer-facing cost schedule version; same value as the deprecated `fcu_schedule_version`."
           },
           "engine_version": {
             "type": "string",
@@ -6988,7 +7455,7 @@
               "null"
             ],
             "format": "int64",
-            "description": "Committed commercial charge, including on post-commit failures.\nAbsent in open development mode; zero for protected pre-commit refusals.",
+            "description": "Committed commercial charge, including on post-commit failures.\nAbsent in open development mode; zero for protected pre-commit refusals.\nDeprecated alias of `cu_charged`, removed in a later beta change.",
             "minimum": 0
           },
           "fcu_quoted": {
@@ -6997,20 +7464,22 @@
               "null"
             ],
             "format": "int64",
-            "description": "Commercial quote; absent until reservation succeeds.",
+            "description": "Commercial quote; absent until reservation succeeds.\nDeprecated alias of `cu_quoted`, removed in a later beta change.",
             "minimum": 0
           },
           "fcu_schedule_id": {
             "type": [
               "string",
               "null"
-            ]
+            ],
+            "description": "Deprecated alias of `cu_schedule_id`, removed in a later beta change."
           },
           "fcu_schedule_version": {
             "type": [
               "string",
               "null"
-            ]
+            ],
+            "description": "Deprecated alias of `cu_schedule_version`, removed in a later beta change."
           },
           "policy": {
             "oneOf": [
@@ -7022,22 +7491,26 @@
               }
             ]
           },
+          "remaining_cu_instance_estimate": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Instance estimate in CU; same value as the deprecated `remaining_fcu_instance_estimate`.",
+            "minimum": 0
+          },
           "remaining_fcu_instance_estimate": {
             "type": [
               "integer",
               "null"
             ],
             "format": "int64",
-            "description": "Instance estimate, never an authoritative account balance or authorization input.",
+            "description": "Instance estimate, never an authoritative account balance or authorization input.\nDeprecated alias of `remaining_cu_instance_estimate`, removed in a later beta change.",
             "minimum": 0
           },
           "request_id": {
             "type": "string"
-          },
-          "units_charged": {
-            "type": "integer",
-            "format": "int64",
-            "minimum": 0
           }
         }
       },
@@ -7081,12 +7554,45 @@
               "null"
             ]
           },
+          "cu_charged": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Committed charge in CU; same value as the deprecated `fcu_charged`.",
+            "minimum": 0
+          },
+          "cu_quoted": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Commercial quote in Compute Units (CU); same value as the deprecated `fcu_quoted`.",
+            "minimum": 0
+          },
+          "cu_schedule_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Cost schedule id; same value as the deprecated `fcu_schedule_id`."
+          },
+          "cu_schedule_version": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Customer-facing cost schedule version; same value as the deprecated `fcu_schedule_version`."
+          },
           "fcu_charged": {
             "type": [
               "integer",
               "null"
             ],
             "format": "int64",
+            "description": "Deprecated alias of `cu_charged`, removed in a later beta change.",
             "minimum": 0
           },
           "fcu_quoted": {
@@ -7095,19 +7601,22 @@
               "null"
             ],
             "format": "int64",
+            "description": "Deprecated alias of `cu_quoted`, removed in a later beta change.",
             "minimum": 0
           },
           "fcu_schedule_id": {
             "type": [
               "string",
               "null"
-            ]
+            ],
+            "description": "Deprecated alias of `cu_schedule_id`, removed in a later beta change."
           },
           "fcu_schedule_version": {
             "type": [
               "string",
               "null"
-            ]
+            ],
+            "description": "Deprecated alias of `cu_schedule_version`, removed in a later beta change."
           },
           "policy": {
             "oneOf": [
@@ -7119,12 +7628,22 @@
               }
             ]
           },
+          "remaining_cu_instance_estimate": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Instance estimate in CU; same value as the deprecated `remaining_fcu_instance_estimate`.",
+            "minimum": 0
+          },
           "remaining_fcu_instance_estimate": {
             "type": [
               "integer",
               "null"
             ],
             "format": "int64",
+            "description": "Deprecated alias of `remaining_cu_instance_estimate`, removed in a later beta change.",
             "minimum": 0
           },
           "request_id": {
@@ -7179,32 +7698,6 @@
     {
       "name": "contract",
       "description": "Machine-readable service contracts"
-    }
-  ],
-  "x-ferro-risk-router-responses": [
-    {
-      "condition": "unmatched_path",
-      "contentType": "application/problem+json",
-      "errorCode": "not_found",
-      "headers": [
-        "x-request-id"
-      ],
-      "schema": {
-        "$ref": "#/components/schemas/ServiceErrorEnvelope"
-      },
-      "status": 404
-    },
-    {
-      "condition": "unsupported_method",
-      "contentType": "application/problem+json",
-      "errorCode": "method_not_allowed",
-      "headers": [
-        "x-request-id"
-      ],
-      "schema": {
-        "$ref": "#/components/schemas/ServiceErrorEnvelope"
-      },
-      "status": 405
     }
   ],
   "x-morphiq-mcp": {
@@ -7262,5 +7755,31 @@
       "allow": "POST",
       "status": 405
     }
-  }
+  },
+  "x-morphiq-router-responses": [
+    {
+      "condition": "unmatched_path",
+      "contentType": "application/problem+json",
+      "errorCode": "not_found",
+      "headers": [
+        "x-request-id"
+      ],
+      "schema": {
+        "$ref": "#/components/schemas/ServiceErrorEnvelope"
+      },
+      "status": 404
+    },
+    {
+      "condition": "unsupported_method",
+      "contentType": "application/problem+json",
+      "errorCode": "method_not_allowed",
+      "headers": [
+        "x-request-id"
+      ],
+      "schema": {
+        "$ref": "#/components/schemas/ServiceErrorEnvelope"
+      },
+      "status": 405
+    }
+  ]
 }

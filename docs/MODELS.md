@@ -1,4 +1,4 @@
-# Available models and API v0.5.0 compatibility
+# Available models and API v0.7.0 compatibility
 
 ```python
 from morphiq_sdk import MorphIQ
@@ -27,8 +27,9 @@ The finite-difference model supports cash-dividend schedules. Legacy aliases
 retired: the SDK forwards that selector so callers receive the server's migration
 error. It does not substitute a model or calculate numerical fallbacks.
 
-`auto` selects BSM for European options and QdFp for American options. Select
-BS1993 explicitly for American Greeks, analytics and batching. Unsupported
+`auto` selects BSM for European options and BS1993 for American options without
+cash-dividend events. A nonempty American cash-dividend schedule selects finite
+difference. QdFp requires explicit selection. Unsupported
 operations and a batch containing QdFp or the cash-dividend model receive HTTP 400
 (`APIError`); batches contain 1–100 items. Account limits may be lower.
 

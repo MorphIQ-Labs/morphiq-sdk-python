@@ -1,6 +1,6 @@
 # Option price and Greeks
 
-See [API v0.5.0 model capabilities](MODELS.md) for supported operations,
+See [API v0.7.0 model capabilities](MODELS.md) for supported operations,
 100-item batch limits and unavailable-Greek semantics.
 
 `MorphIQ.greeks()` and `AsyncMorphIQ.greeks()` call `POST /v1/greeks`. One request

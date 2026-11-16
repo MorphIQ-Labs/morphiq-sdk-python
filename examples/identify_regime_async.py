@@ -53,7 +53,7 @@ async def main() -> None:
     except APIError as error:
         print(f"HTTP {error.status_code}: {error.code}: {error.message}", file=sys.stderr)
         print(f"Request ID: {error.request_id}", file=sys.stderr)
-        charged = error.metadata.fcu_charged if error.metadata else None
+        charged = error.metadata.cu_charged if error.metadata else None
         print(
             f"Commercial CU charged: {charged if charged is not None else 'not reported'}",
             file=sys.stderr,
@@ -84,6 +84,22 @@ async def main() -> None:
         else:
             print(f"  Reason: {head.reason_code}")
 
+    volatility = response.result.volatility
+    if volatility is not None:
+        print("Volatility:", volatility.status)
+        if volatility.status == "available":
+            print("  Label:", volatility.prediction.label)
+        else:
+            print("  Reason:", volatility.reason_code)
+    crisis = response.result.crisis
+    if crisis is not None:
+        print("Crisis:", crisis.status)
+        if crisis.status == "unavailable":
+            print("  Reason:", crisis.reason_code)
+        else:
+            print("  Linear readout (not a probability):", crisis.score)
+            print("  Episode start price index:", crisis.episode_start_price_index)
+
     # Scores are uncalibrated softmax values, not probabilities or p-values.
     # Do not multiply heads. LOWER_VOL/HIGHER_VOL are relative model states,
     # not historical volatility levels or price directions.
@@ -100,7 +116,7 @@ async def main() -> None:
     print("Request ID:", metadata.request_id)
     for engine in metadata.engines:
         print(f"Engine: {engine.name} {engine.version} ({engine.revision})")
-    charged = metadata.fcu_charged
+    charged = metadata.cu_charged
     print("Commercial CU charged:", charged if charged is not None else "not reported")
 
 

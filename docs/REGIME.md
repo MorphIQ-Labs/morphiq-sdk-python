@@ -58,9 +58,33 @@ end. `metadata.provenance` identifies the served model; `metadata.engines`
 identifies the inference library. The SDK preserves both and the raw response.
 
 Keep `metadata.request_id` for support. Commercial charges are
-`metadata.fcu_charged`; absent means unreported, not zero. Service failures raise
+`metadata.cu_charged`; absent means unreported, not zero. Service failures raise
 `APIError` with server evidence. Transport failures and malformed responses can
 leave execution and charges unknown. Neither client retries automatically.
 
 See the [client/model reference](API.md) for shared configuration and errors,
 and the [documentation index](README.md) for related features.
+
+## Crisis and the served volatility label
+
+Production API v0.7.0 also returns `result.volatility`: read its status before
+`prediction.label`, which is `low`, `high` or `crisis`. This rule-selected label
+has no scores. A crisis detector episode takes precedence; otherwise the label
+uses the student's relative state. It is not a forecast or historical norm.
+
+`result.crisis.status` is `crisis`, `not_crisis` or `unavailable`. An active
+episode includes `episode_start_price_index` in the original input array. An
+unavailable result has a null score and a `short_reference` or
+`degenerate_reference` reason; it never means not-crisis. The detector is an
+acute-shock signal whose short episodes can recur, not a persistent regime.
+
+`result.crisis_score_contract` defines the linear readout and entry/exit
+thresholds. The score is unbounded, can be negative, and is not a probability,
+confidence or softmax value. Do not apply the other heads' score contract to it.
+`metadata.provenance.crisis` and `.volatility_label` identify both components and
+the combination rule. `metadata.crisis_time_us` measures detector work separately
+from student inference. See the [API regime guide](https://developers.morphiqlabs.com/docs/regime)
+for applicability and expected signal rates.
+
+The SDK leaves these additive fields as `None` when an older server omits them.
+That means unreported, not an unavailable detector result or a low-risk claim.

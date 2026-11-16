@@ -66,7 +66,7 @@ Required malformed or non-finite result fields produce `ResponseError`; none are
 replaced with zero. Unknown additive fields, resolved model names and residual
 basis names are retained without interpretation. `raw_body`, headers, engine
 identity, request ID and optional commercial CU remain available. Absent
-`fcu_charged` means unreported, not zero; `units_charged` is a separate internal
+`cu_charged` means unreported, not zero; `units_charged` is a separate internal
 compute weight. Service errors preserve charge evidence. Timeouts or malformed
 responses can leave execution and charges unknown; no automatic retries occur.
 

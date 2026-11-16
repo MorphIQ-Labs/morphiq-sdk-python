@@ -32,7 +32,7 @@ def test_snapshot_digest_version_and_route():
     )
 
 
-def test_models_cover_pricing_wire_fields():
+def test_models_cover_pricing_wire_fields(contract_fields):
     schemas = json.loads((ROOT / "contracts/openapi.json").read_text())["components"]["schemas"]
     for model, name in [
         (PriceRequest, "PriceRequest"),
@@ -45,7 +45,9 @@ def test_models_cover_pricing_wire_fields():
         (PolicyMetadata, "PolicyResponseMetadata"),
         (ErrorDetails, "ErrorBody"),
     ]:
-        assert set(model.model_fields) == set(schemas[name]["properties"])
+        assert contract_fields(model, schemas[name]["properties"]) == set(
+            schemas[name]["properties"]
+        )
 
 
 def test_native_fixtures_and_serialized_requests_match_contract(cases):

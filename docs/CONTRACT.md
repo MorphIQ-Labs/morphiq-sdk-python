@@ -9,9 +9,9 @@ coordinates the producer/import workflow with
 [API #106](https://gitlab.com/prophetizo/morphiq-labs/sites/morphiq-api/-/work_items/106).
 contracts/openapi.json now contains the reviewed snapshot byte-for-byte.
 contracts/provenance.json records its digest, API source commit and contract
-version. This snapshot is from deployed API **v0.5.0**, commit
-`2284d802b5ac0b37b43ee269bbf4bfeec3777776`, SHA-256
-`e206327e13aee32c02dbfa22e1d8e8a80ea2d549083971a1cc87aa2b67f401e7`.
+version. This snapshot is from deployed API **v0.7.0**, commit
+`525627cd2334053270214208a70d15450934e54b`, SHA-256
+`89aed6a6d6af982251c2cdac455113228f0ccb823e693f7f3fa0e8709071d33a`.
 The beta wire contract version remains `0.1.0`; API and SDK release versions are separate.
 It was copied from immutable reviewed main source; automated published
 artifact delivery remains #2. SDK tests and builds use the offline snapshot
@@ -50,3 +50,18 @@ Greeks, implied-volatility and analytics fixtures contain synthetic inputs evalu
 native service built from the pinned API commit. Tests verify unscaled
 Greeks and explicit unavailable-quantity reasons, IV solver diagnostics and residual bases, model identity, metadata, error
 evidence and sync/async parity against native JSON.
+
+The current snapshot includes preferred `cu_*` commercial fields, deprecated
+`fcu_*` aliases, the regime crisis detector and the low/high/crisis volatility
+label. The client keeps older response support: omitted new regime fields are
+`None`, never a fabricated prediction; omitted CU fields use the old alias when
+reported. `exclude_unset=True` preserves what the server actually sent. The
+retired capacity attributes remain optional Python compatibility fields and are
+not part of the current wire contract. Scenario and book routes are not deployed
+and are not part of this snapshot.
+
+The v0.7.0 adoption refreshes synthetic numerical fixtures against a locked
+native build of release `525627cd2334053270214208a70d15450934e54b`, with
+Risk 0.45.0. American Auto without cash events now resolves to BS1993, so its
+IV fixture premium is obtained by pricing the same inputs at 20% volatility.
+The public model catalog fixture is refreshed from that service as well.

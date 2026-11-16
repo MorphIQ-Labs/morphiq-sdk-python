@@ -41,6 +41,7 @@ _REQUEST_COLUMNS = [
     "stop",
     "status",
     "request_id",
+    "cu_charged",
     "fcu_charged",
     "metadata",
     "response_extras",
@@ -62,9 +63,19 @@ class BatchFrames:
     results: pd.DataFrame
     requests: pd.DataFrame
     state: str
-    reported_fcu_charged: int
+    reported_cu_charged: int
     unknown_charge_count: int
-    total_fcu_charged: int | None
+    total_cu_charged: int | None
+
+    @property
+    def reported_fcu_charged(self) -> int:
+        """Deprecated alias of ``reported_cu_charged``."""
+        return self.reported_cu_charged
+
+    @property
+    def total_fcu_charged(self) -> int | None:
+        """Deprecated alias of ``total_cu_charged``."""
+        return self.total_cu_charged
 
 
 def _pandas() -> Any:
@@ -145,7 +156,8 @@ def _attempt_rows(
         "stop": attempt.stop,
         "status": status,
         "request_id": attempt.request_id,
-        "fcu_charged": attempt.fcu_charged,
+        "cu_charged": attempt.cu_charged,
+        "fcu_charged": attempt.cu_charged,
         "metadata": metadata.model_dump(exclude_unset=True) if metadata else None,
         "response_extras": (
             response.model_dump(exclude={"metadata", "results"}, exclude_unset=True)
@@ -201,17 +213,15 @@ def _frames(
             for name in _REQUEST_COLUMNS
         }
     )
-    known = sum(
-        receipt["fcu_charged"] for receipt in receipts if receipt["fcu_charged"] is not None
-    )
-    unknown = sum(receipt["fcu_charged"] is None for receipt in receipts)
+    known = sum(receipt["cu_charged"] for receipt in receipts if receipt["cu_charged"] is not None)
+    unknown = sum(receipt["cu_charged"] is None for receipt in receipts)
     return BatchFrames(
         results=results,
         requests=requests,
         state=state,
-        reported_fcu_charged=known,
+        reported_cu_charged=known,
         unknown_charge_count=unknown,
-        total_fcu_charged=known if state == "completed" and not unknown else None,
+        total_cu_charged=known if state == "completed" and not unknown else None,
     )
 
 
@@ -231,7 +241,7 @@ def batch_to_frames(
         stop=len(response.results),
         response=response,
         finished=True,
-        fcu_charged=response.metadata.fcu_charged,
+        fcu_charged=response.metadata.cu_charged,
         request_id=response.metadata.request_id,
     )
     rows, receipt = _attempt_rows(attempt, 0, labels)

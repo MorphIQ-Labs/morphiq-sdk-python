@@ -1,8 +1,8 @@
 {
-  "source_commit": "2284d802b5ac0b37b43ee269bbf4bfeec3777776",
-  "contract_sha256": "e206327e13aee32c02dbfa22e1d8e8a80ea2d549083971a1cc87aa2b67f401e7",
+  "source_commit": "525627cd2334053270214208a70d15450934e54b",
+  "contract_sha256": "89aed6a6d6af982251c2cdac455113228f0ccb823e693f7f3fa0e8709071d33a",
   "admission": "open (isolated loopback service; no commercial charge)",
-  "note": "Synthetic requests evaluated by a --locked native build of deployed API v0.5.0. American Greeks/analytics/batches explicitly use BS1993; Auto American singles resolve to QdFp.",
+  "note": "Synthetic requests evaluated by a --locked native build of deployed API v0.7.0. American Greeks/analytics/batches explicitly use BS1993; Auto American without cash events resolves to BS1993.",
   "cases": [
     {
       "name": "batch-price",
@@ -46,25 +46,23 @@
       },
       "response": {
         "metadata": {
-          "request_id": "fr-18e4e90129262501-000000000000000f",
+          "request_id": "fr-18e88a7b3977d162-000000000000000e",
           "api_version": "v1",
-          "engine_version": "0.43.5",
+          "engine_version": "0.45.0",
           "engines": [
             {
               "name": "morphiq-risk",
-              "version": "0.43.5",
-              "revision": "43ca7f93b9edda6078b49950de6a8b7d51a3e3ef"
+              "version": "0.45.0",
+              "revision": "a4df4da57ff2d53a1f1146f1c4310f0e980a497a"
             }
-          ],
-          "units_charged": 101,
-          "compute_schedule_version": "2026-09-11"
+          ]
         },
         "results": [
           {
             "index": 0,
             "status": "success",
             "result": {
-              "price": 10.45058357218557,
+              "price": 10.450583572185565,
               "exercise_style": "european",
               "option_type": "call",
               "pricing_model": "black_scholes_merton",
@@ -136,25 +134,23 @@
       },
       "response": {
         "metadata": {
-          "request_id": "fr-18e4e90129262501-0000000000000010",
+          "request_id": "fr-18e88a7b3977d162-000000000000000f",
           "api_version": "v1",
-          "engine_version": "0.43.5",
+          "engine_version": "0.45.0",
           "engines": [
             {
               "name": "morphiq-risk",
-              "version": "0.43.5",
-              "revision": "43ca7f93b9edda6078b49950de6a8b7d51a3e3ef"
+              "version": "0.45.0",
+              "revision": "a4df4da57ff2d53a1f1146f1c4310f0e980a497a"
             }
-          ],
-          "units_charged": 806,
-          "compute_schedule_version": "2026-09-11"
+          ]
         },
         "results": [
           {
             "index": 0,
             "status": "success",
             "result": {
-              "price": 10.45058357218557,
+              "price": 10.450583572185565,
               "greeks": {
                 "delta": 0.6368306511756191,
                 "gamma": 0.018762017345846895,
@@ -245,28 +241,26 @@
       },
       "response": {
         "metadata": {
-          "request_id": "fr-18e4e90129262501-0000000000000013",
+          "request_id": "fr-18e88a7b3977d162-0000000000000010",
           "api_version": "v1",
-          "engine_version": "0.43.5",
+          "engine_version": "0.45.0",
           "engines": [
             {
               "name": "morphiq-risk",
-              "version": "0.43.5",
-              "revision": "43ca7f93b9edda6078b49950de6a8b7d51a3e3ef"
+              "version": "0.45.0",
+              "revision": "a4df4da57ff2d53a1f1146f1c4310f0e980a497a"
             }
-          ],
-          "units_charged": 10004,
-          "compute_schedule_version": "2026-09-11"
+          ]
         },
         "results": [
           {
             "index": 0,
             "status": "success",
             "result": {
-              "implied_volatility": 0.1999999999999992,
+              "implied_volatility": 0.19999999999999904,
               "iterations": 2,
               "used_fallback": false,
-              "residual": 1.3200960109770371e-17,
+              "residual": 1.3535144005987383e-17,
               "residual_basis": "forward_normalised_price",
               "pricing_model": "black_scholes_merton",
               "model_version": "black_scholes_merton/1"
@@ -276,10 +270,10 @@
             "index": 1,
             "status": "success",
             "result": {
-              "implied_volatility": 0.20000000000000026,
-              "iterations": 9,
+              "implied_volatility": 0.2000000000000002,
+              "iterations": 12,
               "used_fallback": true,
-              "residual": 9.769962616701378e-15,
+              "residual": 0.0,
               "residual_basis": "option_price",
               "pricing_model": "bjerksund_stensland_1993",
               "model_version": "bjerksund_stensland_1993/1"
@@ -289,10 +283,10 @@
             "index": 2,
             "status": "success",
             "result": {
-              "implied_volatility": 0.20000000000000026,
-              "iterations": 9,
+              "implied_volatility": 0.2000000000000002,
+              "iterations": 12,
               "used_fallback": true,
-              "residual": 9.769962616701378e-15,
+              "residual": 0.0,
               "residual_basis": "option_price",
               "pricing_model": "bjerksund_stensland_1993",
               "model_version": "bjerksund_stensland_1993/1"
@@ -346,42 +340,40 @@
       },
       "response": {
         "metadata": {
-          "request_id": "fr-18e4e90129262501-0000000000000016",
+          "request_id": "fr-18e88a7b3977d162-0000000000000011",
           "api_version": "v1",
-          "engine_version": "0.43.5",
+          "engine_version": "0.45.0",
           "engines": [
             {
               "name": "morphiq-risk",
-              "version": "0.43.5",
-              "revision": "43ca7f93b9edda6078b49950de6a8b7d51a3e3ef"
+              "version": "0.45.0",
+              "revision": "a4df4da57ff2d53a1f1146f1c4310f0e980a497a"
             }
-          ],
-          "units_charged": 10810,
-          "compute_schedule_version": "2026-09-11"
+          ]
         },
         "results": [
           {
             "index": 0,
             "status": "success",
             "result": {
-              "price": 10.450583572185543,
+              "price": 10.45058357218553,
               "greeks": {
-                "delta": 0.6368306511756192,
-                "gamma": 0.018762017345846965,
-                "theta": -6.414027546438186,
+                "delta": 0.6368306511756193,
+                "gamma": 0.018762017345846982,
+                "theta": -6.4140275464381835,
                 "vega": 37.5240346916938,
-                "rho": 53.232481545376395,
-                "vanna": -0.28143026018770706,
-                "volga": 9.850059106569766,
-                "charm": -0.06566706071046423,
-                "veta": -16.46367022098065,
-                "color": 0.010530182235356613
+                "rho": 53.2324815453764,
+                "vanna": -0.28143026018770795,
+                "volga": 9.850059106569802,
+                "charm": -0.06566706071046426,
+                "veta": -16.463670220980642,
+                "color": 0.010530182235356624
               },
               "implied_volatility": {
-                "implied_volatility": 0.1999999999999992,
+                "implied_volatility": 0.19999999999999904,
                 "iterations": 2,
                 "used_fallback": false,
-                "residual": 1.3200960109770371e-17,
+                "residual": 1.3535144005987383e-17,
                 "residual_basis": "forward_normalised_price",
                 "pricing_model": "black_scholes_merton",
                 "model_version": "black_scholes_merton/1"
@@ -394,24 +386,24 @@
             "index": 1,
             "status": "success",
             "result": {
-              "price": 7.529845434912404,
+              "price": 7.5298454349124135,
               "greeks": {
-                "delta": -0.589201884524784,
-                "gamma": 0.032833158923294165,
-                "theta": -3.5549420552482323,
-                "vega": 26.586081744012873,
+                "delta": -0.589201884524783,
+                "gamma": 0.03283315892329411,
+                "theta": -3.5549420552482287,
+                "vega": 26.586081744012898,
                 "rho": -21.612071680237182,
-                "vanna": 0.8950133905908535,
-                "volga": 24.916694215773237,
+                "vanna": 0.895013390590854,
+                "volga": 24.916694215773525,
                 "charm": -0.18410996878530728,
-                "veta": -28.207426026498748,
-                "color": 0.025532151457727564
+                "veta": -28.207426026498784,
+                "color": 0.025532151457727293
               },
               "implied_volatility": {
-                "implied_volatility": 0.20000000000000026,
-                "iterations": 9,
+                "implied_volatility": 0.2000000000000002,
+                "iterations": 12,
                 "used_fallback": true,
-                "residual": 9.769962616701378e-15,
+                "residual": 0.0,
                 "residual_basis": "option_price",
                 "pricing_model": "bjerksund_stensland_1993",
                 "model_version": "bjerksund_stensland_1993/1"
@@ -424,24 +416,24 @@
             "index": 2,
             "status": "success",
             "result": {
-              "price": 7.529845434912404,
+              "price": 7.5298454349124135,
               "greeks": {
-                "delta": -0.589201884524784,
-                "gamma": 0.032833158923294165,
-                "theta": -3.5549420552482323,
-                "vega": 26.586081744012873,
+                "delta": -0.589201884524783,
+                "gamma": 0.03283315892329411,
+                "theta": -3.5549420552482287,
+                "vega": 26.586081744012898,
                 "rho": -21.612071680237182,
-                "vanna": 0.8950133905908535,
-                "volga": 24.916694215773237,
+                "vanna": 0.895013390590854,
+                "volga": 24.916694215773525,
                 "charm": -0.18410996878530728,
-                "veta": -28.207426026498748,
-                "color": 0.025532151457727564
+                "veta": -28.207426026498784,
+                "color": 0.025532151457727293
               },
               "implied_volatility": {
-                "implied_volatility": 0.20000000000000026,
-                "iterations": 9,
+                "implied_volatility": 0.2000000000000002,
+                "iterations": 12,
                 "used_fallback": true,
-                "residual": 9.769962616701378e-15,
+                "residual": 0.0,
                 "residual_basis": "option_price",
                 "pricing_model": "bjerksund_stensland_1993",
                 "model_version": "bjerksund_stensland_1993/1"
@@ -561,25 +553,23 @@
       },
       "response": {
         "metadata": {
-          "request_id": "fr-18e4e90129262501-0000000000000017",
+          "request_id": "fr-18e88a7b3977d162-0000000000000012",
           "api_version": "v1",
-          "engine_version": "0.43.5",
+          "engine_version": "0.45.0",
           "engines": [
             {
               "name": "morphiq-risk",
-              "version": "0.43.5",
-              "revision": "43ca7f93b9edda6078b49950de6a8b7d51a3e3ef"
+              "version": "0.45.0",
+              "revision": "a4df4da57ff2d53a1f1146f1c4310f0e980a497a"
             }
-          ],
-          "units_charged": 9,
-          "compute_schedule_version": "2026-09-11"
+          ]
         },
         "results": [
           {
             "index": 0,
             "status": "success",
             "result": {
-              "price": 1.8594195728121832,
+              "price": 1.8594195728121834,
               "exercise_style": "european",
               "option_type": "call",
               "pricing_model": "black_scholes_merton",
@@ -590,7 +580,7 @@
             "index": 1,
             "status": "success",
             "result": {
-              "price": 3.2135985531478806,
+              "price": 3.21359855314788,
               "exercise_style": "european",
               "option_type": "call",
               "pricing_model": "black_scholes_merton",
@@ -601,7 +591,7 @@
             "index": 2,
             "status": "success",
             "result": {
-              "price": 5.09122207881755,
+              "price": 5.091222078817551,
               "exercise_style": "european",
               "option_type": "call",
               "pricing_model": "black_scholes_merton",
@@ -612,7 +602,7 @@
             "index": 3,
             "status": "success",
             "result": {
-              "price": 7.5108721783527015,
+              "price": 7.510872178352703,
               "exercise_style": "european",
               "option_type": "call",
               "pricing_model": "black_scholes_merton",
@@ -623,7 +613,7 @@
             "index": 4,
             "status": "success",
             "result": {
-              "price": 10.45058357218557,
+              "price": 10.450583572185565,
               "exercise_style": "european",
               "option_type": "call",
               "pricing_model": "black_scholes_merton",
@@ -634,7 +624,7 @@
             "index": 5,
             "status": "success",
             "result": {
-              "price": 13.85790626707311,
+              "price": 13.857906267073119,
               "exercise_style": "european",
               "option_type": "call",
               "pricing_model": "black_scholes_merton",
@@ -645,7 +635,7 @@
             "index": 6,
             "status": "success",
             "result": {
-              "price": 17.66295374059046,
+              "price": 17.66295374059044,
               "exercise_style": "european",
               "option_type": "call",
               "pricing_model": "black_scholes_merton",
@@ -667,7 +657,7 @@
             "index": 8,
             "status": "success",
             "result": {
-              "price": 26.169043946847314,
+              "price": 26.169043946847296,
               "exercise_style": "european",
               "option_type": "call",
               "pricing_model": "black_scholes_merton",
@@ -708,25 +698,23 @@
       },
       "response": {
         "metadata": {
-          "request_id": "fr-18e4e90129262501-0000000000000018",
+          "request_id": "fr-18e88a7b3977d162-0000000000000013",
           "api_version": "v1",
-          "engine_version": "0.43.5",
+          "engine_version": "0.45.0",
           "engines": [
             {
               "name": "morphiq-risk",
-              "version": "0.43.5",
-              "revision": "43ca7f93b9edda6078b49950de6a8b7d51a3e3ef"
+              "version": "0.45.0",
+              "revision": "a4df4da57ff2d53a1f1146f1c4310f0e980a497a"
             }
-          ],
-          "units_charged": 51,
-          "compute_schedule_version": "2026-09-11"
+          ]
         },
         "results": [
           {
             "index": 0,
             "status": "success",
             "result": {
-              "price": 10.45058357218557,
+              "price": 10.450583572185565,
               "exercise_style": "european",
               "option_type": "call",
               "pricing_model": "black_scholes_merton",

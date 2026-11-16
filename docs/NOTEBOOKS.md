@@ -58,7 +58,7 @@ can be supplied through SDK requests but are outside these notebook controls.
 See [Greek units](GREEKS.md#units), [IV diagnostics](IMPLIED_VOLATILITY.md#interpreting-the-result)
 and [regime interpretation](REGIME.md#request-and-result-semantics).
 
-**Session CU** sums only reported `fcu_charged` values, once per request. Combined
+**Session CU** sums only reported `cu_charged` values, once per request. Combined
 results and batches count once, not per returned component or item. Charged failures
 are included; missing charges, transport failures and user interruptions leave an
 explicitly incomplete subtotal. Rerunning setup retains the ledger in that kernel;

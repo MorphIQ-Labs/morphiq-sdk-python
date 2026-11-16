@@ -35,8 +35,13 @@ class ChunkAttempt(Generic[_ResponseT]):
     response: _ResponseT | None = None
     error: BaseException | None = None
     finished: bool = False
-    fcu_charged: int | None = None
+    fcu_charged: int | None = None  # deprecated name; holds the same value as cu_charged
     request_id: str | None = None
+
+    @property
+    def cu_charged(self) -> int | None:
+        """Commercial CU charge reported for this attempt; ``None`` means unreported."""
+        return self.fcu_charged
 
 
 class _Workflow(Generic[_RequestT, _ResponseT]):
@@ -76,21 +81,31 @@ class _Workflow(Generic[_RequestT, _ResponseT]):
         return self._ranges[len(self._attempts) :]
 
     @property
-    def reported_fcu_charged(self) -> int:
+    def reported_cu_charged(self) -> int:
         """Exact integer subtotal of reported commercial charges, once per attempt."""
-        return sum(a.fcu_charged for a in self._attempts if a.fcu_charged is not None)
+        return sum(a.cu_charged for a in self._attempts if a.cu_charged is not None)
+
+    @property
+    def reported_fcu_charged(self) -> int:
+        """Deprecated alias of ``reported_cu_charged``."""
+        return self.reported_cu_charged
 
     @property
     def unknown_charge_count(self) -> int:
         """Attempts without a reported charge; a reported zero is known."""
-        return sum(a.fcu_charged is None for a in self._attempts)
+        return sum(a.cu_charged is None for a in self._attempts)
 
     @property
-    def total_fcu_charged(self) -> int | None:
+    def total_cu_charged(self) -> int | None:
         """Whole-workflow total only when completed and every attempt reports a charge."""
         if self._state != "completed" or self.unknown_charge_count:
             return None
-        return self.reported_fcu_charged
+        return self.reported_cu_charged
+
+    @property
+    def total_fcu_charged(self) -> int | None:
+        """Deprecated alias of ``total_cu_charged``."""
+        return self.total_cu_charged
 
     def _begin(self) -> None:
         with self._state_lock:
@@ -119,7 +134,7 @@ class _Workflow(Generic[_RequestT, _ResponseT]):
             response=response,
             error=error,
             finished=True,
-            fcu_charged=metadata.fcu_charged if metadata else None,
+            fcu_charged=metadata.cu_charged if metadata else None,
             request_id=request_id,
         )
 

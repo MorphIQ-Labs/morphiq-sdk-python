@@ -9,6 +9,7 @@ from pydantic import (
     ConfigDict,
     Field,
     FiniteFloat,
+    ModelWrapValidatorHandler,
     PrivateAttr,
     ValidationInfo,
     field_validator,
@@ -91,6 +92,37 @@ class ImpliedVolatilityRequest(_OptionRequest):
 class _Response(BaseModel):
     # Retain additive fields. A new resolved model name must not break decoding.
     model_config = ConfigDict(extra="allow", strict=True, allow_inf_nan=False)
+
+    @model_validator(mode="wrap")
+    @classmethod
+    def _mirror_cu_names(cls, data: Any, handler: ModelWrapValidatorHandler[Any]) -> Any:
+        """Prefer ``cu_*`` wire names and fall back to the deprecated ``fcu_*`` names.
+
+        API 0.7.0 publishes both names with equal values; older servers publish
+        only ``fcu_*``. Each declared pair is filled from whichever name is present,
+        never overriding a value the server sent, so both attributes are populated.
+        A name the server did not send is not marked as set, so
+        ``model_dump(exclude_unset=True)`` still reproduces the wire payload.
+        """
+        if not isinstance(data, dict):
+            return handler(data)
+        names = cls.model_fields
+        filled: set[str] = set()
+        values = data
+        for legacy in names:
+            current = legacy.replace("fcu", "cu")
+            if legacy == current or current not in names:
+                continue
+            for target, source in ((current, legacy), (legacy, current)):
+                if target not in values and values.get(source) is not None:
+                    if target not in data:
+                        filled.add(target)
+                    values = {**values, target: values[source]}
+                    break
+        model = handler(values)
+        if filled and isinstance(model, BaseModel):
+            model.__pydantic_fields_set__.difference_update(filled)
+        return model
 
 
 class ErrorDetails(_Response):
@@ -216,11 +248,17 @@ class PolicyMetadata(_Response):
 
 
 class _CommercialMetadata(_Response):
+    cu_quoted: int | None = Field(default=None, ge=0)
+    cu_charged: int | None = Field(default=None, ge=0)
+    cu_schedule_id: str | None = None
+    cu_schedule_version: str | None = None
+    # Deprecated aliases with equal values; kept for older callers and servers.
     fcu_quoted: int | None = Field(default=None, ge=0)
     fcu_charged: int | None = Field(default=None, ge=0)
     fcu_schedule_id: str | None = None
     fcu_schedule_version: str | None = None
     policy: PolicyMetadata | None = None
+    remaining_cu_instance_estimate: int | None = Field(default=None, ge=0)
     remaining_fcu_instance_estimate: int | None = Field(default=None, ge=0)
     budget_period: str | None = None
     budget_reset_at: str | None = None
@@ -229,9 +267,10 @@ class _CommercialMetadata(_Response):
 class ResponseMetadata(_CommercialMetadata):
     """Server provenance and optional commercial CU evidence.
 
-    Only ``fcu_quoted`` and ``fcu_charged`` are commercial CU evidence.
+    Only ``cu_quoted`` and ``cu_charged`` are commercial CU evidence; the
+    ``fcu_*`` names are deprecated aliases with equal values.
     Retired capacity fields are optional for compatibility with older deployments.
-    Missing ``fcu_charged`` means unreported, not zero.
+    Missing ``cu_charged`` means unreported, not zero.
     """
 
     request_id: str
@@ -379,7 +418,97 @@ class RegimeScoreContract(_Response):
     sum_tolerance: FiniteFloat
 
 
+RegimeVolatilityLabel = Literal["low", "high", "crisis"]
+RegimeCrisisUnavailableReason = Literal["short_reference", "degenerate_reference"]
+
+
+class RegimeVolatilityBasis(_Response):
+    target: Literal["current_volatility"]
+
+
+class RegimeVolatilityPrediction(_Response):
+    label: RegimeVolatilityLabel
+
+
+class RegimeVolatilityAvailable(_Response):
+    status: Literal["available"]
+    basis: RegimeVolatilityBasis
+    prediction: RegimeVolatilityPrediction
+
+
+class RegimeVolatilityNotApplicable(_Response):
+    status: Literal["not_applicable"]
+    basis: RegimeVolatilityBasis
+    prediction: None
+    reason_code: Literal["predicted_not_eligible"]
+
+
+class RegimeVolatilityUnavailable(_Response):
+    status: Literal["unavailable"]
+    basis: RegimeVolatilityBasis
+    prediction: None
+    reason_code: Literal["prediction_unavailable"]
+
+
+RegimeVolatilityHead = Annotated[
+    RegimeVolatilityAvailable | RegimeVolatilityNotApplicable | RegimeVolatilityUnavailable,
+    Field(discriminator="status"),
+]
+
+
+class RegimeCrisisActive(_Response):
+    status: Literal["crisis"]
+    score: FiniteFloat
+    episode_start_price_index: int = Field(ge=0)
+
+
+class RegimeNotCrisis(_Response):
+    status: Literal["not_crisis"]
+    score: FiniteFloat
+    episode_start_price_index: None
+
+
+class RegimeCrisisUnavailable(_Response):
+    status: Literal["unavailable"]
+    score: None
+    episode_start_price_index: None
+    reason_code: RegimeCrisisUnavailableReason
+
+
+RegimeCrisis = Annotated[
+    RegimeCrisisActive | RegimeNotCrisis | RegimeCrisisUnavailable,
+    Field(discriminator="status"),
+]
+
+
+class RegimeCrisisScoreContract(_Response):
+    """Unbounded linear readout; neither a probability nor a softmax score."""
+
+    kind: Literal["linear_readout"]
+    version: str
+    theta_in: FiniteFloat
+    theta_out: FiniteFloat
+
+
+class RegimeCrisisProvenance(_Response):
+    method: str
+    parameters_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    features: str
+
+
+class RegimeVolatilityLabelProvenance(_Response):
+    method: str
+    model_id: str
+    model_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    crisis_method: str
+    crisis_parameters_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+
 class RegimeResult(_Response):
+    # Production supplies these fields; optional only for older server responses.
+    volatility: RegimeVolatilityHead | None = None
+    crisis: RegimeCrisis | None = None
+    crisis_score_contract: RegimeCrisisScoreContract | None = None
     score_contract: RegimeScoreContract
     decision: Annotated[
         RegimeAvailable[RegimeDecisionPrediction] | RegimeNotApplicable | RegimeUnavailable,
@@ -396,6 +525,8 @@ class RegimeResult(_Response):
 
 
 class RegimeProvenance(_Response):
+    crisis: RegimeCrisisProvenance | None = None
+    volatility_label: RegimeVolatilityLabelProvenance | None = None
     model_id: str
     model_status: str
     model_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
@@ -426,6 +557,7 @@ class RegimeMetadata(_CommercialMetadata):
     return_type: Literal["log"]
     return_unit: Literal["fraction"]
     inference_time_us: int = Field(ge=0)
+    crisis_time_us: int | None = Field(default=None, ge=0)
     all_prices_consumed: bool
 
 
@@ -517,7 +649,8 @@ class CostRate(_Response):
     operation: str
     model: str
     billing_unit: str
-    fcu_per_unit: int
+    cu_per_unit: int
+    fcu_per_unit: int  # deprecated alias of cu_per_unit
     max_discrete_dividends: int
 
 
@@ -528,8 +661,10 @@ class CostSchedule(_Response):
     policy_revision: str
     effective_from: str
     effective_until: str | None
-    fixed_request_fcu: int
-    minimum_charge_fcu: int
+    fixed_request_cu: int
+    minimum_charge_cu: int
+    fixed_request_fcu: int  # deprecated alias of fixed_request_cu
+    minimum_charge_fcu: int  # deprecated alias of minimum_charge_cu
     rounding: str
     failure_charging: str
     rates: list[CostRate]
@@ -540,11 +675,18 @@ class CostLine(_Response):
     model: str
     billing_unit: str
     quantity: int
-    fcu_per_unit: int
-    variable_fcu: int
+    cu_per_unit: int
+    variable_cu: int
+    fcu_per_unit: int  # deprecated alias of cu_per_unit
+    variable_fcu: int  # deprecated alias of variable_cu
 
 
 class CostBreakdown(_Response):
+    total_cu: int
+    fixed_cu: int
+    variable_cu: int
+    minimum_charge_cu: int
+    # Deprecated aliases of the cu_* fields above.
     total_fcu: int
     fixed_fcu: int
     variable_fcu: int

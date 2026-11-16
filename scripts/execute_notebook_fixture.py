@@ -46,9 +46,9 @@ spot.value = 120
 use_yahoo_close(pd.DataFrame({'Close': [100.0]}, index=pd.to_datetime(['2026-01-02'])), 'SPY')
 assert spot.value == 100.0 and 'SPY' in spot_source
 price_button.click()
-assert len(price_history) == 1 and last_response.result.price == 10.45058357218557
+assert len(price_history) == 1 and last_response.result.price == 10.450583572185565
 greeks_button.click()
-assert last_greeks_response.metadata.request_id == 'fr-18e4e90129262501-0000000000000005'
+assert last_greeks_response.metadata.request_id == 'fr-18e88a7b3977d162-0000000000000004'
 assert len(greeks_table) == 10 and greeks_table.loc['vega', 'Value'] == 37.52403469169381
 assert greeks_table.loc['theta', 'Value'] == -6.414027546438199
 assert sum('text/html' in o.get('data', {}) for o in greeks_output.outputs) == 2
@@ -56,7 +56,7 @@ assert greeks_snapshot['Style'] == 'european' and greeks_snapshot['CU charged'] 
 market_price.value = 10.450583572185538
 volatility.value = 0  # Solving IV must not validate an unused volatility assumption.
 iv_button.click()
-assert last_iv_response.metadata.request_id == 'fr-18e4e90129262501-0000000000000007'
+assert last_iv_response.metadata.request_id == 'fr-18e88a7b3977d162-0000000000000008'
 assert abs(last_iv_response.result.implied_volatility - 0.2) < 1e-12
 assert last_iv_response.result.used_fallback is False
 assert iv_snapshot['residual_basis'] == 'forward_normalised_price'
@@ -86,13 +86,13 @@ price_button.click()
 assert len(price_history) == 2
 model.value = 'bjerksund_stensland_1993'
 greeks_button.click()
-assert last_greeks_response.metadata.request_id == 'fr-18e4e90129262501-0000000000000006'
+assert last_greeks_response.metadata.request_id == 'fr-18e88a7b3977d162-0000000000000005'
 assert greeks_snapshot['Style'] == 'american'
 model.value = 'auto'
-market_price.value = 7.6165316765775835
+market_price.value = 7.5298454349124135
 iv_button.click()
-assert last_iv_response.metadata.request_id == 'fr-18e4e90129262501-0000000000000009'
-assert last_iv_response.result.used_fallback is False
+assert last_iv_response.metadata.request_id == 'fr-18e88a7b3977d162-0000000000000091'
+assert last_iv_response.result.used_fallback is True
 assert iv_snapshot['residual_basis'] == 'option_price'
 assert iv_snapshot['market_price'] == market_price.value
 volatility.value = 35

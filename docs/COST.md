@@ -21,10 +21,10 @@ request = PriceRequest(
 with MorphIQ() as client:
     schedule = client.cost_schedule(operation="price", model="black_scholes_merton/1")
     quote = client.quote(request)
-    print(quote.quote.total_fcu, quote.resolved_models)
+    print(quote.quote.total_cu, quote.resolved_models)
     # Explicit execution: one additional, potentially billable request.
-    result = client.price(request, max_cu=quote.quote.total_fcu)
-    print(result.metadata.fcu_charged)
+    result = client.price(request, max_cu=quote.quote.total_cu)
+    print(result.metadata.cu_charged)
 ```
 
 `AsyncMorphIQ` exposes the same methods with `await`. All eleven typed
@@ -41,16 +41,16 @@ minimum and charging rule. Filters combine with AND; known filters with no match
 rows return an empty list. A rate does not establish entitlement or availability. `record_version` identifies
 the immutable policy record, while `schedule_version` identifies the rate schedule.
 A null `effective_until` means no fixed end date on that record, not a price lock.
-Operation filters are `price`, `implied_volatility`, `greeks`, `analytics`, `regime`;
+Operation filters are `price`, `implied_volatility`, `greeks_standard`, `greeks`, `analytics`, `regime`;
 batch calls use those same schedule rows. Model filters use versioned identifiers.
 
-`quote.quote.total_fcu` is exact conditional on the same policy and resolved work
+`quote.quote.total_cu` is exact conditional on the same policy and resolved work
 at execution. Fixed fees and minimums apply once to a batch, not once per item.
 The minimum is a floor on the request total, not an extra fee. Each line groups
 contracts sharing a rate class; mixed-model batches can have several lines.
 `quote.quote.lines` identifies rate classes; `resolved_models` identifies actual
 selected algorithms. These can differ when algorithms share a billing class.
-`quote.metadata.fcu_charged` describes the utility call and is zero.
+`quote.metadata.cu_charged` describes the utility call and is zero.
 
 A quote does not lock a price or guarantee funding, capacity, numerical convergence
 or success. Its policy revision identifies the quote's snapshot. `max_cu` sends
@@ -168,8 +168,8 @@ A single-contract quote, accessed as `response.quote` and `response.resolved_mod
 
 Here the prospective execution charge is **one CU**, and the quote call's
 actual charge is **zero CU**. Utility quotes put the prospective amount in
-`response.quote.total_fcu`. Execution responses use `metadata.fcu_quoted` for
-their own quote and `metadata.fcu_charged` for the committed charge.
+`response.quote.total_cu`. Execution responses use `metadata.cu_quoted` for
+their own quote and `metadata.cu_charged` for the committed charge.
 
 ## Quote and execute a batch
 
@@ -197,15 +197,15 @@ with MorphIQ() as client:
     quote = client.quote(batch)
     print(quote.model_dump_json(indent=2, exclude_none=True))
     try:
-        result = client.price_batch(batch, max_cu=quote.quote.total_fcu)
+        result = client.price_batch(batch, max_cu=quote.quote.total_cu)
     except APIError as error:
         print(error.status_code, error.code, error.request_id)
         if error.metadata is not None:
-            print("Execution quote CU:", error.metadata.fcu_quoted)
-            print("CU charged:", error.metadata.fcu_charged)
+            print("Execution quote CU:", error.metadata.cu_quoted)
+            print("CU charged:", error.metadata.cu_charged)
         # Missing charge metadata means unknown, never zero. No automatic retry.
         raise
-    print("Batch CU charged:", result.metadata.fcu_charged)
+    print("Batch CU charged:", result.metadata.cu_charged)
     for item in result.results:
         if item.status == "success":
             print(item.index, item.result.price)
@@ -290,10 +290,13 @@ its typed evidence is in `error.metadata`:
 }
 ```
 
-`fcu_quoted: 2` records the execution quote; `fcu_charged: 0` records the
+`cu_quoted: 2` records the execution quote; `cu_charged: 0` records the
 zero committed charge. `units_charged` is internal execution accounting, not
 commercial CU. Engine identity does not establish that calculation ran.
 Inspect the error code, the current quote and your budget before choosing a new
 ceiling. Other admission errors, including funding refusals, can occur before
 the ceiling check. Malformed or duplicate HTTP ceilings return 422; the SDK
 rejects invalid `max_cu` values locally before sending a request.
+
+New code uses `cu_*` fields. The recorded historical JSON above uses `fcu_*`;
+production supplies both with equal values, and the SDK retains the old aliases.
