@@ -6,10 +6,16 @@ The SDK backlog and implementation live in this GitHub repository. Contract
 publication and website integration are implemented in the API repository and
 linked from their SDK dependency issues. Link PRs/MRs and evidence back to the
 issues. The merged SDK implements sync/async pricing, Greeks, implied volatility,
-combined analytics, regime, ordered batches, explicit sequential workflows,
+implied Greeks, regime, ordered batches, explicit sequential workflows,
 optional pandas tables and local pricing/regime analysis workspaces. Issue
 acceptance remains open where publication, integration or broader recipe scope
 has not been demonstrated.
+
+The API 0.10.0 contract also serves `options.revalue`, `options.solve_scenario`,
+`books.revalue`, `books.explain` and `books.solve_scenario`. SDK coverage for
+them is open work: [PR #46](https://github.com/MorphIQ-Labs/morphiq-sdk-python/pull/46)
+carries scenario evaluation and spot solving on the earlier contract and needs to
+move to the 0.10.0 shapes before it can merge.
 
 See the [2026-10-24 first-release readiness audit](RELEASE_READINESS.md) for exact
 candidate identities, installed-wheel/Docker evidence and remaining gates.

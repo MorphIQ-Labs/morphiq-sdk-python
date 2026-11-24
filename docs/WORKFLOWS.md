@@ -1,17 +1,18 @@
 # Batch workflows
 
 Use a workflow when you explicitly want to divide an ordered list into multiple
-HTTP batch requests. The existing `*_batch()` methods still send exactly one
-request. Numerical pricing and combined analytics run on the API.
+HTTP batch requests. The `client.options.batch_*()` methods still send exactly one
+request. Numerical pricing and implied Greeks run on the API.
 
-Both `MorphIQ` and `AsyncMorphIQ` provide these factories:
+`client.options` provides these factories on both `MorphIQ` and `AsyncMorphIQ`:
 
 | Factory | Input sequence | Response retained per chunk |
 | --- | --- | --- |
-| `price_workflow()` | `PriceRequest` | `BatchPriceResponse` |
-| `greeks_workflow()` | `GreeksRequest` | `BatchGreeksResponse` |
-| `implied_volatility_workflow()` | `ImpliedVolatilityRequest` | `BatchImpliedVolatilityResponse` |
-| `analytics_workflow()` | `AnalyticsRequest` | `BatchAnalyticsResponse` |
+| `price_workflow()` | `OptionsPriceRequest` | `OptionsBatchPriceResponse` |
+| `greeks_workflow()` | `OptionsGreeksRequest` | `OptionsBatchGreeksResponse` |
+| `standard_greeks_workflow()` | `OptionsStandardGreeksRequest` | `OptionsBatchStandardGreeksResponse` |
+| `implied_volatility_workflow()` | `OptionsImpliedVolatilityRequest` | `OptionsBatchImpliedVolatilityResponse` |
+| `implied_greeks_workflow()` | `OptionsImpliedGreeksRequest` | `OptionsBatchImpliedGreeksResponse` |
 
 Every factory requires `chunk_size=`. Choose a positive integer allowed by your
 account; the SDK checks the reviewed wire ceiling of 100, not customer plan
@@ -26,24 +27,29 @@ This constructs five synthetic pricing scenarios and explicitly submits three
 HTTP requests, with at most two items each:
 
 ```python
-from morphiq_sdk import MorphIQ, MorphIQError, PriceRequest, RateLimitError
+from morphiq_sdk import (
+    BatchFailure,
+    BatchSuccess,
+    Market,
+    MorphIQ,
+    MorphIQError,
+    Option,
+    OptionsPriceRequest,
+    RateLimitError,
+)
 
+option = Option(type="call", exercise_style="european", strike=100.0, time_to_expiry_years=1.0)
 requests = [
-    PriceRequest(
-        exercise_style="european",
-        option_type="call",
-        spot=spot,
-        strike=100.0,
-        time_to_expiry_years=1.0,
+    OptionsPriceRequest(
+        option=option,
+        market=Market(spot=spot, risk_free_rate=0.05, dividend_yield=0.0),
         volatility=0.20,
-        risk_free_rate=0.05,
-        dividend_yield=0.0,
     )
     for spot in (80.0, 85.0, 90.0, 95.0, 100.0)
 ]
 
 with MorphIQ() as client:  # Reads MORPHIQ_API_KEY; defaults to https://api.morphiqlabs.com.
-    workflow = client.price_workflow(requests, chunk_size=2)
+    workflow = client.options.price_workflow(requests, chunk_size=2)
     try:
         workflow.run()
     except RateLimitError as error:
@@ -53,27 +59,27 @@ with MorphIQ() as client:  # Reads MORPHIQ_API_KEY; defaults to https://api.morp
     finally:
         for attempt in workflow.attempts:
             print("Chunk:", attempt.start, attempt.stop, attempt.request_id)
-            print("Reported chunk CU:", attempt.cu_charged)
+            print("Reported chunk CU:", attempt.charged_cu)
             if attempt.response is not None:
                 for item in attempt.response.results:
                     index = attempt.start + item.index
-                    if item.status == "success":
+                    if isinstance(item, BatchSuccess):
                         print(index, item.result.model_dump(exclude_unset=True))
-                    else:
-                        print(index, item.error.code, item.error.message)
-        print("Reported CU subtotal:", workflow.reported_cu_charged)
+                    elif isinstance(item, BatchFailure):
+                        print(index, item.error.code, item.error.detail)
+        print("Reported CU subtotal:", workflow.reported_charged_cu)
         print("Unknown-charge attempts:", workflow.unknown_charge_count)
-        print("Whole-workflow CU:", workflow.total_cu_charged)
+        print("Whole-workflow CU:", workflow.total_charged_cu)
         print("Unattempted input ranges:", workflow.unattempted_ranges)
 ```
 
 Factories validate and snapshot **all** inputs before execution; edits to the
-original list or dividend schedules do not change prepared requests. Validation
+original list or `Market.dividends` lists do not change prepared requests. Validation
 errors send nothing. Preparation holds all chunks in memory: this is for finite
 sequences, not streaming input. Keep the client open while running the workflow.
 
 Async factories are also synchronous preparation methods. Use
-`workflow = client.price_workflow(requests, chunk_size=2)` inside
+`workflow = client.options.price_workflow(requests, chunk_size=2)` inside
 `async with AsyncMorphIQ()`, then **`await workflow.run()`**. With the default
 `max_concurrency=1`, each chunk completes
 before the next starts. The returned types are `BatchWorkflow` and
@@ -98,14 +104,13 @@ Each script independently sends three requests on success. Running both sends si
 | `planned_chunk_count` | Total planned HTTP requests, known before execution |
 | `attempts` | Ordered tuple of `ChunkAttempt` records, including a failed/in-flight chunk |
 | `unattempted_ranges` | Original input `[start, stop)` ranges never submitted |
-| `reported_cu_charged` | Exact integer subtotal of reported commercial charges |
-| `unknown_charge_count` | Attempted chunks with absent/null charge, including in-flight requests |
-| `total_cu_charged` | Total only when completed and all charges are known; otherwise `None` |
+| `reported_charged_cu` | Exact integer subtotal of reported commercial charges |
+| `unknown_charge_count` | Attempted chunks with an absent charge, including in-flight requests |
+| `total_charged_cu` | Total only when completed and all charges are known; otherwise `None` |
 
 Each attempt retains its original input `start` and exclusive `stop`, full typed
-`response` or original `error`, `finished`, `request_id` and `cu_charged`.
-The `fcu_charged` attribute and the `reported_fcu_charged` / `total_fcu_charged` properties
-are deprecated aliases.
+`response` or original `error`, `finished`, `request_id` and `charged_cu` (the
+attempt's `metadata.billing.charged_cu`).
 While in flight, both response and error are `None` and `finished` is false.
 A response preserves its original local item indices and raw response evidence;
 add `attempt.start` to an item index to locate the original input. Failed items
@@ -114,8 +119,8 @@ remain in place. No rows are silently dropped or assigned a zero result.
 A commercial charge belongs to the whole chunk, including failed items. It is
 captured **once per HTTP attempt**, including API errors and malformed successful
 responses with valid charge metadata. Integer sums preserve large CU amounts
-exactly. Missing/null charge remains unknown; reported zero is known. Quotes,
-internal `units_charged`, and item counts do not contribute to the charge total.
+exactly. A missing charge remains unknown; reported zero is known. Quotes and
+item counts do not contribute to the charge total.
 An error can stop execution with every attempted charge known, while the
 whole-workflow total remains `None` because the work is incomplete.
 
@@ -126,7 +131,7 @@ bound simultaneous batch requests, for example:
 
 ```python
 # Inside async with AsyncMorphIQ() as client:
-workflow = client.price_workflow(requests, chunk_size=2, max_concurrency=2)
+workflow = client.options.price_workflow(requests, chunk_size=2, max_concurrency=2)
 await workflow.run()
 ```
 

@@ -20,16 +20,25 @@ assert sdk.__version__ == version('morphiq-sdk') == sys.argv[1]
 assert find_spec('pandas') is None and find_spec('yfinance') is None
 assert files('morphiq_sdk').joinpath('py.typed').is_file()
 assert files('morphiq_sdk_yahoo').joinpath('py.typed').is_file()
-for client in (sdk.MorphIQ, sdk.AsyncMorphIQ):
-    for method in ('price', 'greeks', 'implied_volatility', 'analytics', 'regime',
-                   'price_batch', 'greeks_batch', 'implied_volatility_batch', 'analytics_batch',
-                   'greeks_standard', 'greeks_standard_batch', 'greeks_standard_workflow',
-                   'pricing_models', 'cost_schedule', 'quote'):
-        assert callable(getattr(client, method))
+surface = {
+    'options': ('price', 'implied_volatility', 'greeks', 'standard_greeks', 'implied_greeks',
+                'batch_price', 'batch_implied_volatility', 'batch_greeks',
+                'batch_standard_greeks', 'batch_implied_greeks', 'price_workflow',
+                'implied_volatility_workflow', 'greeks_workflow', 'standard_greeks_workflow',
+                'implied_greeks_workflow'),
+    'series': ('identify_regime',),
+    'models': ('list',),
+    'rate_card': ('get', 'quote'),
+}
+for client_type in (sdk.MorphIQ, sdk.AsyncMorphIQ):
+    client = client_type(api_key='offline-install-check')
+    for collection, methods in surface.items():
+        for method in methods:
+            assert callable(getattr(getattr(client, collection), method))
 with sdk.MorphIQ(api_key='offline-install-check') as client:
-    workflow = client.price_workflow([], chunk_size=1)
+    workflow = client.options.price_workflow([], chunk_size=1)
     workflow.run()
-    assert workflow.total_fcu_charged == 0
+    assert workflow.total_charged_cu == 0
 assert not any(name in sys.modules for name in ('pandas', 'yfinance', 'matplotlib'))
 print('Core install, client surface, typing and optional dependency isolation verified')
 """
@@ -39,26 +48,29 @@ import json
 import sys
 from pathlib import Path
 import ipykernel, ipywidgets, jupyterlab, matplotlib, pandas, yfinance
-from morphiq_sdk import (BatchPriceResponse, BatchGreeksResponse,
-                        BatchImpliedVolatilityResponse, BatchAnalyticsResponse,
-                        BatchGreeksStandardResponse)
+from morphiq_sdk import (OptionsBatchPriceResponse, OptionsBatchGreeksResponse,
+                        OptionsBatchImpliedVolatilityResponse,
+                        OptionsBatchImpliedGreeksResponse,
+                        OptionsBatchStandardGreeksResponse)
 from morphiq_sdk.pandas import batch_to_frames
 cases = json.loads(Path(sys.argv[1]).read_text())['cases']
-for cls, case in zip((BatchPriceResponse, BatchGreeksResponse,
-                     BatchImpliedVolatilityResponse, BatchAnalyticsResponse), cases):
+for cls, case in zip((OptionsBatchPriceResponse, OptionsBatchGreeksResponse,
+                     OptionsBatchImpliedVolatilityResponse,
+                     OptionsBatchImpliedGreeksResponse), cases):
     body = case['response']
-    body['metadata']['fcu_charged'] = 2**100
+    body['metadata']['billing'] = {'charged_cu': 2**100}
     frames = batch_to_frames(cls.model_validate(body), identifiers=[1, None, 2**100])
     assert frames.results['outcome'].tolist() == body['results']
     assert frames.results['identifier'].tolist() == [1, None, 2**100]
-    assert frames.total_fcu_charged == 2**100
-standard = json.loads(Path(sys.argv[1]).with_name('greeks_standard.json').read_text())['cases'][0]
-body = {'metadata': {**standard['response']['metadata'], 'fcu_charged': 2**100}, 'results': [
+    assert frames.total_charged_cu == 2**100
+standard = json.loads(Path(sys.argv[1]).with_name('standard_greeks.json').read_text())['cases'][0]
+billing = {'charged_cu': 2**100}
+body = {'metadata': {**standard['response']['metadata'], 'billing': billing}, 'results': [
     {'index': 0, 'status': 'success', 'result': standard['response']['result']}
 ]}
-frames = batch_to_frames(BatchGreeksStandardResponse.model_validate(body))
+frames = batch_to_frames(OptionsBatchStandardGreeksResponse.model_validate(body))
 assert frames.results['outcome'].tolist() == body['results']
-assert frames.total_fcu_charged == 2**100
+assert frames.total_charged_cu == 2**100
 print('All extras import; all five batch conversions preserve outcomes and exact charges')
 """
 

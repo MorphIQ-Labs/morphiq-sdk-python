@@ -1,59 +1,80 @@
 {
-  "source_commit": "525627cd2334053270214208a70d15450934e54b",
-  "contract_sha256": "89aed6a6d6af982251c2cdac455113228f0ccb823e693f7f3fa0e8709071d33a",
+  "source_commit": "cf2718f3b8ebfe0046556f4fce05e4b0192053f0",
+  "contract_sha256": "23ee6e9f9ad5841def5b34c0d45b43b1c6a8b628179493f9640da58baafe598a",
   "admission": "open (isolated loopback service; no commercial charge)",
-  "note": "Synthetic requests evaluated by a --locked native build of deployed API v0.7.0. American Greeks/analytics/batches explicitly use BS1993; Auto American without cash events resolves to BS1993.",
+  "note": "Synthetic requests evaluated by a native release build of the API 0.10.0 contract (integration/v0.10.0-deploy-readiness). American Greeks and batches explicitly use BS1993; Auto American without cash events resolves to BS1993.",
   "cases": [
     {
       "name": "batch-price",
-      "path": "/v1/price:batch",
+      "path": "/v1/options:batch-price",
       "request": {
-        "requests": [
+        "items": [
           {
-            "exercise_style": "european",
-            "pricing_model": "auto",
-            "option_type": "call",
-            "spot": 100.0,
-            "strike": 100.0,
-            "time_to_expiry_years": 1,
-            "risk_free_rate": 0.05,
-            "dividend_yield": 0,
+            "option": {
+              "type": "call",
+              "exercise_style": "european",
+              "strike": 100.0,
+              "time_to_expiry_years": 1.0
+            },
+            "market": {
+              "spot": 100.0,
+              "risk_free_rate": 0.05,
+              "dividend_yield": 0.0
+            },
+            "model": {
+              "id": "auto"
+            },
             "volatility": 0.2
           },
           {
-            "exercise_style": "american",
-            "pricing_model": "bjerksund_stensland_1993",
-            "option_type": "put",
-            "spot": -1,
-            "strike": 105.0,
-            "time_to_expiry_years": 0.5,
-            "risk_free_rate": 0.05,
-            "dividend_yield": 0.01,
+            "option": {
+              "type": "put",
+              "exercise_style": "american",
+              "strike": 105.0,
+              "time_to_expiry_years": 0.5
+            },
+            "market": {
+              "spot": -1.0,
+              "risk_free_rate": 0.05,
+              "dividend_yield": 0.01
+            },
+            "model": {
+              "id": "bjerksund_stensland_1993"
+            },
             "volatility": 0.2
           },
           {
-            "exercise_style": "american",
-            "pricing_model": "bjerksund_stensland_1993",
-            "option_type": "put",
-            "spot": 100.0,
-            "strike": 105.0,
-            "time_to_expiry_years": 0.5,
-            "risk_free_rate": 0.05,
-            "dividend_yield": 0.01,
+            "option": {
+              "type": "put",
+              "exercise_style": "american",
+              "strike": 105.0,
+              "time_to_expiry_years": 0.5
+            },
+            "market": {
+              "spot": 100.0,
+              "risk_free_rate": 0.05,
+              "dividend_yield": 0.01
+            },
+            "model": {
+              "id": "bjerksund_stensland_1993"
+            },
             "volatility": 0.2
           }
         ]
       },
       "response": {
         "metadata": {
-          "request_id": "fr-18e88a7b3977d162-000000000000000e",
-          "api_version": "v1",
-          "engine_version": "0.45.0",
+          "request_id": "fr-18eb0de772f9d5a8-000000000000001e",
+          "service_version": "0.9.2",
+          "contract": {
+            "version": "v1",
+            "sha256": "23ee6e9f9ad5841def5b34c0d45b43b1c6a8b628179493f9640da58baafe598a"
+          },
           "engines": [
             {
               "name": "morphiq-risk",
-              "version": "0.45.0",
-              "revision": "a4df4da57ff2d53a1f1146f1c4310f0e980a497a"
+              "version": "0.46.1",
+              "revision": "1550e4e41b243b8a978677bc5e9b46916c08cb0e"
             }
           ]
         },
@@ -62,31 +83,34 @@
             "index": 0,
             "status": "success",
             "result": {
-              "price": 10.450583572185565,
-              "exercise_style": "european",
-              "option_type": "call",
-              "pricing_model": "black_scholes_merton",
-              "model_version": "black_scholes_merton/1"
+              "price": 10.450583572185577,
+              "model": {
+                "id": "black_scholes_merton",
+                "version": "black_scholes_merton/1"
+              }
             }
           },
           {
             "index": 1,
             "status": "error",
             "error": {
+              "type": "https://developers.morphiqlabs.com/docs/errors#invalid_field",
+              "title": "Invalid field",
+              "status": 422,
+              "detail": "invalid input: spot = -1",
               "code": "invalid_field",
-              "message": "invalid input: spot = -1",
-              "field": "spot"
+              "field": "market.spot"
             }
           },
           {
             "index": 2,
             "status": "success",
             "result": {
-              "price": 7.5298454349124135,
-              "exercise_style": "american",
-              "option_type": "put",
-              "pricing_model": "bjerksund_stensland_1993",
-              "model_version": "bjerksund_stensland_1993/1"
+              "price": 7.529845434912404,
+              "model": {
+                "id": "bjerksund_stensland_1993",
+                "version": "bjerksund_stensland_1993/1"
+              }
             }
           }
         ]
@@ -94,54 +118,75 @@
     },
     {
       "name": "batch-greeks",
-      "path": "/v1/greeks:batch",
+      "path": "/v1/options:batch-greeks",
       "request": {
-        "requests": [
+        "items": [
           {
-            "exercise_style": "european",
-            "pricing_model": "auto",
-            "option_type": "call",
-            "spot": 100.0,
-            "strike": 100.0,
-            "time_to_expiry_years": 1,
-            "risk_free_rate": 0.05,
-            "dividend_yield": 0,
+            "option": {
+              "type": "call",
+              "exercise_style": "european",
+              "strike": 100.0,
+              "time_to_expiry_years": 1.0
+            },
+            "market": {
+              "spot": 100.0,
+              "risk_free_rate": 0.05,
+              "dividend_yield": 0.0
+            },
+            "model": {
+              "id": "auto"
+            },
             "volatility": 0.2
           },
           {
-            "exercise_style": "american",
-            "pricing_model": "bjerksund_stensland_1993",
-            "option_type": "put",
-            "spot": 100.0,
-            "strike": 105.0,
-            "time_to_expiry_years": 0.5,
-            "risk_free_rate": 0.05,
-            "dividend_yield": 0.01,
+            "option": {
+              "type": "put",
+              "exercise_style": "american",
+              "strike": 105.0,
+              "time_to_expiry_years": 0.5
+            },
+            "market": {
+              "spot": 100.0,
+              "risk_free_rate": 0.05,
+              "dividend_yield": 0.01
+            },
+            "model": {
+              "id": "bjerksund_stensland_1993"
+            },
             "volatility": 1e+308
           },
           {
-            "exercise_style": "american",
-            "pricing_model": "bjerksund_stensland_1993",
-            "option_type": "put",
-            "spot": 100.0,
-            "strike": 105.0,
-            "time_to_expiry_years": 0.5,
-            "risk_free_rate": 0.05,
-            "dividend_yield": 0.01,
+            "option": {
+              "type": "put",
+              "exercise_style": "american",
+              "strike": 105.0,
+              "time_to_expiry_years": 0.5
+            },
+            "market": {
+              "spot": 100.0,
+              "risk_free_rate": 0.05,
+              "dividend_yield": 0.01
+            },
+            "model": {
+              "id": "bjerksund_stensland_1993"
+            },
             "volatility": 0.2
           }
         ]
       },
       "response": {
         "metadata": {
-          "request_id": "fr-18e88a7b3977d162-000000000000000f",
-          "api_version": "v1",
-          "engine_version": "0.45.0",
+          "request_id": "fr-18eb0de772f9d5a8-000000000000001f",
+          "service_version": "0.9.2",
+          "contract": {
+            "version": "v1",
+            "sha256": "23ee6e9f9ad5841def5b34c0d45b43b1c6a8b628179493f9640da58baafe598a"
+          },
           "engines": [
             {
               "name": "morphiq-risk",
-              "version": "0.45.0",
-              "revision": "a4df4da57ff2d53a1f1146f1c4310f0e980a497a"
+              "version": "0.46.1",
+              "revision": "1550e4e41b243b8a978677bc5e9b46916c08cb0e"
             }
           ]
         },
@@ -150,50 +195,57 @@
             "index": 0,
             "status": "success",
             "result": {
-              "price": 10.450583572185565,
+              "price": 10.450583572185577,
               "greeks": {
-                "delta": 0.6368306511756191,
-                "gamma": 0.018762017345846895,
-                "theta": -6.414027546438199,
-                "vega": 37.52403469169381,
+                "delta": 0.6368306511756192,
+                "gamma": 0.01876201734584689,
+                "theta": -6.414027546438195,
+                "vega": 37.52403469169378,
                 "rho": 53.232481545376345,
-                "vanna": -0.28143026018770334,
-                "volga": 9.850059106569617,
-                "charm": -0.06566706071046415,
-                "veta": -16.46367022098066,
-                "color": 0.01053018223535657
+                "vanna": -0.2814302601877039,
+                "volga": 9.850059106569645,
+                "charm": -0.06566706071046408,
+                "veta": -16.463670220980646,
+                "color": 0.010530182235356568
               },
-              "pricing_model": "black_scholes_merton",
-              "model_version": "black_scholes_merton/1"
+              "model": {
+                "id": "black_scholes_merton",
+                "version": "black_scholes_merton/1"
+              }
             }
           },
           {
             "index": 1,
             "status": "error",
             "error": {
-              "code": "pricing_failed",
-              "message": "the pricing engine could not produce a result"
+              "type": "https://developers.morphiqlabs.com/docs/errors#pricing_failed",
+              "title": "Pricing failed",
+              "status": 500,
+              "detail": "the pricing engine could not produce a result",
+              "code": "pricing_failed"
             }
           },
           {
             "index": 2,
             "status": "success",
             "result": {
-              "price": 7.5298454349124135,
+              "price": 7.529845434912404,
               "greeks": {
                 "delta": -0.5892018845247824,
-                "gamma": 0.03283315892329423,
-                "theta": -3.55494205524821,
-                "vega": 26.586081744012873,
-                "rho": -21.61207168023723,
-                "vanna": 0.8950133905908548,
-                "volga": 24.916694215773163,
-                "charm": -0.18410996878530597,
+                "gamma": 0.032833158923294165,
+                "theta": -3.5549420552482163,
+                "vega": 26.586081744012805,
+                "rho": -21.612071680237094,
+                "vanna": 0.8950133905908636,
+                "volga": 24.916694215773536,
+                "charm": -0.18410996878530694,
                 "veta": -28.20742602649876,
-                "color": 0.025532151457727196
+                "color": 0.025532151457727515
               },
-              "pricing_model": "bjerksund_stensland_1993",
-              "model_version": "bjerksund_stensland_1993/1"
+              "model": {
+                "id": "bjerksund_stensland_1993",
+                "version": "bjerksund_stensland_1993/1"
+              }
             }
           }
         ]
@@ -201,54 +253,75 @@
     },
     {
       "name": "batch-implied-volatility",
-      "path": "/v1/implied-volatility:batch",
+      "path": "/v1/options:batch-implied-volatility",
       "request": {
-        "requests": [
+        "items": [
           {
-            "exercise_style": "european",
-            "pricing_model": "auto",
-            "option_type": "call",
-            "spot": 100.0,
-            "strike": 100.0,
-            "time_to_expiry_years": 1,
-            "risk_free_rate": 0.05,
-            "dividend_yield": 0,
+            "option": {
+              "type": "call",
+              "exercise_style": "european",
+              "strike": 100.0,
+              "time_to_expiry_years": 1.0
+            },
+            "market": {
+              "spot": 100.0,
+              "risk_free_rate": 0.05,
+              "dividend_yield": 0.0
+            },
+            "model": {
+              "id": "auto"
+            },
             "market_price": 10.450583572185538
           },
           {
-            "exercise_style": "american",
-            "pricing_model": "bjerksund_stensland_1993",
-            "option_type": "put",
-            "spot": 100.0,
-            "strike": 105.0,
-            "time_to_expiry_years": 0.5,
-            "risk_free_rate": 0.05,
-            "dividend_yield": 0.01,
+            "option": {
+              "type": "put",
+              "exercise_style": "american",
+              "strike": 105.0,
+              "time_to_expiry_years": 0.5
+            },
+            "market": {
+              "spot": 100.0,
+              "risk_free_rate": 0.05,
+              "dividend_yield": 0.01
+            },
+            "model": {
+              "id": "bjerksund_stensland_1993"
+            },
             "market_price": 7.5298454349124135
           },
           {
-            "exercise_style": "american",
-            "pricing_model": "bjerksund_stensland_1993",
-            "option_type": "put",
-            "spot": 100.0,
-            "strike": 105.0,
-            "time_to_expiry_years": 0.5,
-            "risk_free_rate": 0.05,
-            "dividend_yield": 0.01,
+            "option": {
+              "type": "put",
+              "exercise_style": "american",
+              "strike": 105.0,
+              "time_to_expiry_years": 0.5
+            },
+            "market": {
+              "spot": 100.0,
+              "risk_free_rate": 0.05,
+              "dividend_yield": 0.01
+            },
+            "model": {
+              "id": "bjerksund_stensland_1993"
+            },
             "market_price": 7.5298454349124135
           }
         ]
       },
       "response": {
         "metadata": {
-          "request_id": "fr-18e88a7b3977d162-0000000000000010",
-          "api_version": "v1",
-          "engine_version": "0.45.0",
+          "request_id": "fr-18eb0de772f9d5a8-0000000000000020",
+          "service_version": "0.9.2",
+          "contract": {
+            "version": "v1",
+            "sha256": "23ee6e9f9ad5841def5b34c0d45b43b1c6a8b628179493f9640da58baafe598a"
+          },
           "engines": [
             {
               "name": "morphiq-risk",
-              "version": "0.45.0",
-              "revision": "a4df4da57ff2d53a1f1146f1c4310f0e980a497a"
+              "version": "0.46.1",
+              "revision": "1550e4e41b243b8a978677bc5e9b46916c08cb0e"
             }
           ]
         },
@@ -262,92 +335,116 @@
               "used_fallback": false,
               "residual": 1.3535144005987383e-17,
               "residual_basis": "forward_normalised_price",
-              "pricing_model": "black_scholes_merton",
-              "model_version": "black_scholes_merton/1"
+              "model": {
+                "id": "black_scholes_merton",
+                "version": "black_scholes_merton/1"
+              }
             }
           },
           {
             "index": 1,
             "status": "success",
             "result": {
-              "implied_volatility": 0.2000000000000002,
-              "iterations": 12,
+              "implied_volatility": 0.20000000000000084,
+              "iterations": 6,
               "used_fallback": true,
               "residual": 0.0,
               "residual_basis": "option_price",
-              "pricing_model": "bjerksund_stensland_1993",
-              "model_version": "bjerksund_stensland_1993/1"
+              "model": {
+                "id": "bjerksund_stensland_1993",
+                "version": "bjerksund_stensland_1993/1"
+              }
             }
           },
           {
             "index": 2,
             "status": "success",
             "result": {
-              "implied_volatility": 0.2000000000000002,
-              "iterations": 12,
+              "implied_volatility": 0.20000000000000084,
+              "iterations": 6,
               "used_fallback": true,
               "residual": 0.0,
               "residual_basis": "option_price",
-              "pricing_model": "bjerksund_stensland_1993",
-              "model_version": "bjerksund_stensland_1993/1"
+              "model": {
+                "id": "bjerksund_stensland_1993",
+                "version": "bjerksund_stensland_1993/1"
+              }
             }
           }
         ]
       }
     },
     {
-      "name": "batch-analytics",
-      "path": "/v1/analytics:batch",
+      "name": "batch-implied-greeks",
+      "path": "/v1/options:batch-implied-greeks",
       "request": {
-        "requests": [
+        "items": [
           {
-            "exercise_style": "european",
-            "pricing_model": "auto",
-            "option_type": "call",
-            "spot": 100.0,
-            "strike": 100.0,
-            "time_to_expiry_years": 1,
-            "risk_free_rate": 0.05,
-            "dividend_yield": 0,
-            "volatility": 0.35,
+            "option": {
+              "type": "call",
+              "exercise_style": "european",
+              "strike": 100.0,
+              "time_to_expiry_years": 1.0
+            },
+            "market": {
+              "spot": 100.0,
+              "risk_free_rate": 0.05,
+              "dividend_yield": 0.0
+            },
+            "model": {
+              "id": "auto"
+            },
             "market_price": 10.450583572185538
           },
           {
-            "exercise_style": "american",
-            "pricing_model": "bjerksund_stensland_1993",
-            "option_type": "put",
-            "spot": 100.0,
-            "strike": 105.0,
-            "time_to_expiry_years": 0.5,
-            "risk_free_rate": 0.05,
-            "dividend_yield": 0.01,
-            "volatility": 0.35,
+            "option": {
+              "type": "put",
+              "exercise_style": "american",
+              "strike": 105.0,
+              "time_to_expiry_years": 0.5
+            },
+            "market": {
+              "spot": 100.0,
+              "risk_free_rate": 0.05,
+              "dividend_yield": 0.01
+            },
+            "model": {
+              "id": "bjerksund_stensland_1993"
+            },
             "market_price": 7.5298454349124135
           },
           {
-            "exercise_style": "american",
-            "pricing_model": "bjerksund_stensland_1993",
-            "option_type": "put",
-            "spot": 100.0,
-            "strike": 105.0,
-            "time_to_expiry_years": 0.5,
-            "risk_free_rate": 0.05,
-            "dividend_yield": 0.01,
-            "volatility": 0.35,
+            "option": {
+              "type": "put",
+              "exercise_style": "american",
+              "strike": 105.0,
+              "time_to_expiry_years": 0.5
+            },
+            "market": {
+              "spot": 100.0,
+              "risk_free_rate": 0.05,
+              "dividend_yield": 0.01
+            },
+            "model": {
+              "id": "bjerksund_stensland_1993"
+            },
             "market_price": 7.5298454349124135
           }
         ]
       },
       "response": {
         "metadata": {
-          "request_id": "fr-18e88a7b3977d162-0000000000000011",
-          "api_version": "v1",
-          "engine_version": "0.45.0",
+          "request_id": "fr-18eb0de772f9d5a8-0000000000000021",
+          "service_version": "0.9.2",
+          "contract": {
+            "version": "v1",
+            "sha256": "23ee6e9f9ad5841def5b34c0d45b43b1c6a8b628179493f9640da58baafe598a"
+          },
           "engines": [
             {
               "name": "morphiq-risk",
-              "version": "0.45.0",
-              "revision": "a4df4da57ff2d53a1f1146f1c4310f0e980a497a"
+              "version": "0.46.1",
+              "revision": "1550e4e41b243b8a978677bc5e9b46916c08cb0e"
             }
           ]
         },
@@ -358,16 +455,16 @@
             "result": {
               "price": 10.45058357218553,
               "greeks": {
-                "delta": 0.6368306511756193,
-                "gamma": 0.018762017345846982,
-                "theta": -6.4140275464381835,
-                "vega": 37.5240346916938,
-                "rho": 53.2324815453764,
-                "vanna": -0.28143026018770795,
-                "volga": 9.850059106569802,
-                "charm": -0.06566706071046426,
-                "veta": -16.463670220980642,
-                "color": 0.010530182235356624
+                "delta": 0.6368306511756194,
+                "gamma": 0.01876201734584698,
+                "theta": -6.414027546438181,
+                "vega": 37.52403469169378,
+                "rho": 53.232481545376416,
+                "vanna": -0.2814302601877085,
+                "volga": 9.850059106569828,
+                "charm": -0.06566706071046419,
+                "veta": -16.463670220980635,
+                "color": 0.010530182235356622
               },
               "implied_volatility": {
                 "implied_volatility": 0.19999999999999904,
@@ -375,11 +472,15 @@
                 "used_fallback": false,
                 "residual": 1.3535144005987383e-17,
                 "residual_basis": "forward_normalised_price",
-                "pricing_model": "black_scholes_merton",
-                "model_version": "black_scholes_merton/1"
+                "model": {
+                  "id": "black_scholes_merton",
+                  "version": "black_scholes_merton/1"
+                }
               },
-              "pricing_model": "black_scholes_merton",
-              "model_version": "black_scholes_merton/1"
+              "model": {
+                "id": "black_scholes_merton",
+                "version": "black_scholes_merton/1"
+              }
             }
           },
           {
@@ -388,28 +489,32 @@
             "result": {
               "price": 7.5298454349124135,
               "greeks": {
-                "delta": -0.589201884524783,
-                "gamma": 0.03283315892329411,
-                "theta": -3.5549420552482287,
-                "vega": 26.586081744012898,
-                "rho": -21.612071680237182,
-                "vanna": 0.895013390590854,
-                "volga": 24.916694215773525,
-                "charm": -0.18410996878530728,
-                "veta": -28.207426026498784,
-                "color": 0.025532151457727293
+                "delta": -0.5892018845247808,
+                "gamma": 0.03283315892329387,
+                "theta": -3.5549420552482447,
+                "vega": 26.586081744012944,
+                "rho": -21.612071680237353,
+                "vanna": 0.8950133905908367,
+                "volga": 24.9166942157721,
+                "charm": -0.18410996878530303,
+                "veta": -28.20742602649873,
+                "color": 0.025532151457727335
               },
               "implied_volatility": {
-                "implied_volatility": 0.2000000000000002,
-                "iterations": 12,
+                "implied_volatility": 0.20000000000000084,
+                "iterations": 6,
                 "used_fallback": true,
                 "residual": 0.0,
                 "residual_basis": "option_price",
-                "pricing_model": "bjerksund_stensland_1993",
-                "model_version": "bjerksund_stensland_1993/1"
+                "model": {
+                  "id": "bjerksund_stensland_1993",
+                  "version": "bjerksund_stensland_1993/1"
+                }
               },
-              "pricing_model": "bjerksund_stensland_1993",
-              "model_version": "bjerksund_stensland_1993/1"
+              "model": {
+                "id": "bjerksund_stensland_1993",
+                "version": "bjerksund_stensland_1993/1"
+              }
             }
           },
           {
@@ -418,28 +523,32 @@
             "result": {
               "price": 7.5298454349124135,
               "greeks": {
-                "delta": -0.589201884524783,
-                "gamma": 0.03283315892329411,
-                "theta": -3.5549420552482287,
-                "vega": 26.586081744012898,
-                "rho": -21.612071680237182,
-                "vanna": 0.895013390590854,
-                "volga": 24.916694215773525,
-                "charm": -0.18410996878530728,
-                "veta": -28.207426026498784,
-                "color": 0.025532151457727293
+                "delta": -0.5892018845247808,
+                "gamma": 0.03283315892329387,
+                "theta": -3.5549420552482447,
+                "vega": 26.586081744012944,
+                "rho": -21.612071680237353,
+                "vanna": 0.8950133905908367,
+                "volga": 24.9166942157721,
+                "charm": -0.18410996878530303,
+                "veta": -28.20742602649873,
+                "color": 0.025532151457727335
               },
               "implied_volatility": {
-                "implied_volatility": 0.2000000000000002,
-                "iterations": 12,
+                "implied_volatility": 0.20000000000000084,
+                "iterations": 6,
                 "used_fallback": true,
                 "residual": 0.0,
                 "residual_basis": "option_price",
-                "pricing_model": "bjerksund_stensland_1993",
-                "model_version": "bjerksund_stensland_1993/1"
+                "model": {
+                  "id": "bjerksund_stensland_1993",
+                  "version": "bjerksund_stensland_1993/1"
+                }
               },
-              "pricing_model": "bjerksund_stensland_1993",
-              "model_version": "bjerksund_stensland_1993/1"
+              "model": {
+                "id": "bjerksund_stensland_1993",
+                "version": "bjerksund_stensland_1993/1"
+              }
             }
           }
         ]
@@ -447,120 +556,177 @@
     },
     {
       "name": "batch-price-sweep",
-      "path": "/v1/price:batch",
+      "path": "/v1/options:batch-price",
       "request": {
-        "requests": [
+        "items": [
           {
-            "exercise_style": "european",
-            "pricing_model": "auto",
-            "option_type": "call",
-            "spot": 80.0,
-            "strike": 100.0,
-            "time_to_expiry_years": 1,
-            "risk_free_rate": 0.05,
-            "dividend_yield": 0,
+            "option": {
+              "type": "call",
+              "exercise_style": "european",
+              "strike": 100.0,
+              "time_to_expiry_years": 1.0
+            },
+            "market": {
+              "spot": 80.0,
+              "risk_free_rate": 0.05,
+              "dividend_yield": 0.0
+            },
+            "model": {
+              "id": "auto"
+            },
             "volatility": 0.2
           },
           {
-            "exercise_style": "european",
-            "pricing_model": "auto",
-            "option_type": "call",
-            "spot": 85.0,
-            "strike": 100.0,
-            "time_to_expiry_years": 1,
-            "risk_free_rate": 0.05,
-            "dividend_yield": 0,
+            "option": {
+              "type": "call",
+              "exercise_style": "european",
+              "strike": 100.0,
+              "time_to_expiry_years": 1.0
+            },
+            "market": {
+              "spot": 85.0,
+              "risk_free_rate": 0.05,
+              "dividend_yield": 0.0
+            },
+            "model": {
+              "id": "auto"
+            },
             "volatility": 0.2
           },
           {
-            "exercise_style": "european",
-            "pricing_model": "auto",
-            "option_type": "call",
-            "spot": 90.0,
-            "strike": 100.0,
-            "time_to_expiry_years": 1,
-            "risk_free_rate": 0.05,
-            "dividend_yield": 0,
+            "option": {
+              "type": "call",
+              "exercise_style": "european",
+              "strike": 100.0,
+              "time_to_expiry_years": 1.0
+            },
+            "market": {
+              "spot": 90.0,
+              "risk_free_rate": 0.05,
+              "dividend_yield": 0.0
+            },
+            "model": {
+              "id": "auto"
+            },
             "volatility": 0.2
           },
           {
-            "exercise_style": "european",
-            "pricing_model": "auto",
-            "option_type": "call",
-            "spot": 95.0,
-            "strike": 100.0,
-            "time_to_expiry_years": 1,
-            "risk_free_rate": 0.05,
-            "dividend_yield": 0,
+            "option": {
+              "type": "call",
+              "exercise_style": "european",
+              "strike": 100.0,
+              "time_to_expiry_years": 1.0
+            },
+            "market": {
+              "spot": 95.0,
+              "risk_free_rate": 0.05,
+              "dividend_yield": 0.0
+            },
+            "model": {
+              "id": "auto"
+            },
             "volatility": 0.2
           },
           {
-            "exercise_style": "european",
-            "pricing_model": "auto",
-            "option_type": "call",
-            "spot": 100.0,
-            "strike": 100.0,
-            "time_to_expiry_years": 1,
-            "risk_free_rate": 0.05,
-            "dividend_yield": 0,
+            "option": {
+              "type": "call",
+              "exercise_style": "european",
+              "strike": 100.0,
+              "time_to_expiry_years": 1.0
+            },
+            "market": {
+              "spot": 100.0,
+              "risk_free_rate": 0.05,
+              "dividend_yield": 0.0
+            },
+            "model": {
+              "id": "auto"
+            },
             "volatility": 0.2
           },
           {
-            "exercise_style": "european",
-            "pricing_model": "auto",
-            "option_type": "call",
-            "spot": 105.0,
-            "strike": 100.0,
-            "time_to_expiry_years": 1,
-            "risk_free_rate": 0.05,
-            "dividend_yield": 0,
+            "option": {
+              "type": "call",
+              "exercise_style": "european",
+              "strike": 100.0,
+              "time_to_expiry_years": 1.0
+            },
+            "market": {
+              "spot": 105.0,
+              "risk_free_rate": 0.05,
+              "dividend_yield": 0.0
+            },
+            "model": {
+              "id": "auto"
+            },
             "volatility": 0.2
           },
           {
-            "exercise_style": "european",
-            "pricing_model": "auto",
-            "option_type": "call",
-            "spot": 110.00000000000001,
-            "strike": 100.0,
-            "time_to_expiry_years": 1,
-            "risk_free_rate": 0.05,
-            "dividend_yield": 0,
+            "option": {
+              "type": "call",
+              "exercise_style": "european",
+              "strike": 100.0,
+              "time_to_expiry_years": 1.0
+            },
+            "market": {
+              "spot": 110.00000000000001,
+              "risk_free_rate": 0.05,
+              "dividend_yield": 0.0
+            },
+            "model": {
+              "id": "auto"
+            },
             "volatility": 0.2
           },
           {
-            "exercise_style": "european",
-            "pricing_model": "auto",
-            "option_type": "call",
-            "spot": 114.99999999999999,
-            "strike": 100.0,
-            "time_to_expiry_years": 1,
-            "risk_free_rate": 0.05,
-            "dividend_yield": 0,
+            "option": {
+              "type": "call",
+              "exercise_style": "european",
+              "strike": 100.0,
+              "time_to_expiry_years": 1.0
+            },
+            "market": {
+              "spot": 114.99999999999999,
+              "risk_free_rate": 0.05,
+              "dividend_yield": 0.0
+            },
+            "model": {
+              "id": "auto"
+            },
             "volatility": 0.2
           },
           {
-            "exercise_style": "european",
-            "pricing_model": "auto",
-            "option_type": "call",
-            "spot": 120.0,
-            "strike": 100.0,
-            "time_to_expiry_years": 1,
-            "risk_free_rate": 0.05,
-            "dividend_yield": 0,
+            "option": {
+              "type": "call",
+              "exercise_style": "european",
+              "strike": 100.0,
+              "time_to_expiry_years": 1.0
+            },
+            "market": {
+              "spot": 120.0,
+              "risk_free_rate": 0.05,
+              "dividend_yield": 0.0
+            },
+            "model": {
+              "id": "auto"
+            },
             "volatility": 0.2
           }
         ]
       },
       "response": {
         "metadata": {
-          "request_id": "fr-18e88a7b3977d162-0000000000000012",
-          "api_version": "v1",
-          "engine_version": "0.45.0",
+          "request_id": "fr-18eb0de772f9d5a8-0000000000000022",
+          "service_version": "0.9.2",
+          "contract": {
+            "version": "v1",
+            "sha256": "23ee6e9f9ad5841def5b34c0d45b43b1c6a8b628179493f9640da58baafe598a"
+          },
           "engines": [
             {
               "name": "morphiq-risk",
-              "version": "0.45.0",
-              "revision": "a4df4da57ff2d53a1f1146f1c4310f0e980a497a"
+              "version": "0.46.1",
+              "revision": "1550e4e41b243b8a978677bc5e9b46916c08cb0e"
             }
           ]
         },
@@ -569,55 +735,55 @@
             "index": 0,
             "status": "success",
             "result": {
-              "price": 1.8594195728121834,
-              "exercise_style": "european",
-              "option_type": "call",
-              "pricing_model": "black_scholes_merton",
-              "model_version": "black_scholes_merton/1"
+              "price": 1.8594195728121876,
+              "model": {
+                "id": "black_scholes_merton",
+                "version": "black_scholes_merton/1"
+              }
             }
           },
           {
             "index": 1,
             "status": "success",
             "result": {
-              "price": 3.21359855314788,
-              "exercise_style": "european",
-              "option_type": "call",
-              "pricing_model": "black_scholes_merton",
-              "model_version": "black_scholes_merton/1"
+              "price": 3.213598553147886,
+              "model": {
+                "id": "black_scholes_merton",
+                "version": "black_scholes_merton/1"
+              }
             }
           },
           {
             "index": 2,
             "status": "success",
             "result": {
-              "price": 5.091222078817551,
-              "exercise_style": "european",
-              "option_type": "call",
-              "pricing_model": "black_scholes_merton",
-              "model_version": "black_scholes_merton/1"
+              "price": 5.091222078817559,
+              "model": {
+                "id": "black_scholes_merton",
+                "version": "black_scholes_merton/1"
+              }
             }
           },
           {
             "index": 3,
             "status": "success",
             "result": {
-              "price": 7.510872178352703,
-              "exercise_style": "european",
-              "option_type": "call",
-              "pricing_model": "black_scholes_merton",
-              "model_version": "black_scholes_merton/1"
+              "price": 7.510872178352705,
+              "model": {
+                "id": "black_scholes_merton",
+                "version": "black_scholes_merton/1"
+              }
             }
           },
           {
             "index": 4,
             "status": "success",
             "result": {
-              "price": 10.450583572185565,
-              "exercise_style": "european",
-              "option_type": "call",
-              "pricing_model": "black_scholes_merton",
-              "model_version": "black_scholes_merton/1"
+              "price": 10.450583572185577,
+              "model": {
+                "id": "black_scholes_merton",
+                "version": "black_scholes_merton/1"
+              }
             }
           },
           {
@@ -625,43 +791,43 @@
             "status": "success",
             "result": {
               "price": 13.857906267073119,
-              "exercise_style": "european",
-              "option_type": "call",
-              "pricing_model": "black_scholes_merton",
-              "model_version": "black_scholes_merton/1"
+              "model": {
+                "id": "black_scholes_merton",
+                "version": "black_scholes_merton/1"
+              }
             }
           },
           {
             "index": 6,
             "status": "success",
             "result": {
-              "price": 17.66295374059044,
-              "exercise_style": "european",
-              "option_type": "call",
-              "pricing_model": "black_scholes_merton",
-              "model_version": "black_scholes_merton/1"
+              "price": 17.662953740590456,
+              "model": {
+                "id": "black_scholes_merton",
+                "version": "black_scholes_merton/1"
+              }
             }
           },
           {
             "index": 7,
             "status": "success",
             "result": {
-              "price": 21.79051252803113,
-              "exercise_style": "european",
-              "option_type": "call",
-              "pricing_model": "black_scholes_merton",
-              "model_version": "black_scholes_merton/1"
+              "price": 21.790512528031133,
+              "model": {
+                "id": "black_scholes_merton",
+                "version": "black_scholes_merton/1"
+              }
             }
           },
           {
             "index": 8,
             "status": "success",
             "result": {
-              "price": 26.169043946847296,
-              "exercise_style": "european",
-              "option_type": "call",
-              "pricing_model": "black_scholes_merton",
-              "model_version": "black_scholes_merton/1"
+              "price": 26.169043946847303,
+              "model": {
+                "id": "black_scholes_merton",
+                "version": "black_scholes_merton/1"
+              }
             }
           }
         ]
@@ -669,43 +835,58 @@
     },
     {
       "name": "batch-price-example",
-      "path": "/v1/price:batch",
+      "path": "/v1/options:batch-price",
       "request": {
-        "requests": [
+        "items": [
           {
-            "exercise_style": "european",
-            "pricing_model": "auto",
-            "option_type": "call",
-            "spot": 100.0,
-            "strike": 100.0,
-            "time_to_expiry_years": 1,
-            "risk_free_rate": 0.05,
-            "dividend_yield": 0,
+            "option": {
+              "type": "call",
+              "exercise_style": "european",
+              "strike": 100.0,
+              "time_to_expiry_years": 1.0
+            },
+            "market": {
+              "spot": 100.0,
+              "risk_free_rate": 0.05,
+              "dividend_yield": 0.0
+            },
+            "model": {
+              "id": "auto"
+            },
             "volatility": 0.2
           },
           {
-            "exercise_style": "american",
-            "pricing_model": "bjerksund_stensland_1993",
-            "option_type": "put",
-            "spot": 100.0,
-            "strike": 105.0,
-            "time_to_expiry_years": 0.5,
-            "risk_free_rate": 0.05,
-            "dividend_yield": 0.01,
+            "option": {
+              "type": "put",
+              "exercise_style": "american",
+              "strike": 105.0,
+              "time_to_expiry_years": 0.5
+            },
+            "market": {
+              "spot": 100.0,
+              "risk_free_rate": 0.05,
+              "dividend_yield": 0.01
+            },
+            "model": {
+              "id": "bjerksund_stensland_1993"
+            },
             "volatility": 0.2
           }
         ]
       },
       "response": {
         "metadata": {
-          "request_id": "fr-18e88a7b3977d162-0000000000000013",
-          "api_version": "v1",
-          "engine_version": "0.45.0",
+          "request_id": "fr-18eb0de772f9d5a8-0000000000000023",
+          "service_version": "0.9.2",
+          "contract": {
+            "version": "v1",
+            "sha256": "23ee6e9f9ad5841def5b34c0d45b43b1c6a8b628179493f9640da58baafe598a"
+          },
           "engines": [
             {
               "name": "morphiq-risk",
-              "version": "0.45.0",
-              "revision": "a4df4da57ff2d53a1f1146f1c4310f0e980a497a"
+              "version": "0.46.1",
+              "revision": "1550e4e41b243b8a978677bc5e9b46916c08cb0e"
             }
           ]
         },
@@ -714,22 +895,22 @@
             "index": 0,
             "status": "success",
             "result": {
-              "price": 10.450583572185565,
-              "exercise_style": "european",
-              "option_type": "call",
-              "pricing_model": "black_scholes_merton",
-              "model_version": "black_scholes_merton/1"
+              "price": 10.450583572185577,
+              "model": {
+                "id": "black_scholes_merton",
+                "version": "black_scholes_merton/1"
+              }
             }
           },
           {
             "index": 1,
             "status": "success",
             "result": {
-              "price": 7.5298454349124135,
-              "exercise_style": "american",
-              "option_type": "put",
-              "pricing_model": "bjerksund_stensland_1993",
-              "model_version": "bjerksund_stensland_1993/1"
+              "price": 7.529845434912404,
+              "model": {
+                "id": "bjerksund_stensland_1993",
+                "version": "bjerksund_stensland_1993/1"
+              }
             }
           }
         ]

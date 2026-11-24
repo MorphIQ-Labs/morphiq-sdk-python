@@ -1,76 +1,96 @@
 {
-  "source_commit": "525627cd2334053270214208a70d15450934e54b",
-  "contract_sha256": "89aed6a6d6af982251c2cdac455113228f0ccb823e693f7f3fa0e8709071d33a",
+  "source_commit": "cf2718f3b8ebfe0046556f4fce05e4b0192053f0",
+  "contract_sha256": "23ee6e9f9ad5841def5b34c0d45b43b1c6a8b628179493f9640da58baafe598a",
   "admission": "open (isolated loopback service; no commercial charge)",
-  "note": "Synthetic requests evaluated by a --locked native build of deployed API v0.7.0. American Greeks/analytics/batches explicitly use BS1993; Auto American without cash events resolves to BS1993.",
+  "note": "Synthetic requests evaluated by a native release build of the API 0.10.0 contract (integration/v0.10.0-deploy-readiness). American Greeks and batches explicitly use BS1993; Auto American without cash events resolves to BS1993.",
   "cases": [
     {
       "name": "european",
+      "path": "/v1/options:price",
       "request": {
-        "exercise_style": "european",
-        "pricing_model": "auto",
-        "option_type": "call",
-        "spot": 100.0,
-        "strike": 100.0,
-        "time_to_expiry_years": 1,
-        "risk_free_rate": 0.05,
-        "dividend_yield": 0,
+        "option": {
+          "type": "call",
+          "exercise_style": "european",
+          "strike": 100.0,
+          "time_to_expiry_years": 1.0
+        },
+        "market": {
+          "spot": 100.0,
+          "risk_free_rate": 0.05,
+          "dividend_yield": 0.0
+        },
+        "model": {
+          "id": "auto"
+        },
         "volatility": 0.2
       },
       "response": {
         "metadata": {
-          "request_id": "fr-18e88a7b3977d162-0000000000000002",
-          "api_version": "v1",
-          "engine_version": "0.45.0",
+          "request_id": "fr-18eb0de772f9d5a8-0000000000000014",
+          "service_version": "0.9.2",
+          "contract": {
+            "version": "v1",
+            "sha256": "23ee6e9f9ad5841def5b34c0d45b43b1c6a8b628179493f9640da58baafe598a"
+          },
           "engines": [
             {
               "name": "morphiq-risk",
-              "version": "0.45.0",
-              "revision": "a4df4da57ff2d53a1f1146f1c4310f0e980a497a"
+              "version": "0.46.1",
+              "revision": "1550e4e41b243b8a978677bc5e9b46916c08cb0e"
             }
           ]
         },
         "result": {
-          "price": 10.450583572185565,
-          "exercise_style": "european",
-          "option_type": "call",
-          "pricing_model": "black_scholes_merton",
-          "model_version": "black_scholes_merton/1"
+          "price": 10.450583572185577,
+          "model": {
+            "id": "black_scholes_merton",
+            "version": "black_scholes_merton/1"
+          }
         }
       }
     },
     {
       "name": "american",
+      "path": "/v1/options:price",
       "request": {
-        "exercise_style": "american",
-        "pricing_model": "auto",
-        "option_type": "put",
-        "spot": 100.0,
-        "strike": 105.0,
-        "time_to_expiry_years": 0.5,
-        "risk_free_rate": 0.05,
-        "dividend_yield": 0.01,
+        "option": {
+          "type": "put",
+          "exercise_style": "american",
+          "strike": 105.0,
+          "time_to_expiry_years": 0.5
+        },
+        "market": {
+          "spot": 100.0,
+          "risk_free_rate": 0.05,
+          "dividend_yield": 0.01
+        },
+        "model": {
+          "id": "auto"
+        },
         "volatility": 0.2
       },
       "response": {
         "metadata": {
-          "request_id": "fr-18e88a7b3977d162-0000000000000003",
-          "api_version": "v1",
-          "engine_version": "0.45.0",
+          "request_id": "fr-18eb0de772f9d5a8-0000000000000015",
+          "service_version": "0.9.2",
+          "contract": {
+            "version": "v1",
+            "sha256": "23ee6e9f9ad5841def5b34c0d45b43b1c6a8b628179493f9640da58baafe598a"
+          },
           "engines": [
             {
               "name": "morphiq-risk",
-              "version": "0.45.0",
-              "revision": "a4df4da57ff2d53a1f1146f1c4310f0e980a497a"
+              "version": "0.46.1",
+              "revision": "1550e4e41b243b8a978677bc5e9b46916c08cb0e"
             }
           ]
         },
         "result": {
-          "price": 7.5298454349124135,
-          "exercise_style": "american",
-          "option_type": "put",
-          "pricing_model": "bjerksund_stensland_1993",
-          "model_version": "bjerksund_stensland_1993/1"
+          "price": 7.529845434912404,
+          "model": {
+            "id": "bjerksund_stensland_1993",
+            "version": "bjerksund_stensland_1993/1"
+          }
         }
       }
     }

@@ -11,7 +11,24 @@ from getpass import getpass
 
 import yfinance as yf
 
-from morphiq_sdk import APIError, MorphIQ, RegimeRequest, ResponseError, TransportError
+from morphiq_sdk import (
+    APIError,
+    MorphIQ,
+    ResponseError,
+    SeriesIdentifyRegimeRequest,
+    TransportError,
+)
+from morphiq_sdk.models import (
+    RegimeAvailable,
+    RegimeCrisisActive,
+    RegimeCrisisUnavailable,
+    RegimeNotApplicable,
+    RegimeNotCrisis,
+    RegimeUnavailable,
+    RegimeVolatilityAvailable,
+    RegimeVolatilityNotApplicable,
+    RegimeVolatilityUnavailable,
+)
 
 
 def main() -> None:
@@ -41,18 +58,18 @@ def main() -> None:
 
     # Submit the downloaded prices directly to MorphIQ.
     api_key = os.environ.get("MORPHIQ_API_KEY") or getpass("MorphIQ API key: ")
-    request = RegimeRequest(prices=closes["Close"].tolist())
+    request = SeriesIdentifyRegimeRequest(prices=closes["Close"].tolist())
     # Daily date labels do not establish exact close timestamps; omit as_of.
     print(f"Sending {len(request.prices)} closes: {closes.index[0]} through {closes.index[-1]}")
 
     try:
         # The client uses https://api.morphiqlabs.com and closes its connection pool here.
         with MorphIQ(api_key=api_key) as client:
-            response = client.regime(request)
+            response = client.series.identify_regime(request)
     except APIError as error:
-        print(f"HTTP {error.status_code}: {error.code}: {error.message}", file=sys.stderr)
+        print(f"HTTP {error.status_code}: {error.code}: {error.detail}", file=sys.stderr)
         print(f"Request ID: {error.request_id}", file=sys.stderr)
-        charged = error.metadata.cu_charged if error.metadata else None
+        charged = error.metadata.charged_cu if error.metadata else None
         print(
             f"Commercial CU charged: {charged if charged is not None else 'not reported'}",
             file=sys.stderr,
@@ -69,53 +86,61 @@ def main() -> None:
         ) from None
 
     # Each head has its own status. Unresolved is an available decision label;
-    # not_applicable and unavailable instead have a reason and no prediction.
+    # not_applicable and unavailable omit the prediction and give a reason instead.
+    result = response.result
     for name, head in (
-        ("Decision", response.result.decision),
-        ("Direction", response.result.direction),
-        ("State", response.result.state),
+        ("Decision", result.decision),
+        ("Direction", result.direction),
+        ("State", result.state),
     ):
-        print(f"{name}: {head.status} (target: {head.basis.target})")
-        if head.status == "available":
+        print(f"{name}: {head.status}")
+        if isinstance(head, RegimeAvailable):
+            print(f"  Target: {head.basis.target}")
             print(f"  Label: {head.prediction.label}")
             for score in head.prediction.scores:
                 print(f"  {score.label}: {score.value}")
-        else:
-            print(f"  Reason: {head.reason_code}")
+        elif isinstance(head, (RegimeNotApplicable, RegimeUnavailable)):
+            print(f"  Target: {head.basis.target}; reason: {head.reason_code}")
+        # Any other status is newer than this SDK; it is reported, not interpreted.
 
-    volatility = response.result.volatility
-    if volatility is not None:
-        print("Volatility:", volatility.status)
-        if volatility.status == "available":
-            print("  Label:", volatility.prediction.label)
-        else:
-            print("  Reason:", volatility.reason_code)
-    crisis = response.result.crisis
-    if crisis is not None:
-        print("Crisis:", crisis.status)
-        if crisis.status == "unavailable":
-            print("  Reason:", crisis.reason_code)
-        else:
-            print("  Linear readout (not a probability):", crisis.score)
-            print("  Episode start price index:", crisis.episode_start_price_index)
+    volatility = result.volatility
+    print("Volatility:", volatility.status)
+    if isinstance(volatility, RegimeVolatilityAvailable):
+        print("  Label:", volatility.prediction.label)
+    elif isinstance(volatility, (RegimeVolatilityNotApplicable, RegimeVolatilityUnavailable)):
+        print("  Reason:", volatility.reason_code)
+    crisis = result.crisis
+    print("Crisis:", crisis.status)
+    if isinstance(crisis, RegimeCrisisActive):
+        print("  Linear readout (not a probability):", crisis.score)
+        print("  Episode start price index:", crisis.episode_start_price_index)
+    elif isinstance(crisis, RegimeNotCrisis):
+        print("  Linear readout (not a probability):", crisis.score)
+    elif isinstance(crisis, RegimeCrisisUnavailable):
+        print("  Reason:", crisis.reason_code)
 
     # Scores are uncalibrated softmax values, not probabilities or p-values.
-    # Do not multiply heads. LOWER_VOL/HIGHER_VOL are relative model states,
+    # Do not multiply heads. lower_vol/higher_vol are relative model states,
     # not historical volatility levels or price directions.
-    print("Score kind:", response.result.score_contract.kind)
-    metadata = response.metadata
-    consumed = metadata.consumed_price_range
-    print("Prices received:", metadata.received_price_count)
-    print("Window size:", metadata.window_price_count)
+    print("Score kind:", result.score_contract.kind)
+    facts = result.input
+    consumed = facts.consumed_price_range
+    print("Prices received:", facts.received_price_count)
+    print("Window size:", facts.window_price_count)
     print(f"Consumed prices: [{consumed.start_index}, {consumed.end_index_exclusive})")
-    print(f"Selected input price index: {metadata.input_price_index}; as_of: {metadata.as_of}")
-    print(f"Model: {metadata.provenance.model_id} ({metadata.provenance.model_status})")
-    print("Model SHA-256:", metadata.provenance.model_sha256)
-    print("Reference teacher executed:", metadata.provenance.teacher_executed)
+    # as_of is present only when the request supplied it.
+    print(f"Selected input price index: {facts.input_price_index}; as_of: {facts.as_of}")
+    print(f"Inference time: {result.timing.inference_us} us; crisis: {result.timing.crisis_us} us")
+    print(f"Model: {result.provenance.model_id} ({result.provenance.model_status})")
+    print("Model SHA-256:", result.provenance.model_sha256)
+    print("Reference teacher executed:", result.provenance.teacher_executed)
+    print("Response contract version:", result.response_contract_version)
+    metadata = response.metadata
     print("Request ID:", metadata.request_id)
-    for engine in metadata.engines:
+    for engine in metadata.engines or []:
         print(f"Engine: {engine.name} {engine.version} ({engine.revision})")
-    charged = metadata.cu_charged
+    # The charge is metadata.billing.charged_cu; missing means unreported, not zero.
+    charged = metadata.billing.charged_cu if metadata.billing is not None else None
     print("Commercial CU charged:", charged if charged is not None else "not reported")
 
 

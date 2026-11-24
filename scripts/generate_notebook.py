@@ -51,7 +51,7 @@ def regime_sources(filename: str = "identify_regime.py") -> tuple[str, str]:
             module = node.module if isinstance(node, ast.ImportFrom) else node.names[0].name
             group = (
                 "sdk"
-                if module == "morphiq_sdk"
+                if (module or "").startswith("morphiq_sdk")
                 else ("third_party" if module == "yfinance" else "stdlib")
             )
             groups[group].append(ast.unparse(node))
@@ -72,14 +72,15 @@ def notebook() -> dict[str, Any]:
 
 ## Choose an analysis
 
-- [Available models](pricing/models.ipynb): inspect public model capabilities and constraints.
-- [Standard-five Greeks](pricing/standard-five.ipynb): price an option and inspect
-  its five primary sensitivities.
-- [Cost quotation](cost/quotation.ipynb): inspect active rates, quote a synthetic
+- [Available models](pricing/models.ipynb): inspect public model capabilities, operations,
+  constraints and validity contracts.
+- [Standard Greeks](pricing/standard-five.ipynb): price an option and inspect
+  delta, gamma, theta, vega and rho.
+- [Cost quotation](cost/quotation.ipynb): read your rate card, quote a synthetic
   option, and explicitly execute with a maximum CU charge.
 - [Option pricing](pricing/options.ipynb): value European or American calls and puts,
   load a daily or intraday underlying price from Yahoo, inspect Greeks, solve implied
-  volatility, analyze a premium with Greeks, track session CU, and chart sensitivity.
+  volatility, get implied Greeks from a premium, track session CU, and chart sensitivity.
 - [Regime analysis](regime/identification.ipynb): load daily or intraday price history
   and inspect the latest regime assessment, scores and model provenance.
 

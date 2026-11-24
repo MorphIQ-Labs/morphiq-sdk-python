@@ -40,7 +40,7 @@ Choose the action that matches the analysis you need:
 | **Calculate** (standard five) | Supplied inputs → price, delta, gamma, theta, vega, rho | 1 |
 | **Price + Greeks** | Supplied volatility and option terms → price and all ten Greeks | 1 |
 | **Solve IV** | Entered per-share option premium and terms → IV and solver diagnostics | 1 |
-| **Analyze premium** | Entered premium and terms → native combined IV, price and Greeks at solved IV | 1 |
+| **Analyze premium** | Entered premium and terms → implied Greeks: IV, price and Greeks at solved IV | 1 |
 | **Spot sensitivity** | Nine spots across ±20%, other assumptions fixed → ordered outcomes and chart | 1 batch of 9 items |
 | **Analyze regime** | Ticker/interval → Yahoo history, latest regime assessment and score charts | 1 on a fresh analysis |
 
@@ -58,8 +58,8 @@ can be supplied through SDK requests but are outside these notebook controls.
 See [Greek units](GREEKS.md#units), [IV diagnostics](IMPLIED_VOLATILITY.md#interpreting-the-result)
 and [regime interpretation](REGIME.md#request-and-result-semantics).
 
-**Session CU** sums only reported `cu_charged` values, once per request. Combined
-results and batches count once, not per returned component or item. Charged failures
+**Session CU** sums only reported `metadata.billing.charged_cu` values, once per
+request. Implied-Greeks results and batches count once, not per returned component or item. Charged failures
 are included; missing charges, transport failures and user interruptions leave an
 explicitly incomplete subtotal. Rerunning setup retains the ledger in that kernel;
 restarting the kernel resets it. It covers the pricing workspace, not account-wide

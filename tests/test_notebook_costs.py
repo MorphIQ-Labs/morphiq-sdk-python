@@ -11,19 +11,19 @@ from test_analysis_notebooks import run_workspace
 
 
 def test_session_costs_include_errors_unknowns_and_partial_sweeps(
-    cases, greeks_cases, iv_cases, analytics_cases, batch_cases, tmp_path
+    cases, greeks_cases, iv_cases, implied_greeks_cases, batch_cases, tmp_path
 ):
     large = 2**53 + 1
     steps = [
         (cases[0], 2, 200),
         (greeks_cases[0], 3, 200),
         (iv_cases[0], 4, 200),
-        (analytics_cases[1], large, 200),
-        (analytics_cases[1], 0, 200),
-        (analytics_cases[1], None, 200),
-        (analytics_cases[1], 7, 500),
-        (analytics_cases[1], 11, "malformed"),
-        (analytics_cases[1], None, "disconnect"),
+        (implied_greeks_cases[0], large, 200),
+        (implied_greeks_cases[0], 0, 200),
+        (implied_greeks_cases[0], None, 200),
+        (implied_greeks_cases[0], 7, 500),
+        (implied_greeks_cases[0], 11, "malformed"),
+        (implied_greeks_cases[0], None, "disconnect"),
         (batch_cases[4], 49, 200),
     ]
     received = []
@@ -33,20 +33,24 @@ def test_session_costs_include_errors_unknowns_and_partial_sweeps(
             body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
             received.append((self.path, body))
             case, charge, status = steps[len(received) - 1]
-            assert self.path == case.get("path", "/v1/price")
+            assert self.path == case["path"]
             if status == "disconnect":
                 self.close_connection = True
                 return
             payload = copy.deepcopy(case["response"])
-            payload["metadata"].update(
-                request_id=f"cost-{len(received)}",
-                fcu_charged=charge,
-                fcu_quoted=999,
-                units_charged=888,
-            )
+            payload["metadata"]["request_id"] = f"cost-{len(received)}"
+            if charge is not None:
+                # Only billing.charged_cu is a charge; the quote is not added to the session.
+                payload["metadata"]["billing"] = {"charged_cu": charge, "quoted_cu": 999}
             if status == 500:
                 payload.pop("result")
-                payload["error"] = {"code": "pricing_failed", "message": "Synthetic failure"}
+                payload.update(
+                    type="https://developers.morphiqlabs.com/docs/errors#pricing_failed",
+                    title="Pricing failed",
+                    status=500,
+                    detail="Synthetic failure",
+                    code="pricing_failed",
+                )
             elif status == "malformed":
                 del payload["result"]["greeks"]["vega"]
                 status = 200
