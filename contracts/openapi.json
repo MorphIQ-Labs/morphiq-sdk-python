@@ -4246,7 +4246,63 @@
                 "type": "integer"
               },
               "inputs": {
-                "$ref": "#/components/schemas/OptionsPriceRequest"
+                "additionalProperties": false,
+                "description": "Resolved scenario inputs; an error item preserves values the pricing operation refused.",
+                "properties": {
+                  "market": {
+                    "additionalProperties": false,
+                    "description": "Resolved market state echoed for this scenario, including refused inputs.",
+                    "properties": {
+                      "dividend_yield": {
+                        "description": "Annual continuously compounded dividend yield, as a decimal (0.01 is\n1%). Any finite value; negative yields are accepted. Use `dividends`\nfor discrete cash dividends.",
+                        "format": "double",
+                        "type": "number"
+                      },
+                      "dividends": {
+                        "description": "Discrete cash dividends within the option's life; the cash-dividend\nmodel only (Auto selects it for a nonempty list). At most 16.",
+                        "items": {
+                          "$ref": "#/components/schemas/DividendEvent"
+                        },
+                        "maxItems": 16,
+                        "type": "array"
+                      },
+                      "risk_free_rate": {
+                        "description": "Annual continuously compounded risk-free rate, as a decimal (0.03 is\n3%). Any finite value; negative rates are accepted.",
+                        "format": "double",
+                        "type": "number"
+                      },
+                      "spot": {
+                        "description": "Resolved underlying price in the option's quote currency. May be zero or negative when the scenario reports an error.",
+                        "format": "double",
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "spot",
+                      "risk_free_rate",
+                      "dividend_yield"
+                    ],
+                    "type": "object"
+                  },
+                  "model": {
+                    "$ref": "#/components/schemas/ModelSelection"
+                  },
+                  "option": {
+                    "$ref": "#/components/schemas/Option"
+                  },
+                  "volatility": {
+                    "description": "Resolved annual lognormal volatility as a decimal. May be negative when the scenario reports an error.",
+                    "format": "double",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "option",
+                  "market",
+                  "volatility",
+                  "model"
+                ],
+                "type": "object"
               }
             },
             "required": [
