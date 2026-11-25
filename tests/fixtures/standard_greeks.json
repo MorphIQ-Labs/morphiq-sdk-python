@@ -1,0 +1,112 @@
+{
+  "source_commit": "4809233ade17132517a74dfc0ea4aebb087386d9",
+  "contract_sha256": "68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8",
+  "admission": "open (isolated loopback service; no commercial charge)",
+  "note": "Synthetic requests evaluated by a native release build of the API 0.10.0 contract (tag v0.10.0). American Greeks and batches explicitly use BS1993; Auto American without cash events resolves to BS1993.",
+  "cases": [
+    {
+      "name": "standard-greeks-european",
+      "path": "/v1/options:standard-greeks",
+      "request": {
+        "option": {
+          "type": "call",
+          "exercise_style": "european",
+          "strike": 100.0,
+          "time_to_expiry_years": 1.0
+        },
+        "market": {
+          "spot": 100.0,
+          "risk_free_rate": 0.05,
+          "dividend_yield": 0.0
+        },
+        "model": {
+          "id": "auto"
+        },
+        "volatility": 0.2
+      },
+      "response": {
+        "metadata": {
+          "request_id": "fr-18eb4d3a08c36fa2-0000000000000010",
+          "service_version": "0.10.0",
+          "contract": {
+            "version": "0.1.0",
+            "sha256": "68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8"
+          },
+          "engines": [
+            {
+              "name": "morphiq-risk",
+              "version": "0.46.1",
+              "revision": "1550e4e41b243b8a978677bc5e9b46916c08cb0e"
+            }
+          ]
+        },
+        "result": {
+          "price": 10.450583572185577,
+          "greeks": {
+            "delta": 0.6368306511756192,
+            "gamma": 0.01876201734584689,
+            "theta": -6.414027546438195,
+            "vega": 37.52403469169378,
+            "rho": 53.232481545376345
+          },
+          "model": {
+            "id": "black_scholes_merton",
+            "version": "black_scholes_merton/1"
+          }
+        }
+      }
+    },
+    {
+      "name": "standard-greeks-american",
+      "path": "/v1/options:standard-greeks",
+      "request": {
+        "option": {
+          "type": "put",
+          "exercise_style": "american",
+          "strike": 105.0,
+          "time_to_expiry_years": 0.5
+        },
+        "market": {
+          "spot": 100.0,
+          "risk_free_rate": 0.05,
+          "dividend_yield": 0.01
+        },
+        "model": {
+          "id": "bjerksund_stensland_1993"
+        },
+        "volatility": 0.2
+      },
+      "response": {
+        "metadata": {
+          "request_id": "fr-18eb4d3a08c36fa2-0000000000000011",
+          "service_version": "0.10.0",
+          "contract": {
+            "version": "0.1.0",
+            "sha256": "68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8"
+          },
+          "engines": [
+            {
+              "name": "morphiq-risk",
+              "version": "0.46.1",
+              "revision": "1550e4e41b243b8a978677bc5e9b46916c08cb0e"
+            }
+          ]
+        },
+        "result": {
+          "price": 7.5298454349124135,
+          "greeks": {
+            "delta": -0.5892018845247824,
+            "gamma": 0.03283315892329423,
+            "theta": -3.55494205524821,
+            "vega": 26.586081744012873,
+            "rho": -21.61207168023723
+          },
+          "model": {
+            "id": "bjerksund_stensland_1993",
+            "version": "bjerksund_stensland_1993/1"
+          }
+        }
+      }
+    }
+  ]
+}

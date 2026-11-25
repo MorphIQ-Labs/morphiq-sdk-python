@@ -5,12 +5,10 @@ Use the controls to load data and run an analysis; no code edits are required.
 
 | Workspace | Tools | API requests per action |
 | --- | --- | --- |
-| [Scenario evaluation](scenarios/evaluate.ipynb) | Absolute underlying move or explicit grid, signed P&L, ordered results/errors and receipts | Quote: 1 free utility; execute: 1 capped request |
-| [Spot-target solve](scenarios/solve-spot.ipynb) | BSM/BS1993 target price/P&L, bounded search, all boundaries and unresolved cells | Quote: 1 free utility; execute: 1 capped solve |
-| [Available models](pricing/models.ipynb) | Public capabilities, aliases, constraints and engine versions; no key needed | Load: 1 free request |
-| [Standard-five Greeks](pricing/standard-five.ipynb) | BSM/BS1993 inputs, price, five primary sensitivities, unavailable reasons and CU | Calculate: 1 |
-| [Cost quotation](cost/quotation.ipynb) | Account rates, synthetic option inputs, conditional quote, editable execution ceiling | Schedule: 1 utility; quote: 1 utility; execute: 1 capped pricing request |
-| [Option pricing](pricing/options.ipynb) | European/American and model selectors, call/put, option inputs, automatic Yahoo daily/intraday underlying prices, comparison table, all-ten-Greeks panel, implied-volatility solver, combined premium analysis, session CU ledger, spot-sensitivity chart | Price: 1; price + Greeks: 1; solve IV: 1; analyze premium: 1; sensitivity: 1 batch of 9 items |
+| [Available models](pricing/models.ipynb) | Public capabilities, canonical operation ids, constraints, validity contracts and engine versions; no key needed | Load: 1 free request |
+| [Standard Greeks](pricing/standard-five.ipynb) | BSM/BS1993 inputs, price, five primary sensitivities, unavailable reasons and CU | Calculate: 1 |
+| [Cost quotation](cost/quotation.ipynb) | Account rates, synthetic option inputs, conditional quote, editable execution ceiling | Rate card: 1 utility; quote: 1 utility; execute: 1 capped pricing request |
+| [Option pricing](pricing/options.ipynb) | European/American and model selectors, call/put, option inputs, automatic Yahoo daily/intraday underlying prices, comparison table, all-ten-Greeks panel, implied-volatility solver, implied Greeks from a premium, session CU ledger, spot-sensitivity chart | Price: 1; price + Greeks: 1; solve IV: 1; analyze premium: 1; sensitivity: 1 batch of 9 items |
 | [Regime analysis](regime/identification.ipynb) | Ticker and interval selection, one-click Yahoo history download and analysis, price-history chart, latest regime assessment, score charts, provenance | Analyze: 1 |
 
 Setup, control changes and Yahoo downloads make no MorphIQ requests. Data stays
@@ -25,3 +23,16 @@ inspection. Committed notebooks contain no executed outputs or widget state.
 `python scripts/generate_notebook.py --check` verifies the start page and clean
 notebooks. Tests exercise widget actions against synthetic contract fixtures,
 including input conversion, scenario ordering, failure handling and stale-data clearing.
+
+## Scenarios and books
+
+- [options.revalue](scenarios/revalue.ipynb): editable JSON inputs, separate Quote and Execute actions,
+  full result and charge receipts.
+- [options.solve_scenario](scenarios/solve.ipynb): editable JSON inputs, separate Quote and Execute actions,
+  full result and charge receipts.
+- [books.revalue](books/revalue.ipynb): editable JSON inputs, separate Quote and Execute actions,
+  full result and charge receipts.
+- [books.explain](books/explain.ipynb): editable JSON inputs, separate Quote and Execute actions,
+  full result and charge receipts.
+- [books.solve_scenario](books/solve.ipynb): editable JSON inputs, separate Quote and Execute actions,
+  full result and charge receipts.

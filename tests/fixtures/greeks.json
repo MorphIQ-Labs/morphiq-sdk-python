@@ -1,85 +1,101 @@
 {
-  "source_commit": "2284d802b5ac0b37b43ee269bbf4bfeec3777776",
-  "contract_sha256": "e206327e13aee32c02dbfa22e1d8e8a80ea2d549083971a1cc87aa2b67f401e7",
+  "source_commit": "4809233ade17132517a74dfc0ea4aebb087386d9",
+  "contract_sha256": "68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8",
   "admission": "open (isolated loopback service; no commercial charge)",
-  "note": "Synthetic requests evaluated by a --locked native build of deployed API v0.5.0. American Greeks/analytics/batches explicitly use BS1993; Auto American singles resolve to QdFp.",
+  "note": "Synthetic requests evaluated by a native release build of the API 0.10.0 contract (tag v0.10.0). American Greeks and batches explicitly use BS1993; Auto American without cash events resolves to BS1993.",
   "cases": [
     {
       "name": "greeks-european",
-      "path": "/v1/greeks",
+      "path": "/v1/options:greeks",
       "request": {
-        "exercise_style": "european",
-        "pricing_model": "auto",
-        "option_type": "call",
-        "spot": 100.0,
-        "strike": 100.0,
-        "time_to_expiry_years": 1,
-        "risk_free_rate": 0.05,
-        "dividend_yield": 0,
+        "option": {
+          "type": "call",
+          "exercise_style": "european",
+          "strike": 100.0,
+          "time_to_expiry_years": 1.0
+        },
+        "market": {
+          "spot": 100.0,
+          "risk_free_rate": 0.05,
+          "dividend_yield": 0.0
+        },
+        "model": {
+          "id": "auto"
+        },
         "volatility": 0.2
       },
       "response": {
         "metadata": {
-          "request_id": "fr-18e4e90129262501-0000000000000005",
-          "api_version": "v1",
-          "engine_version": "0.43.5",
+          "request_id": "fr-18eb4d3a08c36fa2-000000000000000a",
+          "service_version": "0.10.0",
+          "contract": {
+            "version": "0.1.0",
+            "sha256": "68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8"
+          },
           "engines": [
             {
               "name": "morphiq-risk",
-              "version": "0.43.5",
-              "revision": "43ca7f93b9edda6078b49950de6a8b7d51a3e3ef"
+              "version": "0.46.1",
+              "revision": "1550e4e41b243b8a978677bc5e9b46916c08cb0e"
             }
-          ],
-          "units_charged": 6,
-          "compute_schedule_version": "2026-09-11"
+          ]
         },
         "result": {
-          "price": 10.45058357218557,
+          "price": 10.450583572185577,
           "greeks": {
-            "delta": 0.6368306511756191,
-            "gamma": 0.018762017345846895,
-            "theta": -6.414027546438199,
-            "vega": 37.52403469169381,
+            "delta": 0.6368306511756192,
+            "gamma": 0.01876201734584689,
+            "theta": -6.414027546438195,
+            "vega": 37.52403469169378,
             "rho": 53.232481545376345,
-            "vanna": -0.28143026018770334,
-            "volga": 9.850059106569617,
-            "charm": -0.06566706071046415,
-            "veta": -16.46367022098066,
-            "color": 0.01053018223535657
+            "vanna": -0.2814302601877039,
+            "volga": 9.850059106569645,
+            "charm": -0.06566706071046408,
+            "veta": -16.463670220980646,
+            "color": 0.010530182235356568
           },
-          "pricing_model": "black_scholes_merton",
-          "model_version": "black_scholes_merton/1"
+          "model": {
+            "id": "black_scholes_merton",
+            "version": "black_scholes_merton/1"
+          }
         }
       }
     },
     {
       "name": "greeks-american",
-      "path": "/v1/greeks",
+      "path": "/v1/options:greeks",
       "request": {
-        "exercise_style": "american",
-        "pricing_model": "bjerksund_stensland_1993",
-        "option_type": "put",
-        "spot": 100.0,
-        "strike": 105.0,
-        "time_to_expiry_years": 0.5,
-        "risk_free_rate": 0.05,
-        "dividend_yield": 0.01,
+        "option": {
+          "type": "put",
+          "exercise_style": "american",
+          "strike": 105.0,
+          "time_to_expiry_years": 0.5
+        },
+        "market": {
+          "spot": 100.0,
+          "risk_free_rate": 0.05,
+          "dividend_yield": 0.01
+        },
+        "model": {
+          "id": "bjerksund_stensland_1993"
+        },
         "volatility": 0.2
       },
       "response": {
         "metadata": {
-          "request_id": "fr-18e4e90129262501-0000000000000006",
-          "api_version": "v1",
-          "engine_version": "0.43.5",
+          "request_id": "fr-18eb4d3a08c36fa2-000000000000000b",
+          "service_version": "0.10.0",
+          "contract": {
+            "version": "0.1.0",
+            "sha256": "68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8"
+          },
           "engines": [
             {
               "name": "morphiq-risk",
-              "version": "0.43.5",
-              "revision": "43ca7f93b9edda6078b49950de6a8b7d51a3e3ef"
+              "version": "0.46.1",
+              "revision": "1550e4e41b243b8a978677bc5e9b46916c08cb0e"
             }
-          ],
-          "units_charged": 400,
-          "compute_schedule_version": "2026-09-11"
+          ]
         },
         "result": {
           "price": 7.5298454349124135,
@@ -95,15 +111,12 @@
             "veta": -28.20742602649876,
             "color": 0.025532151457727196
           },
-          "pricing_model": "bjerksund_stensland_1993",
-          "model_version": "bjerksund_stensland_1993/1"
+          "model": {
+            "id": "bjerksund_stensland_1993",
+            "version": "bjerksund_stensland_1993/1"
+          }
         }
       }
     }
-  ],
-  "validation": {
-    "source_commit": "7b4f233b2222fbb95b2492d5c57dbde1ac32e571",
-    "contract_sha256": "38a0c933ea805f132bc4245867c3130c5a1db94e23cb4837872abf8c27e33ccc",
-    "method": "Historical native responses retained with original capture identity; requests/results revalidated against this candidate in controlled native integration. Original request IDs and metadata are not rewritten."
-  }
+  ]
 }

@@ -19,8 +19,8 @@ from pydantic import ValidationError
 from morphiq_sdk import (
     APIError,
     MorphIQ,
+    OptionsSolveScenarioRequest,
     ResponseError,
-    ScenarioSpotSolveRequest,
     TransportError,
 )
 
@@ -43,20 +43,20 @@ class SolverApp(HTTPServer):
     def action(self, path: str, payload: dict[str, Any]) -> dict[str, Any]:
         if path == "/api/quote":
             self.quote = None
-        request = ScenarioSpotSolveRequest.model_validate(payload["request"])
+        request = OptionsSolveScenarioRequest.model_validate(payload["request"])
         wire = request.to_wire()
         if path == "/api/quote":
             # Quoting does not execute the solver or reserve funds.
-            quote = self.client.quote(request)
+            quote = self.client.rate_card.quote(request)
             token = secrets.token_urlsafe(24)
-            self.quote = (token, wire, quote.quote.total_fcu)
+            self.quote = (token, wire, quote.quote.total_cu)
             return {
                 "ok": True,
                 "quote_id": token,
-                "quoted_cu": str(quote.quote.total_fcu),
+                "quoted_cu": str(quote.quote.total_cu),
                 "raw_response": quote.raw_body.decode(errors="replace"),
-                "charged_cu": str(quote.metadata.fcu_charged)
-                if quote.metadata.fcu_charged is not None
+                "charged_cu": str(quote.metadata.charged_cu)
+                if quote.metadata.charged_cu is not None
                 else None,
             }
         current = self.quote
@@ -74,12 +74,12 @@ class SolverApp(HTTPServer):
         # Consume before sending: even an unknown outcome cannot be replayed by
         # a double-click. A deliberate new quote is required for another solve.
         self.quote = None
-        response = self.client.solve_spot(request, max_cu=cap)
+        response = self.client.options.solve_scenario(request, max_cu=cap)
         return {
             "ok": True,
             "raw_response": response.raw_body.decode(errors="replace"),
-            "charged_cu": str(response.metadata.fcu_charged)
-            if response.metadata.fcu_charged is not None
+            "charged_cu": str(response.metadata.charged_cu)
+            if response.metadata.charged_cu is not None
             else None,
         }
 
@@ -176,8 +176,8 @@ class Handler(BaseHTTPRequestHandler):
                     if error.metadata
                     else None,
                     "raw_response": error.body.decode(errors="replace"),
-                    "charged_cu": str(error.metadata.fcu_charged)
-                    if error.metadata and error.metadata.fcu_charged is not None
+                    "charged_cu": str(error.metadata.charged_cu)
+                    if error.metadata and error.metadata.charged_cu is not None
                     else None,
                 },
             )

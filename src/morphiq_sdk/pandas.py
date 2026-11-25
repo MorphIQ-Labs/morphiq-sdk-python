@@ -15,11 +15,13 @@ from pydantic import BaseModel
 
 from .errors import APIError, MorphIQError, ResponseError
 from .models import (
-    BatchAnalyticsResponse,
-    BatchGreeksResponse,
-    BatchGreeksStandardResponse,
-    BatchImpliedVolatilityResponse,
-    BatchPriceResponse,
+    BatchFailure,
+    BatchSuccess,
+    OptionsBatchGreeksResponse,
+    OptionsBatchImpliedGreeksResponse,
+    OptionsBatchImpliedVolatilityResponse,
+    OptionsBatchPriceResponse,
+    OptionsBatchStandardGreeksResponse,
 )
 from .workflows import AsyncBatchWorkflow, BatchWorkflow, ChunkAttempt
 
@@ -27,11 +29,11 @@ if TYPE_CHECKING:
     import pandas as pd
 
 _BatchResponse = (
-    BatchPriceResponse
-    | BatchGreeksResponse
-    | BatchGreeksStandardResponse
-    | BatchImpliedVolatilityResponse
-    | BatchAnalyticsResponse
+    OptionsBatchPriceResponse
+    | OptionsBatchGreeksResponse
+    | OptionsBatchStandardGreeksResponse
+    | OptionsBatchImpliedVolatilityResponse
+    | OptionsBatchImpliedGreeksResponse
 )
 _Identifier = str | int | None
 _ITEM_COLUMNS = ["index", "identifier", "request_index", "item_index", "status", "outcome"]
@@ -41,7 +43,7 @@ _REQUEST_COLUMNS = [
     "stop",
     "status",
     "request_id",
-    "fcu_charged",
+    "charged_cu",
     "metadata",
     "response_extras",
     "error",
@@ -62,9 +64,9 @@ class BatchFrames:
     results: pd.DataFrame
     requests: pd.DataFrame
     state: str
-    reported_fcu_charged: int
+    reported_charged_cu: int
     unknown_charge_count: int
-    total_fcu_charged: int | None
+    total_charged_cu: int | None
 
 
 def _pandas() -> Any:
@@ -145,7 +147,7 @@ def _attempt_rows(
         "stop": attempt.stop,
         "status": status,
         "request_id": attempt.request_id,
-        "fcu_charged": attempt.fcu_charged,
+        "charged_cu": attempt.charged_cu,
         "metadata": metadata.model_dump(exclude_unset=True) if metadata else None,
         "response_extras": (
             response.model_dump(exclude={"metadata", "results"}, exclude_unset=True)
@@ -167,9 +169,9 @@ def _attempt_rows(
         if response is not None:
             item = response.results[local_index]
             row.update(status=item.status, outcome=item.model_dump(exclude_unset=True))
-            if item.status == "success":
+            if isinstance(item, BatchSuccess):
                 row.update(_fields(item.result, "result"))
-            else:
+            elif isinstance(item, BatchFailure):
                 row.update(_fields(item.error, "error"))
         rows.append(row)
     return rows, receipt
@@ -201,17 +203,15 @@ def _frames(
             for name in _REQUEST_COLUMNS
         }
     )
-    known = sum(
-        receipt["fcu_charged"] for receipt in receipts if receipt["fcu_charged"] is not None
-    )
-    unknown = sum(receipt["fcu_charged"] is None for receipt in receipts)
+    known = sum(receipt["charged_cu"] for receipt in receipts if receipt["charged_cu"] is not None)
+    unknown = sum(receipt["charged_cu"] is None for receipt in receipts)
     return BatchFrames(
         results=results,
         requests=requests,
         state=state,
-        reported_fcu_charged=known,
+        reported_charged_cu=known,
         unknown_charge_count=unknown,
-        total_fcu_charged=known if state == "completed" and not unknown else None,
+        total_charged_cu=known if state == "completed" and not unknown else None,
     )
 
 
@@ -231,7 +231,7 @@ def batch_to_frames(
         stop=len(response.results),
         response=response,
         finished=True,
-        fcu_charged=response.metadata.fcu_charged,
+        charged_cu=response.metadata.charged_cu,
         request_id=response.metadata.request_id,
     )
     rows, receipt = _attempt_rows(attempt, 0, labels)

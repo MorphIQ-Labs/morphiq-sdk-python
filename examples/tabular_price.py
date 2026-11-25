@@ -8,29 +8,42 @@ Set MORPHIQ_API_KEY first, or enter it at the masked prompt.
 import os
 from getpass import getpass
 
-from morphiq_sdk import MorphIQ, MorphIQError, PriceRequest, RateLimitError
+from morphiq_sdk import (
+    Market,
+    ModelSelection,
+    MorphIQ,
+    MorphIQError,
+    Option,
+    OptionsPriceRequest,
+    RateLimitError,
+)
 from morphiq_sdk.pandas import workflow_to_frames
 
 
 def main() -> None:
     api_key = os.environ.get("MORPHIQ_API_KEY") or getpass("MorphIQ API key: ")
     requests = [
-        PriceRequest(
-            exercise_style="european",
-            option_type="call",
-            spot=spot,
-            strike=100.0,
-            time_to_expiry_years=1.0,
+        OptionsPriceRequest(
+            option=Option(
+                type="call",
+                exercise_style="european",
+                strike=100.0,
+                time_to_expiry_years=1.0,
+            ),
+            market=Market(
+                spot=spot,
+                risk_free_rate=0.05,
+                dividend_yield=0.0,
+            ),
             volatility=0.20,
-            risk_free_rate=0.05,
-            dividend_yield=0.0,
+            model=ModelSelection(id="auto"),
         )
         for spot in (80.0, 85.0, 90.0, 95.0, 100.0)
     ]
-    labels = [f"spot-{request.spot:g}" for request in requests]
+    labels = [f"spot-{request.market.spot:g}" for request in requests]
 
     with MorphIQ(api_key=api_key) as client:
-        workflow = client.price_workflow(requests, chunk_size=2)
+        workflow = client.options.price_workflow(requests, chunk_size=2)
         # Validate labels and the optional dependency before making paid requests.
         workflow_to_frames(workflow, identifiers=labels)
         print("Planned HTTP requests:", workflow.planned_chunk_count)
@@ -48,13 +61,13 @@ def main() -> None:
             print(frames.results[columns].to_string(index=False))
             # Charges belong to requests, never to individual option rows.
             print(
-                frames.requests[["request_index", "status", "request_id", "fcu_charged"]].to_string(
+                frames.requests[["request_index", "status", "request_id", "charged_cu"]].to_string(
                     index=False
                 )
             )
-            print("Reported CU subtotal:", frames.reported_fcu_charged)
+            print("Reported CU subtotal:", frames.reported_charged_cu)
             print("Attempts with unknown CU:", frames.unknown_charge_count)
-            total = frames.total_fcu_charged
+            total = frames.total_charged_cu
             print("Whole-workflow CU:", total if total is not None else "unknown or incomplete")
         if workflow.state != "completed":
             raise SystemExit(1)

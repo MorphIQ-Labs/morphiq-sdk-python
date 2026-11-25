@@ -1,391 +1,276 @@
-"""Scenario wire, transport and receipt parity against the pinned native API."""
+"""Native API 0.10 fixtures plus transport, quotation and uncertainty contracts."""
 
 import asyncio
 import copy
 import json
+import os
 from pathlib import Path
 
 import httpx
 import pytest
 from jsonschema import Draft202012Validator
 from pydantic import ValidationError
+from support import charged, problem
 
-from morphiq_sdk import (
-    APIError,
-    AsyncMorphIQ,
-    MorphIQ,
-    RateLimitError,
-    RequestTimeout,
-    ResponseError,
-    ScenarioFailure,
-    ScenarioOptionPriceTarget,
-    ScenarioPoint,
-    ScenarioPosition,
-    ScenarioPositionPnlTarget,
-    ScenarioPriceInputs,
-    ScenarioRequest,
-    ScenarioResponse,
-    ScenarioSolveInterval,
-    ScenarioSolvePoint,
-    ScenarioSolveProfile,
-    ScenarioSolveRegion,
-    ScenarioSolveResolved,
-    ScenarioSolveUnresolved,
-    ScenarioSolveUnresolvedCell,
-    ScenarioSpotSolveRequest,
-    ScenarioSpotSolveResponse,
-    ScenarioSpotSolveResult,
-    ScenarioSuccess,
-    ScenarioValuation,
-)
+import morphiq_sdk as sdk
 
-ROOT = Path(__file__).parents[1]
-ARTIFACT = json.loads((ROOT / "tests/fixtures/scenarios.json").read_text())
-CASES = ARTIFACT["cases"]
-SUCCESS = [case for case in CASES if case["status"] == 200]
-SOLVES = [case for case in SUCCESS if case["name"].startswith("solve-")]
+ROOT = Path(__file__).resolve().parents[1]
 SCHEMA = json.loads((ROOT / "contracts/openapi.json").read_text())
+CASES = json.loads((ROOT / "tests/fixtures/scenarios.json").read_text())["cases"]
+QUOTES = json.loads((ROOT / "tests/fixtures/scenario_quotes.json").read_text())["cases"]
 
 
-def request_for(case):
-    model = ScenarioSpotSolveRequest if case["path"].endswith("solve-spot") else ScenarioRequest
-    return model.model_validate(case["request"])
+def invoke(client, case, request, **kwargs):
+    collection, method = case["operation"].split(".")
+    return getattr(getattr(client, collection), method)(request, **kwargs)
 
 
-def method_for(case):
-    return "solve_spot" if case["path"].endswith("solve-spot") else "evaluate_scenarios"
+def validate(name, body):
+    name = name.replace("BooksExplain", "BooksRevalue")
+    Draft202012Validator({"$ref": f"#/components/schemas/{name}", **SCHEMA}).validate(body)
 
 
-def invoke(mode, handler, action):
-    transport = httpx.MockTransport(handler)
-    if mode == "sync":
-        with MorphIQ(api_key="scenario-test-key", transport=transport) as client:
-            return action(client)
-
-    async def run():
-        async with AsyncMorphIQ(api_key="scenario-test-key", transport=transport) as client:
-            return await action(client)
-
-    return asyncio.run(run())
-
-
-@pytest.mark.parametrize("mode", ["sync", "async"])
-@pytest.mark.parametrize("case", SUCCESS, ids=lambda case: case["name"])
-def test_native_response_and_request_parity(mode, case):
-    calls = []
-    request = request_for(case)
-
-    def handle(incoming):
-        calls.append(incoming)
-        assert incoming.method == "POST" and incoming.url.path == case["path"]
-        assert incoming.headers["authorization"] == "Bearer scenario-test-key"
-        assert incoming.headers["x-morphiq-max-cu"] == str(case["expected_cu"])
-        assert json.loads(incoming.content) == case["request"]
-        return httpx.Response(200, json=case["response"], headers={"x-request-id": "fixture-id"})
-
-    result = invoke(
-        mode, handle, lambda c: getattr(c, method_for(case))(request, max_cu=case["expected_cu"])
-    )
-    assert len(calls) == 1
-    assert result.model_dump(exclude_unset=True) == case["response"]
-    assert json.loads(result.raw_body) == case["response"]
-    assert result.headers["x-request-id"] == "fixture-id"
-    assert result.metadata.fcu_charged == case["expected_cu"]
-
-
-@pytest.mark.parametrize("mode", ["sync", "async"])
-@pytest.mark.parametrize("case", SUCCESS, ids=lambda case: case["name"])
-def test_quotes_send_one_free_utility_call_with_the_right_operation(mode, case):
-    calls = []
-
-    def handle(incoming):
-        calls.append(incoming)
-        assert incoming.url.path == "/v1/cost/quote"
-        assert "x-morphiq-max-cu" not in incoming.headers
-        assert json.loads(incoming.content) == {
-            "operation": "scenario_spot_solve"
-            if method_for(case) == "solve_spot"
-            else "scenario_evaluate",
-            "request": case["request"],
-        }
-        return httpx.Response(200, json=case["quote"])
-
-    result = invoke(mode, handle, lambda c: c.quote(request_for(case)))
-    assert len(calls) == 1
-    assert result.quote.total_fcu == case["expected_cu"]
-    assert result.metadata.fcu_charged == 0
-    if case in SOLVES:
-        assert result.resolved_models[0].quantity == 1
-
-
-def test_fixture_and_wire_model_coverage_matches_exact_api_snapshot():
-    provenance = json.loads((ROOT / "contracts/provenance.json").read_text())
-    assert ARTIFACT["source"]["api_commit"] == provenance["source_commit"]
-    assert ARTIFACT["source"]["schema_sha256"] == provenance["sha256"]
-    schemas = SCHEMA["components"]["schemas"]
-    for model, name in [
-        (ScenarioPosition, "ScenarioPosition"),
-        (ScenarioPoint, "ScenarioPoint"),
-        (ScenarioRequest, "ScenarioRequest"),
-        (ScenarioSpotSolveRequest, "ScenarioSpotSolveRequest"),
-        (ScenarioPriceInputs, "PriceRequest"),
-        (ScenarioValuation, "ScenarioValuation"),
-        (ScenarioResponse, "ScenarioResponse"),
-        (ScenarioSpotSolveResponse, "ScenarioSpotSolveResponse"),
-        (ScenarioSpotSolveResult, "ScenarioSpotSolveResult"),
-        (ScenarioSolveProfile, "ScenarioSolveProfile"),
-        (ScenarioSolveRegion, "ScenarioSolveRegion"),
-        (ScenarioSolveUnresolvedCell, "ScenarioSolveUnresolvedCell"),
-    ]:
-        assert set(model.model_fields) == set(schemas[name]["properties"])
-    for models, name in [
-        ([ScenarioOptionPriceTarget, ScenarioPositionPnlTarget], "ScenarioSolveTarget"),
-        ([ScenarioSolvePoint, ScenarioSolveInterval], "ScenarioSolveBoundary"),
-        ([ScenarioSolveResolved, ScenarioSolveUnresolved], "ScenarioSolveCoverage"),
-        ([ScenarioSuccess, ScenarioFailure], "ScenarioOutcome"),
-    ]:
-        for model, variant in zip(models, schemas[name]["oneOf"], strict=True):
-            extra = {"index", "inputs"} if name == "ScenarioOutcome" else set()
-            assert set(model.model_fields) == set(variant["properties"]) | extra
-    for case in CASES:
-        solving = method_for(case) == "solve_spot"
-        pairs = [
-            (
-                "ScenarioSpotSolveRequest" if solving else "ScenarioRequest",
-                request_for(case).to_wire(),
-            ),
-            (
-                ("ScenarioSpotSolveResponse" if solving else "ScenarioResponse")
-                if case["status"] == 200
-                else "ErrorEnvelope",
-                case["response"],
-            ),
-        ]
-        if case["quote"]:
-            pairs.append(("CostQuoteResponse", case["quote"]))
-        for name, value in pairs:
-            Draft202012Validator(
-                {"$ref": f"#/components/schemas/{name}", "components": SCHEMA["components"]}
-            ).validate(value)
-
-
-def test_omission_null_zero_and_nested_list_edits_are_preserved_or_revalidated():
-    case = SOLVES[0]
-    request = request_for(case)
+@pytest.mark.parametrize("case", CASES, ids=lambda c: c["name"])
+def test_native_wire_round_trip_and_contract(case):
+    request = getattr(sdk, case["request_model"]).model_validate(case["request"])
     assert request.to_wire() == case["request"]
-    assert "spot_tolerance" not in request.to_wire()
-    changed = ScenarioSpotSolveRequest.model_validate(
-        {**case["request"], "volatility": None, "elapsed_time_years": 0.0}
+    validate(case["request_model"], request.to_wire())
+    response = getattr(sdk, case["response_model"]).model_validate(case["response"])
+    assert response.model_dump(exclude_unset=True) == case["response"]
+    if case["name"] != "option-partial":
+        validate(case["response_model"], case["response"])
+    else:
+        # The service echoes the invalid spot in an error item's inputs; the
+        # OpenAPI reuses a positive-spot request schema for that echoed object.
+        assert response.result.scenarios[1].status == "error"
+        assert response.result.scenarios[1].inputs.market.spot == -1
+        validate("Problem", case["response"]["result"]["scenarios"][1]["error"])
+
+
+@pytest.mark.parametrize("mode", ["sync", "async"])
+@pytest.mark.parametrize(
+    "case,quote", list(zip(CASES, QUOTES, strict=True)), ids=[c["name"] for c in CASES]
+)
+def test_quote_and_execution_use_exact_wire_and_one_charge(mode, case, quote):
+    request = getattr(sdk, case["request_model"]).model_validate(case["request"])
+    body = copy.deepcopy(case["response"])
+    body["metadata"] = charged(body["metadata"], 200, 200)
+    received = []
+
+    def handle(wire):
+        received.append(wire)
+        assert wire.headers["Authorization"] == "Bearer fixture-key"
+        if wire.url.path == "/v1/rate-card:quote":
+            assert json.loads(wire.content) == quote["request"]
+            validate("RateCardQuoteRequest", quote["request"])
+            validate("RateCardQuoteResponse", quote["response"])
+            return httpx.Response(200, json=quote["response"])
+        assert wire.url.path == case["path"]
+        assert wire.headers["X-MorphIQ-Max-CU"] == "200"
+        assert json.loads(wire.content) == request.to_wire()
+        return httpx.Response(200, json=body, headers={"X-Request-ID": "fixture"})
+
+    async def asynchronous():
+        async with sdk.AsyncMorphIQ(
+            api_key="fixture-key", transport=httpx.MockTransport(handle)
+        ) as c:
+            estimate = await c.rate_card.quote(request)
+            return estimate, await invoke(c, case, request, max_cu=200)
+
+    if mode == "async":
+        estimate, result = asyncio.run(asynchronous())
+    else:
+        with sdk.MorphIQ(api_key="fixture-key", transport=httpx.MockTransport(handle)) as c:
+            estimate = c.rate_card.quote(request)
+            result = invoke(c, case, request, max_cu=200)
+    assert estimate.metadata.charged_cu == 0
+    assert result.metadata.charged_cu == 200
+    assert result.model_dump(exclude_unset=True) == body
+    assert json.loads(result.raw_body) == body
+    assert result.headers["x-request-id"] == "fixture"
+    assert len(received) == 2
+
+
+def test_order_duplicates_partial_errors_and_signed_position_survive():
+    case = next(c for c in CASES if c["name"] == "option-partial")
+    result = sdk.OptionsRevalueResponse.model_validate(case["response"]).result
+    assert [item.index for item in result.scenarios] == [0, 1, 2]
+    assert [item.status for item in result.scenarios] == ["success", "error", "success"]
+    assert result.scenarios[0].result == result.scenarios[2].result
+    assert result.position.quantity == -2
+    assert result.scenarios[0].pnl == pytest.approx(result.scenarios[0].price_change * -200)
+
+
+def test_book_attribution_partitions_and_overlapping_strategies():
+    result = sdk.BooksExplainResponse.model_validate(CASES[3]["response"]).result
+    book = result.books[0]
+    assert [p.id for p in book.positions] == ["long-call", "short-call"]
+    assert book.positions[1].quantity < 0
+    assert result.pnl == pytest.approx(sum(p.pnl for p in book.positions))
+    assert sum(s.pnl for s in book.strategies) != pytest.approx(result.pnl)
+    for attribution in (result.attribution, book.attribution):
+        assert sum(b.pnl for b in attribution.expiry_buckets) == pytest.approx(result.pnl)
+        assert sum(b.pnl for b in attribution.strike_buckets) == pytest.approx(result.pnl)
+    solve = sdk.BooksSolveScenarioResponse.model_validate(CASES[4]["response"]).result
+    assert solve.pnl_basis == "signed_reference_net_value"
+    assert solve.signed_reference_net_value == 200
+    assert solve.boundaries[0].coordinate == pytest.approx(102, abs=1e-6)
+
+
+def test_incomplete_solve_is_preserved_not_misreported_as_no_solution():
+    case = next(c for c in CASES if c["name"] == "option-unresolved")
+    result = sdk.OptionsSolveScenarioResponse.model_validate(case["response"]).result
+    assert result.outcome == "incomplete"
+    assert result.coverage.status == "unresolved" and result.coverage.cells
+    assert result.coverage.cells[0].best_abs_value_error > 0
+
+
+@pytest.mark.parametrize("case", [CASES[1], CASES[4]])
+def test_unknown_solver_variants_and_enums_remain_visible(case):
+    body = copy.deepcopy(case["response"])
+    body["result"].update(
+        outcome="future_outcome",
+        coordinate="future_axis",
+        coordinate_unit="future_unit",
+        coverage={"status": "future_coverage", "evidence": [1, 2]},
+        boundaries=[{"kind": "future_boundary", "certificate": "preserved"}],
     )
-    assert changed.to_wire()["volatility"] is None
-    assert changed.to_wire()["elapsed_time_years"] == 0.0
-    evaluate = request_for(SUCCESS[0])
-    evaluate.scenarios.append(ScenarioPoint(spot_change=0.0, volatility=None))
-    assert evaluate.to_wire()["scenarios"][-1] == {"spot_change": 0.0, "volatility": None}
-    evaluate.scenarios.append({"spot_change": float("nan")})
-    with pytest.raises(ValidationError):
-        evaluate.to_wire()
-    request.contract.dividend_schedule.append({"ex_time_years": "wrong", "cash_amount": 1})
+    if "target" in body["result"]:
+        body["result"]["target"] = {"kind": "future_target", "value": 1}
+    else:
+        body["result"]["scenario"]["shocks"].append({"kind": "future_shock", "axis": "x"})
+    if "positions" in body["result"]:
+        body["result"]["positions"][0]["contract"]["model"]["id"] = "future_model"
+    parsed = getattr(sdk, case["response_model"]).model_validate(body)
+    assert parsed.model_dump(exclude_unset=True) == body
+
+
+@pytest.mark.parametrize("kind", ["timeout", "problem", "malformed", "reordered"])
+@pytest.mark.parametrize("mode", ["sync", "async"])
+def test_failure_evidence_and_no_automatic_retry(kind, mode):
+    case = CASES[0]
+    request = sdk.OptionsRevalueRequest.model_validate(case["request"])
+    calls = []
+    body = copy.deepcopy(case["response"])
+    metadata = charged(body["metadata"], 100)
+
+    def handle(wire):
+        calls.append(wire)
+        if kind == "timeout":
+            raise httpx.ReadTimeout("uncertain", request=wire)
+        if kind == "problem":
+            return httpx.Response(
+                422, json=problem("invalid_field", metadata=metadata, field="market.spot")
+            )
+        if kind == "malformed":
+            return httpx.Response(200, json={"metadata": metadata, "result": {}})
+        body["result"]["scenarios"].reverse()
+        return httpx.Response(200, json=body)
+
+    expected = {"timeout": sdk.RequestTimeout, "problem": sdk.APIError}.get(kind, sdk.ResponseError)
+
+    async def asynchronous():
+        async with sdk.AsyncMorphIQ(api_key="fixture", transport=httpx.MockTransport(handle)) as c:
+            await c.options.revalue(request)
+
+    with pytest.raises(expected) as failure:
+        if mode == "async":
+            asyncio.run(asynchronous())
+        else:
+            with sdk.MorphIQ(api_key="fixture", transport=httpx.MockTransport(handle)) as c:
+                c.options.revalue(request)
+    assert len(calls) == 1
+    if kind == "problem":
+        assert failure.value.metadata.charged_cu == 100
+        assert failure.value.field == "market.spot"
+
+
+def test_closed_requests_revalidate_mutable_lists_and_reject_future_variants():
+    request = sdk.OptionsRevalueRequest.model_validate(CASES[0]["request"])
+    request.scenarios.append({"spot": float("nan")})
     with pytest.raises(ValidationError):
         request.to_wire()
-    for count in (0, 100):
-        with pytest.raises(ValidationError):
-            ScenarioRequest(contract=request.contract, scenarios=[ScenarioPoint()] * count)
+    request = copy.deepcopy(CASES[2]["request"])
+    request["scenario"]["shocks"] = [{"kind": "future_shock", "amount": 1}]
     with pytest.raises(ValidationError):
-        ScenarioSpotSolveRequest.model_validate({**case["request"], "max_spot": float("inf")})
+        sdk.BooksRevalueRequest.model_validate(request)
+    request = sdk.BooksRevalueRequest.model_validate(CASES[2]["request"])
+    request.markets["SPY"] = {"spot": float("inf"), "risk_free_rate": 0.05, "dividend_yield": 0}
     with pytest.raises(ValidationError):
-        ScenarioSpotSolveRequest.model_validate(
-            {**case["request"], "target": {"kind": "position_pnl", "value": 0.0}}
-        )
+        request.to_wire()
 
 
-@pytest.mark.parametrize("mode", ["sync", "async"])
-@pytest.mark.parametrize("case", [c for c in CASES if c["status"] != 200], ids=lambda c: c["name"])
-def test_errors_preserve_zero_or_committed_charge_and_never_retry(mode, case):
-    calls = []
-
-    def handle(incoming):
-        calls.append(incoming)
-        return httpx.Response(case["status"], json=case["response"])
-
-    with pytest.raises(APIError) as error:
-        invoke(mode, handle, lambda c: c.solve_spot(request_for(case)))
-    assert len(calls) == 1
-    assert error.value.metadata.fcu_charged == case["expected_cu"]
-    assert error.value.body == json.dumps(case["response"], separators=(",", ":")).encode()
+@pytest.mark.integration
+@pytest.mark.parametrize("case", CASES, ids=lambda c: c["name"])
+def test_native_scenario_and_book_operations(case):
+    endpoint = os.environ.get("MORPHIQ_TEST_API_URL")
+    if not endpoint:
+        pytest.skip("Set MORPHIQ_TEST_API_URL to a controlled pinned local API")
+    assert httpx.URL(endpoint).host in {"localhost", "127.0.0.1", "::1"}
+    request = getattr(sdk, case["request_model"]).model_validate(case["request"])
+    with sdk.MorphIQ(base_url=endpoint, allow_unauthenticated=True) as client:
+        response = invoke(client, case, request)
+    assert response.result.model_dump(exclude_unset=True) == case["response"]["result"]
+    assert response.metadata.contract.sha256 == SCHEMA_DIGEST
 
 
-@pytest.mark.parametrize("mode", ["sync", "async"])
-@pytest.mark.parametrize("failure", ["missing_boundary_value", "invalid_coverage", "bad_count"])
-def test_malformed_solve_response_keeps_charge_evidence(mode, failure):
-    case = SOLVES[0]
-    payload = copy.deepcopy(case["response"])
-    if failure == "missing_boundary_value":
-        del payload["result"]["boundaries"][0]["value"]
-    elif failure == "invalid_coverage":
-        payload["result"]["coverage"] = {"status": "unresolved"}
-    else:
-        payload["result"]["price_evaluations"] = 2**64
-    with pytest.raises(ResponseError) as error:
-        invoke(
-            mode,
-            lambda r: httpx.Response(200, json=payload),
-            lambda c: c.solve_spot(request_for(case)),
-        )
-    assert error.value.metadata.fcu_charged == 100
-    assert json.loads(error.value.body) == payload
+SCHEMA_DIGEST = json.loads((ROOT / "contracts/provenance.json").read_text())["sha256"]
 
 
-@pytest.mark.parametrize("mode", ["sync", "async"])
-@pytest.mark.parametrize("failure", ["reordered", "missing", "duplicate"])
-def test_scenario_results_cannot_be_silently_misassociated(mode, failure):
-    case = next(c for c in SUCCESS if c["name"] == "scenario-bsm-partial")
-    payload = copy.deepcopy(case["response"])
-    if failure == "reordered":
-        payload["results"].reverse()
-    elif failure == "missing":
-        payload["results"].pop()
-    else:
-        payload["results"][1]["index"] = 0
-    with pytest.raises(ResponseError) as error:
-        invoke(
-            mode,
-            lambda r: httpx.Response(200, json=payload),
-            lambda c: c.evaluate_scenarios(request_for(case)),
-        )
-    assert error.value.metadata.fcu_charged == case["expected_cu"]
+def test_interval_and_no_solution_are_distinct_from_incomplete():
+    interval = next(c for c in CASES if c["name"] == "book-interval")
+    result = sdk.BooksSolveScenarioResponse.model_validate(interval["response"]).result
+    assert result.coverage.status == "resolved"
+    assert result.boundaries[0].kind == "interval"
+    assert (result.boundaries[0].lower, result.boundaries[0].upper) == (50, 90)
+    absent = next(c for c in CASES if c["name"] == "option-no-solution")
+    result = sdk.OptionsSolveScenarioResponse.model_validate(absent["response"]).result
+    assert result.coverage.status == "resolved"
+    assert result.outcome == "no_solution_detected" and not result.boundaries
 
 
-@pytest.mark.parametrize("mode", ["sync", "async"])
-def test_additive_fields_and_large_diagnostic_counts_do_not_recalculate_charges(mode):
-    case = SOLVES[0]
-    payload = copy.deepcopy(case["response"])
-    payload["result"]["future_diagnostic"] = {"value": 0}
-    payload["result"]["boundaries"][0]["future_boundary"] = None
-    payload["result"]["inputs"]["future_input"] = 0
-    payload["result"]["price_evaluations"] = 2**53 + 1
-    result = invoke(
-        mode, lambda r: httpx.Response(200, json=payload), lambda c: c.solve_spot(request_for(case))
-    )
-    assert result.model_dump(exclude_unset=True) == payload
-    assert result.result.price_evaluations == 2**53 + 1
-    assert result.metadata.fcu_charged == 100
+def test_all_shocks_multiple_underlyings_and_selected_strategy_are_preserved():
+    case = next(c for c in CASES if c["name"] == "books-all-shocks")
+    request = sdk.BooksExplainRequest.model_validate(case["request"])
+    assert [s.kind for s in request.scenario.shocks] == [
+        "spot_relative",
+        "parallel_vol",
+        "skew",
+        "rate",
+        "roll_down",
+        "vol_term",
+    ]
+    result = sdk.BooksExplainResponse.model_validate(case["response"]).result
+    assert [b.id for b in result.books] == ["spread", "second"]
+    assert result.pnl == pytest.approx(sum(b.pnl for b in result.books))
+    assert result.scenario.model_dump(exclude_unset=True) == case["request"]["scenario"]
+    strategy = next(c for c in CASES if c["name"] == "book-strategy")
+    result = sdk.BooksSolveScenarioResponse.model_validate(strategy["response"]).result
+    assert result.strategy_id == "long-leg"
+    assert [p.id for p in result.positions] == ["long-call"]
 
 
-@pytest.mark.parametrize("mode", ["sync", "async"])
-@pytest.mark.parametrize("failure", ["timeout", "rate_limit"])
-@pytest.mark.parametrize("case", [SUCCESS[0], SOLVES[0]], ids=lambda c: c["name"])
-def test_scenarios_never_retry_after_uncertain_execution_or_rate_limit(mode, failure, case):
-    calls = []
-
-    def handle(request):
-        calls.append(request)
-        if failure == "timeout":
-            raise httpx.ReadTimeout("late response")
-        return httpx.Response(429, json={"message": "slow down"}, headers={"Retry-After": "3"})
-
-    with pytest.raises(RequestTimeout if failure == "timeout" else RateLimitError):
-        invoke(mode, handle, lambda c: getattr(c, method_for(case))(request_for(case)))
-    assert len(calls) == 1
-
-
-@pytest.mark.parametrize(
-    "module,mode",
-    [
-        ("scenario_evaluate", "point"),
-        ("scenario_evaluate", "grid"),
-        ("solve_spot", "price"),
-        ("solve_spot", "pnl"),
-        ("solve_spot_async", "price"),
-        ("solve_spot_async", "pnl"),
-    ],
-)
-@pytest.mark.parametrize("model", ["bsm", "bs1993"])
-def test_executable_examples_quote_then_optionally_execute_once(
-    fixture_api, tmp_path, module, mode, model
+@pytest.mark.parametrize("case", CASES[:5], ids=lambda c: c["name"])
+def test_standalone_examples_send_one_request_and_preserve_unreported_charge(
+    case, fixture_api, tmp_path
 ):
-    import os
     import shutil
     import subprocess
     import sys
 
     endpoint, received = fixture_api
-    script = tmp_path / f"{module}.py"
-    shutil.copyfile(ROOT / "examples" / script.name, script)
-    args = [sys.executable, str(script), "--model", model]
-    if module == "scenario_evaluate":
-        args += ["--mode", mode]
-        cost = (2 if mode == "point" else 10) * (1 if model == "bsm" else 2)
-    else:
-        cost = 100 if model == "bsm" else 200
-        if mode == "pnl":
-            args += ["--target-pnl", "500"]
-    env = {**os.environ, "MORPHIQ_API_BASE_URL": endpoint, "MORPHIQ_API_KEY": "fixture-key"}
-    quoted = subprocess.run(args, cwd=tmp_path, env=env, capture_output=True, text=True)
-    assert quoted.returncode == 0, quoted.stderr
-    assert len(received) == 1 and received[0][0] == "/v1/cost/quote"
-    assert f"Quoted CU: {cost}" in quoted.stdout
-    refused = subprocess.run(
-        args + ["--max-cu", str(cost - 1)], cwd=tmp_path, env=env, capture_output=True, text=True
+    source = ROOT / "examples" / (case["name"] + ".py")
+    script = tmp_path / source.name
+    shutil.copyfile(source, script)
+    result = subprocess.run(
+        [sys.executable, str(script)],
+        cwd=tmp_path,
+        env={**os.environ, "MORPHIQ_API_BASE_URL": endpoint, "MORPHIQ_API_KEY": "example-key"},
+        capture_output=True,
+        text=True,
+        check=True,
     )
-    assert refused.returncode == 2 and len(received) == 2
-    assert "no execution submitted" in refused.stderr
-    executed = subprocess.run(
-        args + ["--max-cu", str(cost)], cwd=tmp_path, env=env, capture_output=True, text=True
-    )
-    assert executed.returncode == 0, executed.stderr
-    assert len(received) == 4
-    assert f'"fcu_charged": {cost}' in executed.stdout
-    assert "fixture-key" not in executed.stdout + executed.stderr
-
-
-@pytest.mark.integration
-def test_native_scenarios_sync_async_quotes_and_receipts():
-    import hashlib
-    import os
-
-    endpoint = os.environ.get("MORPHIQ_TEST_API_URL")
-    if not endpoint:
-        pytest.skip("controlled API not set")
-    key = os.environ.get("MORPHIQ_TEST_API_KEY")
-    with httpx.Client(
-        base_url=endpoint,
-        trust_env=False,
-        headers={"Authorization": f"Bearer {key}"} if key else {},
-    ) as raw:
-        provenance = json.loads((ROOT / "contracts/provenance.json").read_text())
-        assert hashlib.sha256(raw.get("/openapi.json").content).hexdigest() == provenance["sha256"]
-
-        async def run_async(case):
-            async with AsyncMorphIQ(
-                base_url=endpoint, api_key=key, allow_unauthenticated=key is None
-            ) as client:
-                return await getattr(client, method_for(case))(
-                    request_for(case), max_cu=case["expected_cu"]
-                )
-
-        with MorphIQ(base_url=endpoint, api_key=key, allow_unauthenticated=key is None) as client:
-            for case in SUCCESS:
-                response = getattr(client, method_for(case))(
-                    request_for(case), max_cu=case["expected_cu"]
-                )
-                asynchronous = asyncio.run(run_async(case))
-                direct = raw.post(case["path"], json=case["request"])
-                direct.raise_for_status()
-                for candidate in (response, asynchronous):
-                    assert {
-                        k: v
-                        for k, v in candidate.model_dump(exclude_unset=True).items()
-                        if k != "metadata"
-                    } == {k: v for k, v in direct.json().items() if k != "metadata"}
-                    assert candidate.metadata.fcu_charged == (case["expected_cu"] if key else None)
-                if key:
-                    quote = client.quote(request_for(case))
-                    assert quote.quote.total_fcu == case["expected_cu"]
-                    assert quote.metadata.fcu_charged == 0
-                    with pytest.raises(APIError) as refused:
-                        getattr(client, method_for(case))(
-                            request_for(case), max_cu=case["expected_cu"] - 1
-                        )
-                    assert refused.value.code == "cost_limit_exceeded"
-                    assert refused.value.metadata.fcu_charged == 0
+    assert len(received) == 1
+    assert received[0] == (case["path"], "Bearer example-key", case["request"])
+    assert "Commercial CU charged: not reported" in result.stdout
+    assert "example-key" not in result.stdout + result.stderr

@@ -6,27 +6,24 @@ import sys
 import httpx
 import pandas as pd
 import pytest
+from support import BATCH_OPERATIONS, problem, set_charge
 
 from morphiq_sdk import (
     AsyncMorphIQ,
-    BatchAnalyticsResponse,
-    BatchGreeksResponse,
-    BatchImpliedVolatilityResponse,
-    BatchPriceRequest,
-    BatchPriceResponse,
     MorphIQ,
+    OptionsBatchGreeksResponse,
+    OptionsBatchImpliedGreeksResponse,
+    OptionsBatchImpliedVolatilityResponse,
+    OptionsBatchPriceRequest,
+    OptionsBatchPriceResponse,
+    OptionsBatchStandardGreeksResponse,
     RateLimitError,
     RequestTimeout,
     ResponseError,
 )
 from morphiq_sdk.pandas import batch_to_frames, workflow_to_frames
 
-RESPONSE_TYPES = [
-    BatchPriceResponse,
-    BatchGreeksResponse,
-    BatchImpliedVolatilityResponse,
-    BatchAnalyticsResponse,
-]
+RESPONSE_TYPES = [response for _, _, response, _ in BATCH_OPERATIONS]
 
 
 @pytest.mark.parametrize("operation", range(4))
@@ -37,9 +34,9 @@ def test_batch_tables_preserve_lossless_rows_and_one_exact_charge(operation, cha
     body["results"][1] = {
         "index": 1,
         "status": "error",
-        "error": {"code": "pricing_failed", "message": "Synthetic failure"},
+        "error": problem("pricing_failed", status=500),
     }
-    body["metadata"].update(fcu_charged=charge, fcu_quoted=999999)
+    set_charge(body["metadata"], charge, quoted=999999)
     body["future_root"] = {"version": 2**100}
     # Future keys, even dotted names, must survive without colliding with typed columns.
     body["results"][0]["result"].update({"future": {"value": 2**100}, "greeks.delta": 123})
@@ -53,13 +50,15 @@ def test_batch_tables_preserve_lossless_rows_and_one_exact_charge(operation, cha
     assert [r["item_index"] for r in records] == [0, 1, 2]
     assert [r["request_index"] for r in records] == [0, 0, 0]
     assert not any("fcu" in name or "units_charged" in name for name in frames.results.columns)
+    assert frames.results.loc[1, "error.code"] == "pricing_failed"
+    assert frames.results.loc[1, "error.detail"] == "Synthetic failure"
     receipt = frames.requests.to_dict(orient="records")[0]
     assert receipt["metadata"] == body["metadata"]
-    assert receipt["fcu_charged"] == charge
+    assert receipt["charged_cu"] == charge
     assert receipt["start"] == 0 and receipt["stop"] == 3
-    assert frames.reported_fcu_charged == (0 if charge is None else charge)
+    assert frames.reported_charged_cu == (0 if charge is None else charge)
     assert frames.unknown_charge_count == (1 if charge is None else 0)
-    assert frames.total_fcu_charged == charge
+    assert frames.total_charged_cu == charge
     # Reconstruct the original batch using the lossless payload and receipt columns.
     restored = RESPONSE_TYPES[operation].model_validate(
         {
@@ -86,10 +85,10 @@ def test_integer_and_boolean_diagnostics_and_float_units_are_unchanged(batch_cas
     body["results"][1] = {
         "index": 1,
         "status": "error",
-        "error": {"code": "pricing_failed", "message": "Synthetic failure"},
+        "error": problem("pricing_failed", status=500),
     }
     body["results"][0]["result"].update(iterations=2**100, used_fallback=False, residual=-0.0)
-    frames = batch_to_frames(BatchImpliedVolatilityResponse.model_validate(body))
+    frames = batch_to_frames(OptionsBatchImpliedVolatilityResponse.model_validate(body))
     assert frames.results["result.iterations"].dtype == object
     assert frames.results.loc[0, "result.iterations"] == 2**100
     assert frames.results["result.used_fallback"].dtype == pd.BooleanDtype()
@@ -101,8 +100,8 @@ def test_integer_and_boolean_diagnostics_and_float_units_are_unchanged(batch_cas
         == (body["results"][0]["result"]["implied_volatility"])
     )
     for case, cls in [
-        (batch_cases[1], BatchGreeksResponse),
-        (batch_cases[3], BatchAnalyticsResponse),
+        (batch_cases[1], OptionsBatchGreeksResponse),
+        (batch_cases[3], OptionsBatchImpliedGreeksResponse),
     ]:
         result = cls.model_validate(case["response"])
         frame = batch_to_frames(result).results
@@ -112,13 +111,13 @@ def test_integer_and_boolean_diagnostics_and_float_units_are_unchanged(batch_cas
 
 @pytest.mark.parametrize("values", [["a"], "abc", [1, 2.0, 3], [1, True, 3]])
 def test_identifier_validation_does_not_infer_or_coerce(values, batch_cases):
-    response = BatchPriceResponse.model_validate(batch_cases[0]["response"])
+    response = OptionsBatchPriceResponse.model_validate(batch_cases[0]["response"])
     with pytest.raises((TypeError, ValueError)):
         batch_to_frames(response, identifiers=values)
 
 
 def test_reordered_response_is_rejected(batch_cases):
-    response = BatchPriceResponse.model_validate(batch_cases[0]["response"])
+    response = OptionsBatchPriceResponse.model_validate(batch_cases[0]["response"])
     response.results.reverse()
     with pytest.raises(ValueError, match="indices"):
         batch_to_frames(response)
@@ -130,22 +129,19 @@ def test_workflow_tables_preserve_all_inputs_partial_progress_and_charges(
     mode, failure, batch_cases
 ):
     case = batch_cases[0]
-    requests = BatchPriceRequest(**case["request"]).requests * 3
+    requests = OptionsBatchPriceRequest.model_validate(case["request"]).items * 3
     calls = []
 
     def handle(request):
         calls.append(request)
         body = copy.deepcopy(case["response"])
-        body["metadata"]["fcu_charged"] = 2**100 if len(calls) == 1 else None
+        set_charge(body["metadata"], 2**100 if len(calls) == 1 else None)
         if len(calls) == 2 and failure:
             if failure == "429":
-                body["metadata"]["fcu_charged"] = 7
+                set_charge(body["metadata"], 7)
                 return httpx.Response(
                     429,
-                    json={
-                        "metadata": body["metadata"],
-                        "error": {"code": "limited", "message": "synthetic"},
-                    },
+                    json=problem("limited", status=429, metadata=body["metadata"]),
                     headers={"Retry-After": "30"},
                 )
             if failure == "timeout":
@@ -153,7 +149,7 @@ def test_workflow_tables_preserve_all_inputs_partial_progress_and_charges(
             if failure == "interrupt":
                 raise KeyboardInterrupt()
             body["results"].pop()
-            body["metadata"]["fcu_charged"] = 11
+            set_charge(body["metadata"], 11)
         return httpx.Response(200, json=body)
 
     def check(workflow):
@@ -162,9 +158,9 @@ def test_workflow_tables_preserve_all_inputs_partial_progress_and_charges(
         assert frames.results["identifier"].tolist() == [f"contract-{i}" for i in range(9)]
         assert frames.results["status"].tolist()[:3] == ["success", "error", "success"]
         assert len(frames.results) == 9 and len(frames.requests) == (2 if failure else 3)
-        assert frames.reported_fcu_charged == workflow.reported_fcu_charged
+        assert frames.reported_charged_cu == workflow.reported_charged_cu
         assert frames.unknown_charge_count == workflow.unknown_charge_count
-        assert frames.total_fcu_charged == workflow.total_fcu_charged
+        assert frames.total_charged_cu == workflow.total_charged_cu
         if failure:
             expected = "interrupted" if failure == "interrupt" else "request_error"
             assert frames.results["status"].tolist()[3:] == [expected] * 3 + ["unattempted"] * 3
@@ -175,18 +171,19 @@ def test_workflow_tables_preserve_all_inputs_partial_progress_and_charges(
             )
             if failure == "429":
                 assert frames.requests.loc[1, "error"]["retry_after"] == "30"
-                assert frames.requests.loc[1, "fcu_charged"] == 7
+                assert frames.requests.loc[1, "charged_cu"] == 7
+                assert frames.requests.loc[1, "error"]["code"] == "limited"
         else:
             assert frames.results["status"].tolist() == ["success", "error", "success"] * 3
         # Editing a view does not alter the captured summary or workflow evidence.
-        frames.requests.loc[0, "fcu_charged"] = 0
-        assert frames.reported_fcu_charged >= 2**100
-        assert workflow.reported_fcu_charged >= 2**100
+        frames.requests.loc[0, "charged_cu"] = 0
+        assert frames.reported_charged_cu >= 2**100
+        assert workflow.reported_charged_cu >= 2**100
 
     errors = (RateLimitError, RequestTimeout, ResponseError, KeyboardInterrupt)
     if mode == "sync":
         with MorphIQ(api_key="frame-test", transport=httpx.MockTransport(handle)) as client:
-            workflow = client.price_workflow(requests, chunk_size=3)
+            workflow = client.options.price_workflow(requests, chunk_size=3)
             try:
                 workflow.run()
             except errors:
@@ -198,7 +195,7 @@ def test_workflow_tables_preserve_all_inputs_partial_progress_and_charges(
             async with AsyncMorphIQ(
                 api_key="frame-test", transport=httpx.MockTransport(handle)
             ) as client:
-                workflow = client.price_workflow(requests, chunk_size=3)
+                workflow = client.options.price_workflow(requests, chunk_size=3)
                 try:
                     await workflow.run()
                 except errors:
@@ -211,22 +208,23 @@ def test_workflow_tables_preserve_all_inputs_partial_progress_and_charges(
 
 def test_ready_and_empty_workflows_have_stable_columns_without_fake_receipts(batch_cases):
     with MorphIQ(api_key="frame-test") as client:
-        workflow = client.price_workflow(
-            BatchPriceRequest(**batch_cases[0]["request"]).requests, chunk_size=2
+        workflow = client.options.price_workflow(
+            OptionsBatchPriceRequest.model_validate(batch_cases[0]["request"]).items, chunk_size=2
         )
         frames = workflow_to_frames(workflow)
         assert frames.results["status"].tolist() == ["unattempted"] * 3
         assert frames.requests.empty
-        assert "fcu_charged" in frames.requests.columns
-        assert frames.reported_fcu_charged == frames.unknown_charge_count == 0
-        assert frames.total_fcu_charged is None
+        assert "charged_cu" in frames.requests.columns
+        assert not any("fcu" in name for name in frames.requests.columns)
+        assert frames.reported_charged_cu == frames.unknown_charge_count == 0
+        assert frames.total_charged_cu is None
         with pytest.raises(ValueError):
             workflow_to_frames(workflow, identifiers=["only-one"])
-        empty = client.price_workflow([], chunk_size=2)
+        empty = client.options.price_workflow([], chunk_size=2)
         empty.run()
         frames = workflow_to_frames(empty)
         assert frames.results.empty and frames.requests.empty
-        assert frames.total_fcu_charged == 0
+        assert frames.total_charged_cu == 0
         assert frames.results.columns.tolist() == [
             "index",
             "identifier",
@@ -248,8 +246,9 @@ def test_running_async_workflow_rejected_cancelled_workflow_is_convertible(batch
         async with AsyncMorphIQ(
             api_key="frame-test", transport=httpx.MockTransport(handle)
         ) as client:
-            workflow = client.price_workflow(
-                BatchPriceRequest(**batch_cases[0]["request"]).requests, chunk_size=2
+            workflow = client.options.price_workflow(
+                OptionsBatchPriceRequest.model_validate(batch_cases[0]["request"]).items,
+                chunk_size=2,
             )
             task = asyncio.create_task(workflow.run())
             await entered.wait()
@@ -285,26 +284,51 @@ def test_core_and_adapter_import_do_not_load_pandas():
     assert not result.stdout and not result.stderr
 
 
-def test_absent_and_null_fields_remain_distinct_in_lossless_payloads(analytics_cases):
-    case = analytics_cases[0]
+def test_absent_members_stay_absent_in_lossless_payloads(implied_greeks_cases):
+    case = implied_greeks_cases[0]
     absent = copy.deepcopy(case["response"]["result"])
     absent.pop("implied_volatility", None)
-    explicit_null = {**absent, "implied_volatility": None}
     metadata = copy.deepcopy(case["response"]["metadata"])
-    metadata.pop("fcu_charged", None)
-    response = BatchAnalyticsResponse.model_validate(
+    metadata.pop("billing", None)
+    response = OptionsBatchImpliedGreeksResponse.model_validate(
         {
             "metadata": metadata,
             "results": [
                 {"index": 0, "status": "success", "result": absent},
-                {"index": 1, "status": "success", "result": explicit_null},
+                {"index": 1, "status": "success", "result": case["response"]["result"]},
             ],
         }
     )
     frames = batch_to_frames(response)
     outcomes = frames.results["outcome"].tolist()
     assert "implied_volatility" not in outcomes[0]["result"]
-    assert outcomes[1]["result"]["implied_volatility"] is None
-    assert frames.requests.loc[0, "fcu_charged"] is None
-    assert "fcu_charged" not in frames.requests.loc[0, "metadata"]
-    assert frames.unknown_charge_count == 1 and frames.total_fcu_charged is None
+    assert (
+        outcomes[1]["result"]["implied_volatility"]
+        == case["response"]["result"]["implied_volatility"]
+    )
+    assert pd.isna(frames.results.loc[0, "result.implied_volatility.implied_volatility"])
+    assert frames.requests.loc[0, "charged_cu"] is None
+    assert "billing" not in frames.requests.loc[0, "metadata"]
+    assert frames.unknown_charge_count == 1 and frames.total_charged_cu is None
+
+
+def test_unrecognized_outcomes_are_kept_without_typed_columns(batch_cases):
+    body = copy.deepcopy(batch_cases[0]["response"])
+    body["results"][1] = {"index": 1, "status": "deferred", "ticket": "t-1"}
+    frames = batch_to_frames(OptionsBatchPriceResponse.model_validate(body))
+    assert frames.results["status"].tolist() == ["success", "deferred", "success"]
+    assert frames.results.loc[1, "outcome"] == body["results"][1]
+    assert pd.isna(frames.results.loc[1, "result.price"])
+
+
+def test_standard_greeks_batches_convert(standard_greeks_cases):
+    case = standard_greeks_cases[0]
+    response = OptionsBatchStandardGreeksResponse.model_validate(
+        {
+            "metadata": case["response"]["metadata"],
+            "results": [{"index": 0, "status": "success", "result": case["response"]["result"]}],
+        }
+    )
+    frame = batch_to_frames(response).results
+    assert frame.loc[0, "result.greeks.delta"] == case["response"]["result"]["greeks"]["delta"]
+    assert frame.loc[0, "result.model.id"] == case["response"]["result"]["model"]["id"]

@@ -7,7 +7,16 @@ import os
 import sys
 from getpass import getpass
 
-from morphiq_sdk import APIError, MorphIQ, PriceRequest, ResponseError, TransportError
+from morphiq_sdk import (
+    APIError,
+    Market,
+    ModelSelection,
+    MorphIQ,
+    Option,
+    OptionsPriceRequest,
+    ResponseError,
+    TransportError,
+)
 
 
 def main() -> None:
@@ -16,47 +25,57 @@ def main() -> None:
 
     # Package each option as its own request; this is two sequential API calls.
     requests = [
-        PriceRequest(
-            exercise_style="european",
-            option_type="call",
-            spot=100.0,
-            strike=100.0,
-            time_to_expiry_years=1.0,  # Years from valuation.
-            risk_free_rate=0.05,  # 5% annual rate.
-            dividend_yield=0.0,
+        OptionsPriceRequest(
+            option=Option(
+                type="call",
+                exercise_style="european",
+                strike=100.0,
+                time_to_expiry_years=1.0,  # Years from valuation.
+            ),
+            market=Market(
+                spot=100.0,
+                risk_free_rate=0.05,  # 5% annual rate.
+                dividend_yield=0.0,
+            ),
             volatility=0.20,  # 20% annual volatility.
-            pricing_model="auto",
+            model=ModelSelection(id="auto"),
         ),
-        PriceRequest(
-            exercise_style="american",
-            option_type="put",
-            spot=100.0,
-            strike=105.0,
-            time_to_expiry_years=0.5,  # Years from valuation.
-            risk_free_rate=0.05,  # 5% annual rate.
-            dividend_yield=0.01,
+        OptionsPriceRequest(
+            option=Option(
+                type="put",
+                exercise_style="american",
+                strike=105.0,
+                time_to_expiry_years=0.5,  # Years from valuation.
+            ),
+            market=Market(
+                spot=100.0,
+                risk_free_rate=0.05,  # 5% annual rate.
+                dividend_yield=0.01,
+            ),
             volatility=0.20,  # 20% annual volatility.
-            pricing_model="auto",
+            model=ModelSelection(id="auto"),
         ),
     ]
 
     try:
         with MorphIQ(api_key=api_key) as client:
             for request in requests:
-                response = client.price(request)
-                print(f"{response.result.exercise_style} {response.result.option_type}")
+                response = client.options.price(request)
+                # Results name the resolved model, not the request's option terms.
+                print(f"{request.option.exercise_style} {request.option.type}")
                 print(f"Price: {response.result.price}")
-                print(f"Model: {response.result.pricing_model} ({response.result.model_version})")
+                print(f"Model: {response.result.model.id} ({response.result.model.version})")
                 print(f"Request ID: {response.metadata.request_id}")
-                for engine in response.metadata.engines:
+                for engine in response.metadata.engines or []:
                     print(f"Engine: {engine.name} {engine.version} ({engine.revision})")
-                # Missing commercial CU is unreported, not zero.
-                charged = response.metadata.fcu_charged
+                # The charge is metadata.billing.charged_cu; missing means unreported, not zero.
+                billing = response.metadata.billing
+                charged = billing.charged_cu if billing is not None else None
                 print("Commercial CU charged:", charged if charged is not None else "not reported")
     except APIError as error:
-        print(f"HTTP {error.status_code}: {error.code}: {error.message}", file=sys.stderr)
+        print(f"HTTP {error.status_code}: {error.code}: {error.detail}", file=sys.stderr)
         print(f"Request ID: {error.request_id}", file=sys.stderr)
-        charged = error.metadata.fcu_charged if error.metadata else None
+        charged = error.metadata.charged_cu if error.metadata else None
         print(
             f"Commercial CU charged: {charged if charged is not None else 'not reported'}",
             file=sys.stderr,

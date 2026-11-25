@@ -13,6 +13,17 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parents[1]
+FIXTURES = (
+    "scenarios",
+    "scenario_quotes",
+    "pricing",
+    "regime",
+    "greeks",
+    "standard_greeks",
+    "implied_volatility",
+    "implied_greeks",
+    "batch",
+)
 
 
 def docker(*arguments: str) -> str:
@@ -109,16 +120,7 @@ def check(image: str) -> None:
             "Local Jupyter startup, token authentication and all seeded notebooks verified.",
             flush=True,
         )
-        for name in (
-            "pricing",
-            "regime",
-            "greeks",
-            "implied_volatility",
-            "analytics",
-            "batch",
-            "scenarios",
-            "scenario_quotes",
-        ):
+        for name in FIXTURES:
             docker(
                 "cp", str(ROOT / f"tests/fixtures/{name}.json"), identifier + f":/tmp/{name}.json"
             )
@@ -140,14 +142,7 @@ def check(image: str) -> None:
                     "--notebook-root",
                     "/home/notebook/work",
                     "--fixtures",
-                    "/tmp/pricing.json",
-                    "/tmp/regime.json",
-                    "/tmp/greeks.json",
-                    "/tmp/implied_volatility.json",
-                    "/tmp/analytics.json",
-                    "/tmp/batch.json",
-                    "/tmp/scenarios.json",
-                    "/tmp/scenario_quotes.json",
+                    *(f"/tmp/{name}.json" for name in FIXTURES),
                 ),
                 flush=True,
             )

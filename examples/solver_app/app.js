@@ -8,18 +8,18 @@ const text = value => value == null ? 'Not reported' : String(value);
 const pretty = value => JSON.stringify(value, null, 2);
 function request() {
   const american = $('model').value === 'bs1993';
-  const contract = {
-    pricing_model: american ? 'bjerksund_stensland_1993' : 'black_scholes_merton',
-    exercise_style: american ? 'american' : 'european', option_type: $('option_type').value,
-    spot: n('spot'), strike: n('strike'), time_to_expiry_years: n('time_to_expiry_years'),
-    volatility: n('volatility') / 100, risk_free_rate: n('risk_free_rate') / 100,
-    dividend_yield: n('dividend_yield') / 100,
-  };
   const target = {kind: $('target_kind').value, value: n('target_value')};
   if (target.kind === 'position_pnl') target.position = {quantity: n('quantity'), multiplier: n('multiplier')};
-  const body = {contract, target, min_spot: n('min_spot'), max_spot: n('max_spot'),
-    elapsed_time_years: n('elapsed_time_years'), spot_tolerance: n('spot_tolerance'), value_tolerance: n('value_tolerance')};
-  if ($('scenario_volatility').value !== '') body.volatility = n('scenario_volatility') / 100;
+  const body = {
+    option: {type: $('option_type').value, exercise_style: american ? 'american' : 'european', strike: n('strike'), time_to_expiry_years: n('time_to_expiry_years')},
+    market: {spot: n('spot'), risk_free_rate: n('risk_free_rate') / 100, dividend_yield: n('dividend_yield') / 100},
+    volatility: n('volatility') / 100,
+    model: {id: american ? 'bjerksund_stensland_1993' : 'black_scholes_merton'},
+    target, coordinate: 'spot', lower: n('min_spot'), upper: n('max_spot'),
+    scenario: {elapsed_time_years: n('elapsed_time_years')},
+    coordinate_tolerance: n('spot_tolerance'), value_tolerance: n('value_tolerance')
+  };
+  if ($('scenario_volatility').value !== '') body.scenario.volatility = n('scenario_volatility') / 100;
   return body;
 }
 function refresh() {
@@ -53,18 +53,18 @@ function table(id, rows, columns, empty) {
 function outcome(result) {
   $('outcome').hidden = false;
   $('result-title').textContent = result.coverage.status === 'unresolved' ? 'Search incomplete.' : result.boundaries.length ? 'Target boundaries returned.' : 'No boundary found in this scan.';
-  $('status').textContent = `API coverage: ${result.coverage.status}. Model: ${result.pricing_model}. Results apply to the submitted inputs.`;
+  $('status').textContent = `API coverage: ${result.coverage.status}. Model: ${result.model.id}. Results apply to the submitted inputs.`;
   $('metrics').replaceChildren();
-  for (const [label, value] of [['Search range', `${result.min_spot} – ${result.max_spot}`], ['Target', `${result.target.kind}: ${result.target.value}`], ['Base option price', result.base.result.price], ['Price evaluations', result.price_evaluations]]) {
+  for (const [label, value] of [['Search range', `${result.lower} – ${result.upper}`], ['Target', `${result.target.kind}: ${result.target.value}`], ['Base option price', result.base.result.price], ['Price evaluations', result.price_evaluations]]) {
     const card = document.createElement('div'); card.className = 'metric';
     const caption = document.createElement('span'); caption.textContent = label;
     const content = document.createElement('strong'); content.textContent = text(value);
     card.append(caption, content); $('metrics').append(card);
   }
-  table('boundaries', result.boundaries, [['Kind', r => r.kind], ['Spot / interval', r => r.kind === 'point' ? r.spot : `${r.min_spot} – ${r.max_spot}`], ['Value', r => r.value], ['Value − target', r => r.value - result.target.value]], 'No boundaries returned. Review coverage and sign regions.');
-  table('regions', result.regions, [['From', r => r.min_spot], ['To', r => r.max_spot], ['Sign', r => r.sign]], 'No sign regions returned.');
-  table('cells', result.coverage.cells || [], [['From', r => r.lower_spot], ['To', r => r.upper_spot], ['Best spot', r => r.best_spot], ['Absolute error', r => r.best_abs_value_error], ['Reason', r => r.reason]], 'No unresolved cells reported.');
-  $('assumptions').textContent = pretty({base: result.base, inputs: result.inputs, target: result.target, reference_net_value: result.reference_net_value, profile: result.profile, spot_tolerance: result.spot_tolerance, value_tolerance: result.value_tolerance});
+  table('boundaries', result.boundaries, [['Kind', r => r.kind], ['Spot / interval', r => r.kind === 'point' ? r.coordinate : `${r.lower} – ${r.upper}`], ['Value', r => r.value], ['Value − target', r => r.value - result.target.value]], 'No boundaries returned. Review coverage and sign regions.');
+  table('regions', result.regions, [['From', r => r.lower], ['To', r => r.upper], ['Sign', r => r.sign]], 'No sign regions returned.');
+  table('cells', result.coverage.cells || [], [['From', r => r.lower], ['To', r => r.upper], ['Best spot', r => r.best_coordinate], ['Absolute error', r => r.best_abs_value_error], ['Reason', r => r.reason]], 'No unresolved cells reported.');
+  $('assumptions').textContent = pretty({base: result.base, inputs: result.inputs, target: result.target, reference_net_value: result.reference_net_value, profile: result.profile, spot_tolerance: result.coordinate_tolerance, value_tolerance: result.value_tolerance});
 }
 function receipt(action, payload, submitted) {
   const host = $('history'); host.querySelector('.empty')?.remove();
@@ -77,7 +77,7 @@ function receipt(action, payload, submitted) {
   // integers exactly. Full raw responses remain available as source records.
   const charge = payload.charged_cu;
   const chargeLine = document.createElement('p'); chargeLine.textContent = `Charged CU: ${payload.local_refusal ? '0 (no upstream request)' : charge ?? 'unknown / not reported'} · Request ID: ${text(payload.request_id || metadata?.request_id)}`;
-  const message = document.createElement('p'); message.textContent = payload.message || `Quoted CU: ${payload.quoted_cu ?? metadata?.fcu_quoted ?? 'not reported'} · Schedule: ${text(metadata?.fcu_schedule_id)} / ${text(metadata?.fcu_schedule_version)}`;
+  const message = document.createElement('p'); message.textContent = payload.message || `Quoted CU: ${payload.quoted_cu ?? metadata?.billing?.quoted_cu ?? 'not reported'} · Schedule: ${text(metadata?.billing?.rate_card?.id)} / ${text(metadata?.billing?.rate_card?.version)}`;
   const details = document.createElement('details');
   const summary = document.createElement('summary'); summary.textContent = 'Submitted inputs & complete API response';
   const raw = document.createElement('pre'); raw.textContent = pretty(submitted) + '\n\n' + (payload.raw_response || pretty(payload));

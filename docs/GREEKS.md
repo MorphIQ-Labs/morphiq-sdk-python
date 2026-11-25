@@ -1,10 +1,12 @@
 # Option price and Greeks
 
-See [API v0.5.0 model capabilities](MODELS.md) for supported operations,
+See [model capabilities](MODELS.md) for supported operations,
 100-item batch limits and unavailable-Greek semantics.
 
-`MorphIQ.greeks()` and `AsyncMorphIQ.greeks()` call `POST /v1/greeks`. One request
-returns the option price and all ten Greeks at the supplied volatility. The SDK
+`client.options.greeks()` (sync and async) calls `options.greeks`,
+`POST /v1/options:greeks`. One request returns the option price and all ten
+Greeks at the supplied volatility. To start from a market premium instead, use
+[implied Greeks](IMPLIED_GREEKS.md). The SDK
 does not calculate derivatives, choose the numerical model, or rescale values.
 
 Set `MORPHIQ_API_KEY`, then run a self-contained example:
@@ -21,33 +23,28 @@ reported commercial CU. Missing CU is shown as unreported, not zero.
 ## Python usage
 
 ```python
-from morphiq_sdk import GreeksRequest, MorphIQ
+from morphiq_sdk import Market, MorphIQ, Option, OptionsGreeksRequest
 
-request = GreeksRequest(
-    exercise_style="european",
-    option_type="call",
-    spot=100.0,
-    strike=100.0,
-    time_to_expiry_years=1.0,
-    risk_free_rate=0.05,
-    dividend_yield=0.0,
+request = OptionsGreeksRequest(
+    option=Option(type="call", exercise_style="european", strike=100.0, time_to_expiry_years=1.0),
+    market=Market(spot=100.0, risk_free_rate=0.05, dividend_yield=0.0),
     volatility=0.20,
-    pricing_model="auto",
 )
 with MorphIQ() as client:
-    response = client.greeks(request)
+    response = client.options.greeks(request)
 print(response.result.price)
 print(response.result.greeks.delta)
 print(response.model_dump_json(indent=2, exclude_unset=True))
 ```
 
 The asynchronous equivalent uses `async with AsyncMorphIQ()` and
-`await client.greeks(request)`. `GreeksRequest` has the same input fields and wire
-serialization rules as `PriceRequest`. Rates and volatility are decimals, time is
-in years, and spot/strike share the caller's currency. European/American style and
-the explicit model selector are forwarded to the service. Dividend schedule edits,
-omitted fields and explicit null `model_version` are preserved. The service owns
-schedule support and model/domain validation.
+`await client.options.greeks(request)`. `OptionsGreeksRequest` has the same
+`option`, `market`, `volatility` and `model` fields and wire serialization rules
+as `OptionsPriceRequest`. Rates and volatility are decimals, time is in years, and
+spot/strike share the caller's currency. European/American style and the model
+selection are forwarded to the service. The service owns dividend-schedule
+support and model/domain validation. `result.model` reports the resolved model
+id and version.
 
 ## Units
 
@@ -69,8 +66,10 @@ These are the bases in the pinned API contract; the SDK preserves them unchanged
 | `color` | d³V/(dS² dt) | Per underlying price squared and year |
 
 No calendar convention, percentage-point conversion, or option contract multiplier
-is applied by the SDK. Missing, null or non-finite required Greeks produce a
-`ResponseError`; they are never replaced with zero. Unknown additive response
+is applied by the SDK. A Greek the model cannot provide is omitted and explained
+in `greeks.unavailable` as a problem with a `code` and `detail`; a Greek that is
+neither present nor explained, null or non-finite produces a `ResponseError`.
+Values are never replaced with zero. Unknown additive response
 fields are preserved, and `raw_body` retains the response evidence with reflected
 credentials redacted.
 
@@ -93,12 +92,14 @@ and the [documentation index](README.md) for related features.
 
 ## Standard five
 
-`GreeksStandardRequest` and `client.greeks_standard(request)` return price,
-delta, gamma, theta, vega and rho from `/v1/greeks/standard`. The request fields
-match `GreeksRequest`; `max_cu` is supported. Use `BatchGreeksStandardRequest`
-with `greeks_standard_batch()` for a single synchronous batch, or explicitly
-chunk with `greeks_standard_workflow(..., chunk_size=100)`. Both clients expose
-these methods; async client calls use `await` and do not create server jobs.
+`OptionsStandardGreeksRequest` and `client.options.standard_greeks(request)`
+return price, delta, gamma, theta, vega and rho from
+`POST /v1/options:standard-greeks` (`options.standard_greeks`). The request fields
+match `OptionsGreeksRequest`; `max_cu` is supported. Use
+`OptionsBatchStandardGreeksRequest` with `client.options.batch_standard_greeks()`
+for a single batch, or explicitly chunk with
+`client.options.standard_greeks_workflow(..., chunk_size=100)`. Both clients
+expose these methods; async client calls use `await` and do not create server jobs.
 
-Run `python examples/greeks_standard.py` or open
+Run `python examples/standard_greeks.py` or open
 `notebooks/pricing/standard-five.ipynb` for an explicit single-request analysis.

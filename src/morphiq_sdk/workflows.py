@@ -11,10 +11,9 @@ from typing import Any, Generic, Literal, TypeVar
 from .errors import APIError, ResponseError
 from .models import (
     ResponseMetadata,
-    ServiceErrorMetadata,
     _BatchRequest,
     _BatchResponse,
-    _OptionRequest,
+    _Request,
 )
 
 _RequestT = TypeVar("_RequestT", bound=_BatchRequest[Any])
@@ -35,7 +34,8 @@ class ChunkAttempt(Generic[_ResponseT]):
     response: _ResponseT | None = None
     error: BaseException | None = None
     finished: bool = False
-    fcu_charged: int | None = None
+    charged_cu: int | None = None
+    """``metadata.billing.charged_cu`` for this attempt; ``None`` means unreported."""
     request_id: str | None = None
 
 
@@ -52,7 +52,7 @@ class _Workflow(Generic[_RequestT, _ResponseT]):
         ranges = []
         start = 0
         for chunk in chunks:
-            stop = start + len(chunk.requests)
+            stop = start + len(chunk.items)
             ranges.append((start, stop))
             start = stop
         return ranges
@@ -76,21 +76,21 @@ class _Workflow(Generic[_RequestT, _ResponseT]):
         return self._ranges[len(self._attempts) :]
 
     @property
-    def reported_fcu_charged(self) -> int:
+    def reported_charged_cu(self) -> int:
         """Exact integer subtotal of reported commercial charges, once per attempt."""
-        return sum(a.fcu_charged for a in self._attempts if a.fcu_charged is not None)
+        return sum(a.charged_cu for a in self._attempts if a.charged_cu is not None)
 
     @property
     def unknown_charge_count(self) -> int:
         """Attempts without a reported charge; a reported zero is known."""
-        return sum(a.fcu_charged is None for a in self._attempts)
+        return sum(a.charged_cu is None for a in self._attempts)
 
     @property
-    def total_fcu_charged(self) -> int | None:
+    def total_charged_cu(self) -> int | None:
         """Whole-workflow total only when completed and every attempt reports a charge."""
         if self._state != "completed" or self.unknown_charge_count:
             return None
-        return self.reported_fcu_charged
+        return self.reported_charged_cu
 
     def _begin(self) -> None:
         with self._state_lock:
@@ -106,9 +106,7 @@ class _Workflow(Generic[_RequestT, _ResponseT]):
         self, index: int, *, response: _ResponseT | None = None, error: BaseException | None = None
     ) -> None:
         attempt = self._attempts[index]
-        metadata: ResponseMetadata | ServiceErrorMetadata | None = (
-            response.metadata if response is not None else None
-        )
+        metadata: ResponseMetadata | None = response.metadata if response is not None else None
         request_id = metadata.request_id if metadata else None
         if isinstance(error, (APIError, ResponseError)):
             metadata = error.metadata
@@ -119,13 +117,13 @@ class _Workflow(Generic[_RequestT, _ResponseT]):
             response=response,
             error=error,
             finished=True,
-            fcu_charged=metadata.fcu_charged if metadata else None,
+            charged_cu=metadata.charged_cu if metadata else None,
             request_id=request_id,
         )
 
 
 class BatchWorkflow(_Workflow[_RequestT, _ResponseT]):
-    """Prepared synchronous workflow. Use a client's ``*_workflow`` factory.
+    """Prepared synchronous workflow. Use a factory such as ``client.options.price_workflow``.
 
     Construction makes no HTTP requests. ``run()`` sends chunks sequentially,
     retains each outcome and propagates the original exception on failure.
@@ -245,12 +243,12 @@ class AsyncBatchWorkflow(_Workflow[_RequestT, _ResponseT]):
 
 
 def _prepare_chunks(
-    requests: Sequence[_OptionRequest], batch_type: type[_RequestT], chunk_size: int
+    requests: Sequence[_Request], batch_type: type[_RequestT], chunk_size: int
 ) -> tuple[_RequestT, ...]:
     # Validate size using the reviewed envelope, not a customer plan assumption.
     if type(chunk_size) is not int or chunk_size < 1:
         raise ValueError("chunk_size must be a positive integer within the batch wire limit.")
-    limit = batch_type.model_fields["requests"].metadata
+    limit = batch_type.model_fields["items"].metadata
     maximum = next(rule.max_length for rule in limit if hasattr(rule, "max_length"))
     if chunk_size > maximum:
         raise ValueError(f"chunk_size exceeds the reviewed batch wire limit of {maximum}.")
@@ -258,7 +256,7 @@ def _prepare_chunks(
     # input schedules cannot change the prepared work after this point.
     return tuple(
         batch_type.model_validate(
-            batch_type(requests=list(requests[start : start + chunk_size])).to_wire()
+            batch_type(items=list(requests[start : start + chunk_size])).to_wire()
         )
         for start in range(0, len(requests), chunk_size)
     )

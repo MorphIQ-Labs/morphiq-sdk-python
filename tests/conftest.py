@@ -24,13 +24,18 @@ def greeks_cases():
 
 
 @pytest.fixture
+def standard_greeks_cases():
+    return json.loads((ROOT / "tests/fixtures/standard_greeks.json").read_text())["cases"]
+
+
+@pytest.fixture
 def iv_cases():
     return json.loads((ROOT / "tests/fixtures/implied_volatility.json").read_text())["cases"]
 
 
 @pytest.fixture
-def analytics_cases():
-    return json.loads((ROOT / "tests/fixtures/analytics.json").read_text())["cases"]
+def implied_greeks_cases():
+    return json.loads((ROOT / "tests/fixtures/implied_greeks.json").read_text())["cases"]
 
 
 @pytest.fixture
@@ -44,8 +49,18 @@ def scenario_cases():
 
 
 @pytest.fixture
-def scenario_quote_cases():
+def scenario_quotes():
     return json.loads((ROOT / "tests/fixtures/scenario_quotes.json").read_text())["cases"]
+
+
+@pytest.fixture
+def contract_fields():
+    """Declared model fields, for comparison with a schema's properties."""
+
+    def fields(model, properties):
+        return set(model.model_fields)
+
+    return fields
 
 
 @pytest.fixture(autouse=True)
@@ -59,11 +74,12 @@ def fixture_api(
     cases,
     regime_cases,
     greeks_cases,
+    standard_greeks_cases,
     iv_cases,
-    analytics_cases,
+    implied_greeks_cases,
     batch_cases,
     scenario_cases,
-    scenario_quote_cases,
+    scenario_quotes,
 ):
     """Loopback replay of contract fixtures; no numerical implementation or external calls."""
     received = []
@@ -71,11 +87,12 @@ def fixture_api(
         cases
         + regime_cases
         + greeks_cases
+        + standard_greeks_cases
         + iv_cases
-        + analytics_cases
+        + implied_greeks_cases
         + batch_cases
         + scenario_cases
-        + scenario_quote_cases
+        + scenario_quotes
     )
 
     class Handler(BaseHTTPRequestHandler):
@@ -83,17 +100,13 @@ def fixture_api(
             body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
             received.append((self.path, self.headers.get("Authorization"), body))
             match = next(
-                (
-                    case
-                    for case in cases
-                    if case["request"] == body and case.get("path", "/v1/price") == self.path
-                ),
+                (case for case in cases if case["request"] == body and case["path"] == self.path),
                 None,
             )
-            if match is None or self.path != match.get("path", "/v1/price"):
+            if match is None:
                 self.send_error(422)
                 return
-            self.send_response(match.get("status", 200))
+            self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.end_headers()
             self.wfile.write(json.dumps(match["response"]).encode())
@@ -136,11 +149,15 @@ def failing_api(request, cases):
                 charged = 7 if failure == "api_charged" else 0
                 status = 500 if charged else 422
                 body = {
-                    "error": {"code": "pricing_failed", "message": "Synthetic failure"},
+                    "type": "https://developers.morphiqlabs.com/docs/errors#pricing_failed",
+                    "title": "Pricing failed",
+                    "status": status,
+                    "detail": "Synthetic failure",
+                    "code": "pricing_failed",
                     "metadata": {
                         **cases[0]["response"]["metadata"],
                         "request_id": "failure-test-id",
-                        "fcu_charged": charged,
+                        "billing": {"charged_cu": charged},
                     },
                 }
             self.send_response(status)

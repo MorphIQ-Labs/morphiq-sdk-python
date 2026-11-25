@@ -6,10 +6,14 @@ The SDK backlog and implementation live in this GitHub repository. Contract
 publication and website integration are implemented in the API repository and
 linked from their SDK dependency issues. Link PRs/MRs and evidence back to the
 issues. The merged SDK implements sync/async pricing, Greeks, implied volatility,
-combined analytics, regime, ordered batches, explicit sequential workflows,
+implied Greeks, regime, ordered batches, explicit sequential workflows,
 optional pandas tables and local pricing/regime analysis workspaces. Issue
 acceptance remains open where publication, integration or broader recipe scope
 has not been demonstrated.
+
+The SDK covers all 19 operations of API 0.10.0, including option scenarios,
+book revaluation, P&L attribution and book scenario solves. Each has sync/async
+methods, quotation support and an explicit-action notebook.
 
 See the [2026-10-24 first-release readiness audit](RELEASE_READINESS.md) for exact
 candidate identities, installed-wheel/Docker evidence and remaining gates.
@@ -40,13 +44,3 @@ evaluates a browser experience built from the cookbook, including runtime choice
 credentials, CU visibility, session isolation, costs and download/local-run support.
 It is outside the initial SDK milestone. A prototype and a decision come before
 an implementation/hosting commitment.
-
-## Scenario API adoption
-
-[#45 Scenario evaluation and spot solving](https://github.com/MorphIQ-Labs/morphiq-sdk-python/issues/45)
-tracks SDK adoption of API MR !209. The candidate includes typed sync/async
-methods, quotes/ceilings, examples and two scenario workspaces. **Owner hold:**
-keep the SDK PR draft with auto-merge off; do not merge to main or release until
-the matching API has been deployed and its schema, permissions and 100/200-CU
-solve quotes/receipts are verified. This work does not authorize API deployment.
-See [local validation](validation/2026-11-05-scenarios.json).

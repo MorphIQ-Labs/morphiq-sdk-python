@@ -22,9 +22,11 @@ so the regime request omits `as_of`. An exact known final observation timestamp
 can be supplied as RFC 3339 with an explicit UTC offset.
 
 The [sync example](../examples/identify_regime.py) constructs
-`RegimeRequest(prices=closes["Close"].tolist())` and calls `MorphIQ.regime`. The
+`SeriesIdentifyRegimeRequest(prices=closes["Close"].tolist())` and calls
+`client.series.identify_regime` (`series.identify_regime`,
+`POST /v1/series:identify-regime`). The
 [async example](../examples/identify_regime_async.py) shows the same data and
-response handling with `await AsyncMorphIQ.regime`. Both connect to
+response handling with `await client.series.identify_regime`. Both connect to
 `https://api.morphiqlabs.com` and read `MORPHIQ_API_KEY`, or prompt for it masked.
 The [analysis workspace](../notebooks/regime/identification.ipynb) provides ticker
 selection, a price-history chart, an Analyze button, head results and score charts. Docker includes yfinance; outside
@@ -41,26 +43,60 @@ Requests have a 32 KiB encoded body limit that service policy may narrow.
 Each of `response.result.decision`, `.direction` and `.state` has a status:
 
 - `available`: read `prediction.label` and each labeled entry in `prediction.scores`.
-- `not_applicable`: `prediction` is null; read `reason_code`.
-- `unavailable`: `prediction` is null; read `reason_code`.
+- `not_applicable`: `prediction` is omitted; read `reason_code`.
+- `unavailable`: `prediction` is omitted; read `reason_code`.
 
-`unresolved` is an available decision label, not a serving failure. `NEUTRAL`
-is a valid direction label. `LOWER_VOL` and `HIGHER_VOL` are relative to the
-reference model's other state, not historical volatility norms or directions.
+The SDK types these as `RegimeAvailable`, `RegimeNotApplicable` and
+`RegimeUnavailable`; a status this SDK version does not know is kept as
+`Unrecognized` with all its wire members. Labels are lower snake case.
+`unresolved` is an available decision label, not a serving failure. `neutral`
+is a valid direction label (with `up` and `down`). `lower_vol` and `higher_vol`
+are relative to the reference model's other state, not historical volatility
+norms or directions. A label this SDK version does not list is kept as a string.
 Scores are uncalibrated softmax values, not calibrated probabilities, p-values
 or confidence intervals. Treat heads separately; never multiply their scores.
 The basis describes the prediction target, not a claim that reference fitting
-ran for the request. Read `metadata.provenance.teacher_executed` as reported.
+ran for the request. Read `result.provenance.teacher_executed` as reported.
 
-`metadata.consumed_price_range` is a half-open range in the original input
-array. `input_price_index` identifies the original price at the selected return's
-end. `metadata.provenance` identifies the served model; `metadata.engines`
-identifies the inference library. The SDK preserves both and the raw response.
+Regime facts are part of the result. `result.input` holds the window and return
+facts: `received_price_count`, `window_price_count`, `price_count`,
+`return_count`, `consumed_price_range` (a half-open range in the original input
+array), `observation_index`, `input_price_index` (the original price at the
+selected return's end), `all_prices_consumed`, `return_type`, `return_unit` and
+`as_of` when the request supplied it. `result.timing` reports `inference_us` and
+`crisis_us` in microseconds. `result.provenance` identifies the served model and
+`result.response_contract_version` the regime response contract;
+`metadata.engines` identifies the inference library. The SDK preserves all of
+them and the raw response.
 
-Keep `metadata.request_id` for support. Commercial charges are
-`metadata.fcu_charged`; absent means unreported, not zero. Service failures raise
+Regime responses carry the same `metadata` as every other operation. Keep
+`metadata.request_id` for support. Commercial charges are
+`metadata.billing.charged_cu`; absent means unreported, not zero. Service failures raise
 `APIError` with server evidence. Transport failures and malformed responses can
 leave execution and charges unknown. Neither client retries automatically.
 
 See the [client/model reference](API.md) for shared configuration and errors,
 and the [documentation index](README.md) for related features.
+
+## Crisis and the served volatility label
+
+`result.volatility` reports the served volatility label: read its status before
+`prediction.label`, which is `low`, `high` or `crisis`. This rule-selected label
+has no scores. A crisis detector episode takes precedence; otherwise the label
+uses the student's relative state. It is not a forecast or historical norm.
+
+`result.crisis.status` is `crisis`, `not_crisis` or `unavailable`. An active
+episode (`RegimeCrisisActive`) includes `score` and `episode_start_price_index`
+in the original input array. `not_crisis` (`RegimeNotCrisis`) has a `score` and
+omits the episode index. An `unavailable` result (`RegimeCrisisUnavailable`)
+omits both and carries a `short_reference` or `degenerate_reference` reason; it
+never means not-crisis. The detector is an
+acute-shock signal whose short episodes can recur, not a persistent regime.
+
+`result.crisis_score_contract` defines the linear readout and entry/exit
+thresholds. The score is unbounded, can be negative, and is not a probability,
+confidence or softmax value. Do not apply the other heads' score contract to it.
+`result.provenance.crisis` and `.volatility_label` identify both components and
+the combination rule. `result.timing.crisis_us` measures detector work separately
+from student inference (`result.timing.inference_us`). See the [API regime guide](https://developers.morphiqlabs.com/docs/regime)
+for applicability and expected signal rates.

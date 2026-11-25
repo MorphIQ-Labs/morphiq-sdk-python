@@ -51,7 +51,7 @@ def regime_sources(filename: str = "identify_regime.py") -> tuple[str, str]:
             module = node.module if isinstance(node, ast.ImportFrom) else node.names[0].name
             group = (
                 "sdk"
-                if module == "morphiq_sdk"
+                if (module or "").startswith("morphiq_sdk")
                 else ("third_party" if module == "yfinance" else "stdlib")
             )
             groups[group].append(ast.unparse(node))
@@ -72,22 +72,27 @@ def notebook() -> dict[str, Any]:
 
 ## Choose an analysis
 
-- [Scenario evaluation](scenarios/evaluate.ipynb): reprice a move or a spot/volatility grid.
-- [Spot-target solving](scenarios/solve-spot.ipynb): quote and solve a target option price or P&L.
-- [Available models](pricing/models.ipynb): inspect public model capabilities and constraints.
-- [Standard-five Greeks](pricing/standard-five.ipynb): price an option and inspect
-  its five primary sensitivities.
-- [Cost quotation](cost/quotation.ipynb): inspect active rates, quote a synthetic
+- [Available models](pricing/models.ipynb): inspect public model capabilities, operations,
+  constraints and validity contracts.
+- [Standard Greeks](pricing/standard-five.ipynb): price an option and inspect
+  delta, gamma, theta, vega and rho.
+- [Cost quotation](cost/quotation.ipynb): read your rate card, quote a synthetic
   option, and explicitly execute with a maximum CU charge.
 - [Option pricing](pricing/options.ipynb): value European or American calls and puts,
   load a daily or intraday underlying price from Yahoo, inspect Greeks, solve implied
-  volatility, analyze a premium with Greeks, track session CU, and chart sensitivity.
+  volatility, get implied Greeks from a premium, track session CU, and chart sensitivity.
 - [Regime analysis](regime/identification.ipynb): load daily or intraday price history
   and inspect the latest regime assessment, scores and model provenance.
 
 Open a workspace and select **Run → Run All Cells** once to display its controls.
 Then use its buttons. Running the setup makes no MorphIQ requests; each action button
 states how many requests it sends. All market data stays in memory.
+
+- [options.revalue](scenarios/revalue.ipynb): quote, execute and inspect the result.
+- [options.solve_scenario](scenarios/solve.ipynb): quote, execute and inspect the result.
+- [books.revalue](books/revalue.ipynb): quote, execute and inspect the result.
+- [books.explain](books/explain.ipynb): quote, execute and inspect the result.
+- [books.solve_scenario](books/solve.ipynb): quote, execute and inspect the result.
 
 ## API access
 
@@ -117,13 +122,16 @@ def notebooks() -> dict[str, dict[str, Any]]:
     result = {"start-here.ipynb": notebook()}
     # Analysis notebooks are authored directly; tests verify their SDK requests.
     for filename in (
+        "scenarios/revalue.ipynb",
+        "scenarios/solve.ipynb",
+        "books/revalue.ipynb",
+        "books/explain.ipynb",
+        "books/solve.ipynb",
         "pricing/options.ipynb",
         "pricing/models.ipynb",
         "pricing/standard-five.ipynb",
         "regime/identification.ipynb",
         "cost/quotation.ipynb",
-        "scenarios/evaluate.ipynb",
-        "scenarios/solve-spot.ipynb",
     ):
         content = json.loads((ROOT / "notebooks" / filename).read_text())
         if "widgets" in content["metadata"]:

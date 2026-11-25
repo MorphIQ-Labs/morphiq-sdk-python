@@ -37,8 +37,8 @@ run full CI and exercise prose, mixed, renamed and unknown-path cases.
 ## Client contract
 
 - Preserve wire semantics, numerical values, diagnostics/provenance, ordering
-  and optional commercial CU fields. Internal `units_charged` is not the
-  commercial `fcu_charged` amount.
+  and optional commercial CU fields. Only `metadata.billing.charged_cu` reports
+  a commercial charge; `quoted_cu` is a quote, not a charge.
 - Consume an immutable reviewed OpenAPI artifact with its digest and source
   identity. Do not maintain a second authoritative contract.
 - Keep credentials, private market data and engine source out of fixtures,
@@ -62,8 +62,12 @@ run full CI and exercise prose, mixed, renamed and unknown-path cases.
 - Follow RELEASE.md: no manual release version bumps or package publication.
   Release Please owns pyproject.toml version, manifest and changelog updates.
 
-The published SDK implements sync/async single-option JSON pricing, all-ten-Greeks
-analysis, implied volatility, combined analytics and regime identification, plus
-explicit ordered batches and optional bounded concurrency for the four option
-operations. PyPI publication is live; notebook images and hosted notebooks remain
-separate work. Keep availability statements precise.
+The published SDK 0.2.1 implements the earlier API contract. The main branch
+targets the API 0.10.0 contract: sync/async `options.price`, `options.greeks`,
+`options.standard_greeks`, `options.implied_volatility` and
+`options.implied_greeks` with their batches and optional bounded-concurrency
+workflows, `series.identify_regime`, `models.list` and the `rate_card` utilities.
+It also covers option revaluation and scenario solving, and book revaluation,
+P&L attribution and scenario solving. PyPI publication is live;
+notebook images and hosted notebooks remain separate work. Keep availability
+statements precise.

@@ -4,12 +4,13 @@ import json
 
 import httpx
 import pytest
+from support import problem, set_charge
 from test_workflows import OPERATIONS
 
 from morphiq_sdk import (
     APIError,
     AsyncMorphIQ,
-    BatchPriceRequest,
+    OptionsBatchPriceRequest,
     RateLimitError,
     RequestTimeout,
     ResponseError,
@@ -24,11 +25,10 @@ def test_out_of_order_completions_keep_indices_and_exact_charges(operation, batc
     case["response"]["results"][1] = {
         "index": 1,
         "status": "error",
-        "error": {"code": "pricing_failed", "message": "Synthetic failure"},
+        "error": problem("pricing_failed", status=500),
     }
-    requests = (
-        request_type(**case["request"]).requests * 5 + request_type(**case["request"]).requests[:1]
-    )
+    items = request_type.model_validate(case["request"]).items
+    requests = items * 5 + items[:1]
 
     async def run():
         entered = [asyncio.Event() for _ in range(6)]
@@ -41,7 +41,7 @@ def test_out_of_order_completions_keep_indices_and_exact_charges(operation, batc
             index = len(calls)
             body = json.loads(request.content)
             assert request.url.path == case["path"]
-            assert body == {"requests": [r.to_wire() for r in requests[index * 3 : index * 3 + 3]]}
+            assert body == {"items": [r.to_wire() for r in requests[index * 3 : index * 3 + 3]]}
             calls.append(body)
             active += 1
             peak = max(peak, active)
@@ -49,8 +49,9 @@ def test_out_of_order_completions_keep_indices_and_exact_charges(operation, batc
             try:
                 await release[index].wait()
                 response = copy.deepcopy(case["response"])
-                response["results"] = response["results"][: len(body["requests"])]
-                response["metadata"].update(request_id=f"chunk-{index}", fcu_charged=2**100 + index)
+                response["results"] = response["results"][: len(body["items"])]
+                response["metadata"]["request_id"] = f"chunk-{index}"
+                set_charge(response["metadata"], 2**100 + index)
                 completed.append(index)
                 return httpx.Response(200, json=response)
             finally:
@@ -59,7 +60,7 @@ def test_out_of_order_completions_keep_indices_and_exact_charges(operation, batc
         async with AsyncMorphIQ(
             api_key="concurrency-test", transport=httpx.MockTransport(handle)
         ) as client:
-            workflow = getattr(client, factory)(requests, chunk_size=3, max_concurrency=2)
+            workflow = getattr(client.options, factory)(requests, chunk_size=3, max_concurrency=2)
             assert workflow.max_concurrency == 2 and not calls
             task = asyncio.create_task(workflow.run())
             await entered[1].wait()
@@ -81,8 +82,8 @@ def test_out_of_order_completions_keep_indices_and_exact_charges(operation, batc
             assert workflow.state == "completed" and not workflow.unattempted_ranges
             assert [a.start for a in workflow.attempts] == [0, 3, 6, 9, 12, 15]
             assert [a.request_id for a in workflow.attempts] == [f"chunk-{i}" for i in range(6)]
-            assert [a.fcu_charged for a in workflow.attempts] == [2**100 + i for i in range(6)]
-            assert workflow.total_fcu_charged == 6 * 2**100 + 15
+            assert [a.charged_cu for a in workflow.attempts] == [2**100 + i for i in range(6)]
+            assert workflow.total_charged_cu == 6 * 2**100 + 15
             assert workflow.unknown_charge_count == 0
             assert [
                 a.start + r.index for a in workflow.attempts for r in a.response.results
@@ -112,9 +113,8 @@ def test_failure_stops_launches_drains_inflight_and_preserves_all_errors(failure
             entered[index].set()
             await release[index].wait()
             response = copy.deepcopy(case["response"])
-            response["metadata"].update(
-                fcu_charged=2**100 if index == 0 else 7, request_id=f"chunk-{index}"
-            )
+            response["metadata"]["request_id"] = f"chunk-{index}"
+            set_charge(response["metadata"], 2**100 if index == 0 else 7)
             returned[index].set()
             if index == 1:
                 if failure == "timeout":
@@ -128,22 +128,18 @@ def test_failure_stops_launches_drains_inflight_and_preserves_all_errors(failure
                     return httpx.Response(200, json=response)
             if index != 0:
                 # A later in-flight failure must not replace the first observed error.
-                response = {
-                    "metadata": response["metadata"],
-                    "error": {"code": "synthetic", "message": "synthetic failure"},
-                }
-                return httpx.Response(
-                    429 if index == 1 and failure == "429" else 500,
-                    json=response,
-                    headers={"Retry-After": "30"},
-                )
+                status = 429 if index == 1 and failure == "429" else 500
+                response = problem("synthetic", status=status, metadata=response["metadata"])
+                return httpx.Response(status, json=response, headers={"Retry-After": "30"})
             return httpx.Response(200, json=response)
 
         async with AsyncMorphIQ(
             api_key="concurrency-test", transport=httpx.MockTransport(handle)
         ) as client:
-            workflow = client.price_workflow(
-                BatchPriceRequest(**case["request"]).requests * 5, chunk_size=3, max_concurrency=3
+            workflow = client.options.price_workflow(
+                OptionsBatchPriceRequest.model_validate(case["request"]).items * 5,
+                chunk_size=3,
+                max_concurrency=3,
             )
             task = asyncio.create_task(workflow.run())
             await entered[2].wait()
@@ -171,8 +167,8 @@ def test_failure_stops_launches_drains_inflight_and_preserves_all_errors(failure
             assert workflow.unattempted_ranges == ((9, 12), (12, 15))
             unknown = failure in ("gateway", "timeout", "cancel")
             assert workflow.unknown_charge_count == int(unknown)
-            assert workflow.reported_fcu_charged == 2**100 + (7 if unknown else 14)
-            assert workflow.total_fcu_charged is None and workflow.state == "stopped"
+            assert workflow.reported_charged_cu == 2**100 + (7 if unknown else 14)
+            assert workflow.total_charged_cu is None and workflow.state == "stopped"
             assert len(calls) == 3
 
     asyncio.run(run())
@@ -202,8 +198,10 @@ def test_bound_defaults_and_oversized_pool(limit, batch_cases):
             api_key="concurrency-test", transport=httpx.MockTransport(handle)
         ) as client:
             kwargs = {} if limit == 1 else {"max_concurrency": limit}
-            workflow = client.price_workflow(
-                BatchPriceRequest(**case["request"]).requests * 3, chunk_size=3, **kwargs
+            workflow = client.options.price_workflow(
+                OptionsBatchPriceRequest.model_validate(case["request"]).items * 3,
+                chunk_size=3,
+                **kwargs,
             )
             task = asyncio.create_task(workflow.run())
             await entered.wait()
@@ -234,15 +232,11 @@ def test_repeated_caller_cancellation_joins_workers_and_keeps_known_charges(
                 # Wait until three calls are in flight before returning a known receipt.
                 await entered.wait()
                 response = copy.deepcopy(case["response"])
-                response["metadata"]["fcu_charged"] = 2**100
+                set_charge(response["metadata"], 2**100)
                 first_done.set()
                 if during_failure:
                     return httpx.Response(
-                        429,
-                        json={
-                            "metadata": response["metadata"],
-                            "error": {"code": "limited", "message": "synthetic"},
-                        },
+                        429, json=problem("limited", status=429, metadata=response["metadata"])
                     )
                 return httpx.Response(200, json=response)
             if index == 2:
@@ -260,8 +254,10 @@ def test_repeated_caller_cancellation_joins_workers_and_keeps_known_charges(
         async with AsyncMorphIQ(
             api_key="concurrency-test", transport=httpx.MockTransport(handle)
         ) as client:
-            workflow = client.price_workflow(
-                BatchPriceRequest(**case["request"]).requests * 6, chunk_size=3, max_concurrency=3
+            workflow = client.options.price_workflow(
+                OptionsBatchPriceRequest.model_validate(case["request"]).items * 6,
+                chunk_size=3,
+                max_concurrency=3,
             )
             task = asyncio.create_task(workflow.run())
             await first_done.wait()
@@ -276,9 +272,9 @@ def test_repeated_caller_cancellation_joins_workers_and_keeps_known_charges(
                 await task
             assert sorted(cleaned) == sorted(cancelled)
             assert asyncio.all_tasks() == baseline
-            assert workflow.reported_fcu_charged == 2**100
+            assert workflow.reported_charged_cu == 2**100
             assert workflow.unknown_charge_count == (2 if during_failure else 3)
-            assert workflow.total_fcu_charged is None and workflow.state == "stopped"
+            assert workflow.total_charged_cu is None and workflow.state == "stopped"
             assert all(a.finished for a in workflow.attempts)
             assert len(calls) == (3 if during_failure else 4)
             assert workflow.unattempted_ranges[0][0] == len(calls) * 3
@@ -294,15 +290,15 @@ def test_concurrency_validation_and_empty_work(operation, batch_cases):
         async with AsyncMorphIQ(api_key="concurrency-test") as client:
             for invalid in (0, -1, True, 1.5, "2", None):
                 with pytest.raises(ValueError, match="positive integer"):
-                    getattr(client, factory)(
-                        request_type(**batch_cases[operation]["request"]).requests,
+                    getattr(client.options, factory)(
+                        request_type.model_validate(batch_cases[operation]["request"]).items,
                         chunk_size=3,
                         max_concurrency=invalid,
                     )
-            workflow = getattr(client, factory)([], chunk_size=1, max_concurrency=10)
+            workflow = getattr(client.options, factory)([], chunk_size=1, max_concurrency=10)
             await workflow.run()
             assert workflow.attempts == () and workflow.state == "completed"
-            assert workflow.total_fcu_charged == 0
+            assert workflow.total_charged_cu == 0
 
     asyncio.run(run())
 
@@ -324,15 +320,17 @@ def test_receipt_returned_during_cancellation_is_retained_without_new_submission
             except asyncio.CancelledError:
                 if index == 0:
                     body = copy.deepcopy(case["response"])
-                    body["metadata"]["fcu_charged"] = 7
+                    set_charge(body["metadata"], 7)
                     return httpx.Response(200, json=body)
                 raise
 
         async with AsyncMorphIQ(
             api_key="concurrency-test", transport=httpx.MockTransport(handle)
         ) as client:
-            workflow = client.price_workflow(
-                BatchPriceRequest(**case["request"]).requests * 6, chunk_size=3, max_concurrency=3
+            workflow = client.options.price_workflow(
+                OptionsBatchPriceRequest.model_validate(case["request"]).items * 6,
+                chunk_size=3,
+                max_concurrency=3,
             )
             task = asyncio.create_task(workflow.run())
             await entered.wait()
@@ -341,7 +339,7 @@ def test_receipt_returned_during_cancellation_is_retained_without_new_submission
                 await task
             assert calls == [0, 1, 2]
             assert workflow.attempts[0].response is not None
-            assert workflow.reported_fcu_charged == 7
+            assert workflow.reported_charged_cu == 7
             assert workflow.unknown_charge_count == 2
             assert workflow.state == "stopped"
 
@@ -367,8 +365,8 @@ def test_standalone_async_example_uses_explicit_concurrency(batch_cases, tmp_pat
         def do_POST(self):
             nonlocal active, peak
             body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
-            start = {80.0: 0, 90.0: 2, 100.0: 4}[body["requests"][0]["spot"]]
-            assert body == {"requests": case["request"]["requests"][start : min(start + 2, 5)]}
+            start = {80.0: 0, 90.0: 2, 100.0: 4}[body["items"][0]["market"]["spot"]]
+            assert body == {"items": case["request"]["items"][start : min(start + 2, 5)]}
             with lock:
                 seen.append(start)
                 active += 1
@@ -385,7 +383,7 @@ def test_standalone_async_example_uses_explicit_concurrency(batch_cases, tmp_pat
                 response["results"] = response["results"][start : min(start + 2, 5)]
                 for index, item in enumerate(response["results"]):
                     item["index"] = index
-                response["metadata"]["fcu_charged"] = {0: 2**100, 2: 7, 4: 11}[start]
+                set_charge(response["metadata"], {0: 2**100, 2: 7, 4: 11}[start])
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json")
                 self.end_headers()

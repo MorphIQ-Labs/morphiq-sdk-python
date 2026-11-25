@@ -41,7 +41,7 @@ def scenario_api(request, cases):
         def do_POST(self):
             body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
             received.append(body)
-            assert self.path == "/v1/price:batch"
+            assert self.path == "/v1/options:batch-price"
             results = []
             for index, value in enumerate(values):
                 if index == failed_index:
@@ -49,7 +49,13 @@ def scenario_api(request, cases):
                         {
                             "index": index,
                             "status": "error",
-                            "error": {"code": "pricing_failed", "message": "Synthetic failure"},
+                            "error": {
+                                "type": "https://developers.morphiqlabs.com/docs/errors#pricing_failed",
+                                "title": "Pricing failed",
+                                "status": 422,
+                                "detail": "Synthetic failure",
+                                "code": "pricing_failed",
+                            },
                         }
                     )
                 else:
@@ -65,7 +71,7 @@ def scenario_api(request, cases):
                 "metadata": {
                     **cases[0]["response"]["metadata"],
                     "request_id": "scenario-batch",
-                    "fcu_charged": 7,
+                    "billing": {"charged_cu": 7},
                 },
             }
             self.send_response(200)
@@ -105,7 +111,7 @@ assert price_history == []
 """
     output = run_workspace("pricing/options.ipynb", code, endpoint, tmp_path)
     assert len(received) == 1
-    assert [body["spot"] for body in received[0]["requests"]] == expected_spots
+    assert [body["market"]["spot"] for body in received[0]["items"]] == expected_spots
     if failed_index is not None:
         assert "pricing_failed" in output
 
@@ -155,9 +161,10 @@ def test_regime_renders_absent_predictions_without_score_charts(
     fixture_api, regime_cases, tmp_path, status, reason
 ):
     endpoint, received = fixture_api
-    regime_cases[0]["response"]["result"]["direction"].update(
-        status=status, reason_code=reason, prediction=None
-    )
+    # A head that is not available omits its prediction.
+    direction = regime_cases[0]["response"]["result"]["direction"]
+    del direction["prediction"]
+    direction.update(status=status, reason_code=reason)
     code = (
         fixture_prices_source(regime_cases[0]["request"]["prices"])
         + f"""
@@ -222,11 +229,12 @@ assert analyze_button.description == 'Show analysis'
 outputs = analysis_output.outputs
 tables = [o['data']['text/html'] for o in outputs if 'text/html' in o.get('data', {})]
 assert len(tables) == 2
-assert all(head in tables[0] for head in ['Decision', 'Direction', 'State'])
+assert all(head in tables[0] for head in ['Decision', 'Direction', 'State', 'Volatility'])
 assert 'Model SHA-256' in tables[1] and 'Engine(s)' in tables[1]
 assert sum('image/png' in o.get('data', {}) for o in outputs) == 1
 text = ''.join(o.get('text', '') for o in outputs)
 assert 'fixture-regime' in text and 'CU charged: not reported' in text
+assert 'Crisis: not_crisis' in text and 'Linear readout (not a probability): -1.25' in text
 assert not analyze_button.disabled and not ticker.disabled and not price_interval.disabled
 response = last_response
 analysis_output.outputs = ()

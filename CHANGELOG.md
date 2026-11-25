@@ -1,5 +1,33 @@
 # Changelog
 
+## [0.2.1](https://github.com/MorphIQ-Labs/morphiq-sdk-python/compare/v0.2.0...v0.2.1) (2026-11-16)
+
+
+### Features
+
+* **sdk:** align Python client with production API v0.7.0 ([#49](https://github.com/MorphIQ-Labs/morphiq-sdk-python/issues/49)) ([3807e36](https://github.com/MorphIQ-Labs/morphiq-sdk-python/commit/3807e36662e2a016b86c2658a82381ff2c862e3d))
+
+## [0.2.0](https://github.com/MorphIQ-Labs/morphiq-sdk-python/compare/v0.1.1...v0.2.0) (2026-11-05)
+
+
+### ⚠ BREAKING CHANGES
+
+* **client:** align Python SDK with API v0.5.0 ([#41](https://github.com/MorphIQ-Labs/morphiq-sdk-python/issues/41))
+
+### Features
+
+* **client:** align Python SDK with API v0.5.0 ([#41](https://github.com/MorphIQ-Labs/morphiq-sdk-python/issues/41)) ([043287a](https://github.com/MorphIQ-Labs/morphiq-sdk-python/commit/043287a4d17028085b1ca067eb5789860adf9eb1))
+
+
+### Bug Fixes
+
+* accept metadata without retired capacity fields ([#47](https://github.com/MorphIQ-Labs/morphiq-sdk-python/issues/47)) ([5547614](https://github.com/MorphIQ-Labs/morphiq-sdk-python/commit/5547614393bdb4e2238fb5d729852c7b7c30630d))
+
+
+### Documentation
+
+* adopt strategic pragmatism guidance ([#42](https://github.com/MorphIQ-Labs/morphiq-sdk-python/issues/42)) ([7484eb2](https://github.com/MorphIQ-Labs/morphiq-sdk-python/commit/7484eb216fb1f2f66ccb62592c3a1f7bbf24444c))
+
 ## [0.1.1](https://github.com/MorphIQ-Labs/morphiq-sdk-python/compare/v0.1.0...v0.1.1) (2026-10-26)
 
 

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import os
-import shutil
 import subprocess
 import sys
 import tarfile
@@ -80,7 +79,7 @@ def main() -> None:
                 "    raise AssertionError('Yahoo worked without optional dependencies')\n"
                 "from morphiq_sdk.pandas import workflow_to_frames;\n"
                 "with morphiq_sdk.MorphIQ(api_key='package-test') as client:\n"
-                "    workflow = client.price_workflow([], chunk_size=1)\n"
+                "    workflow = client.options.price_workflow([], chunk_size=1)\n"
                 "    workflow.run()\n"
                 "    try:\n"
                 "        workflow_to_frames(workflow)\n"
@@ -100,25 +99,6 @@ def main() -> None:
             check=True,
         )
 
-        # The browser example is shipped in the sdist, uses no optional extras,
-        # and can run outside the checkout with only the installed SDK wheel.
-        app_path = temporary / "solver_app"
-        shutil.copytree(
-            root / "examples/solver_app", app_path, ignore=shutil.ignore_patterns("__pycache__")
-        )
-        with tarfile.open(sources[0]) as source:
-            for name in ("app.py", "index.html", "app.js", "style.css", "README.md"):
-                member = source.extractfile(
-                    f"morphiq_sdk-{expected_version}/examples/solver_app/{name}"
-                )
-                assert member is not None and member.read() == (app_path / name).read_bytes()
-        subprocess.run(
-            [str(python), "-I", str(app_path / "app.py"), "--help"],
-            cwd=temporary,
-            check=True,
-        )
-        print("Standalone solver app and sdist assets verified with installed wheel")
-
         # Check the optional extra independently of the notebook/Yahoo environment.
         subprocess.run(
             [str(python), "-m", "pip", "install", f"{wheels[0]}[pandas]"],
@@ -136,42 +116,43 @@ def main() -> None:
                 from importlib.util import find_spec
                 from pathlib import Path
                 from morphiq_sdk import (
-                    MorphIQ, BatchPriceResponse, BatchGreeksResponse,
-                    BatchImpliedVolatilityResponse, BatchAnalyticsResponse,
-                    BatchGreeksStandardResponse,
+                    MorphIQ, OptionsBatchPriceResponse, OptionsBatchGreeksResponse,
+                    OptionsBatchImpliedVolatilityResponse, OptionsBatchImpliedGreeksResponse,
+                    OptionsBatchStandardGreeksResponse,
                 )
                 from morphiq_sdk.pandas import batch_to_frames, workflow_to_frames
                 assert find_spec('yfinance') is None
                 assert 'pandas' not in sys.modules
                 cases = json.loads(Path(sys.argv[1]).read_text())['cases']
-                types = (BatchPriceResponse, BatchGreeksResponse,
-                         BatchImpliedVolatilityResponse, BatchAnalyticsResponse)
+                types = (OptionsBatchPriceResponse, OptionsBatchGreeksResponse,
+                         OptionsBatchImpliedVolatilityResponse,
+                         OptionsBatchImpliedGreeksResponse)
                 for cls, case in zip(types, cases):
                     body = case['response']
-                    body['metadata']['fcu_charged'] = 2**100
+                    body['metadata']['billing'] = {'charged_cu': 2**100}
                     frames = batch_to_frames(
                         cls.model_validate(body), identifiers=[1, None, 2**100]
                     )
                     assert frames.results['outcome'].tolist() == body['results']
                     assert frames.results['identifier'].tolist() == [1, None, 2**100]
-                    assert frames.total_fcu_charged == 2**100
-                    assert frames.requests.loc[0, 'fcu_charged'] == 2**100
+                    assert frames.total_charged_cu == 2**100
+                    assert frames.requests.loc[0, 'charged_cu'] == 2**100
                 with MorphIQ(api_key='package-test') as client:
-                    workflow = client.price_workflow([], chunk_size=1)
+                    workflow = client.options.price_workflow([], chunk_size=1)
                     workflow.run()
                     frames = workflow_to_frames(workflow)
                     assert frames.results.empty and frames.requests.empty
-                    assert frames.total_fcu_charged == 0
+                    assert frames.total_charged_cu == 0
                 standard = json.loads(Path(sys.argv[2]).read_text())['cases'][0]['response']
                 body = {'metadata': standard['metadata'], 'results': [
                     {'index': 0, 'status': 'success', 'result': standard['result']}
                 ]}
-                frames = batch_to_frames(BatchGreeksStandardResponse.model_validate(body))
+                frames = batch_to_frames(OptionsBatchStandardGreeksResponse.model_validate(body))
                 assert frames.results['outcome'].tolist() == body['results']
                 print('Isolated pandas extra and all five batch conversions verified')
                 """),
                 str(root / "tests/fixtures/batch.json"),
-                str(root / "tests/fixtures/greeks_standard.json"),
+                str(root / "tests/fixtures/standard_greeks.json"),
             ],
             cwd=temporary,
             check=True,

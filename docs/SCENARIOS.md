@@ -1,190 +1,166 @@
-# Option scenarios and spot-target solving
+# Option scenarios and books
 
-This SDK candidate targets the scenario contract in API MR !209. Merge and
-release are held until the matching API is deployed and its live schema,
-permissions, quotes and receipts are verified. Existing published SDK versions
-may not provide these methods. Use a compatible controlled service for testing.
+These methods target the pinned API 0.10.0 contract. Both `MorphIQ` and
+`AsyncMorphIQ` expose them; every call sends one request without retries.
+Execution, numerical validation, plan permissions and billing remain server-owned.
+Use explicit BSM or BS1993 model selections for these operations.
 
-Both `MorphIQ` and `AsyncMorphIQ` provide `evaluate_scenarios()` and `solve_spot()`.
-Each call sends exactly one HTTP JSON request. All numerical work runs on the
-server; the SDK does not price, interpolate or find roots locally. There are no
-automatic retries, hidden preliminary prices, request splitting or parallel calls.
+| Operation | Request model | Result |
+| --- | --- | --- |
+| `client.options.revalue` | `OptionsRevalueRequest` | Base valuation and ordered scenario outcomes |
+| `client.options.solve_scenario` | `OptionsSolveScenarioRequest` | Target boundaries, sign regions and coverage |
+| `client.books.revalue` | `BooksRevalueRequest` | Position, strategy, book and portfolio valuations |
+| `client.books.explain` | `BooksExplainRequest` | Revaluation plus expiry and strike P&L buckets |
+| `client.books.solve_scenario` | `BooksSolveScenarioRequest` | Spot boundaries for a book or selected strategy |
 
-## A five-dollar underlying move
+## Option revaluation
 
-```python
-from morphiq_sdk import MorphIQ, PriceRequest, ScenarioPoint, ScenarioPosition, ScenarioRequest
-
-contract = PriceRequest(
-    exercise_style="european",
-    pricing_model="black_scholes_merton",
-    option_type="call",
-    spot=100.0,
-    strike=100.0,
-    time_to_expiry_years=1.0,
-    risk_free_rate=0.05,
-    dividend_yield=0.0,
-    volatility=0.20,
-)
-request = ScenarioRequest(
-    contract=contract,
-    scenarios=[ScenarioPoint(spot_change=5.0)],
-    position=ScenarioPosition(quantity=1.0, multiplier=100.0),
-)
-with MorphIQ() as client:
-    quote = client.quote(request)  # One zero-CU utility request; no execution.
-    print(quote.quote.total_fcu)
-    result = client.evaluate_scenarios(request, max_cu=2)  # One capped request.
-    for item in result.results:
-        if item.status == "success":
-            print(item.inputs.spot, item.result.price, item.price_change, item.position_pnl)
-        else:
-            print(item.index, item.error.code, item.error.message)
-    print("Commercial CU charged:", result.metadata.fcu_charged)
-```
-
-The example uses synthetic inputs and an explicit two-CU ceiling. Obtain the
-account's active quote before choosing a ceiling; quotes do not reserve funds
-or lock policy. Use `bjerksund_stensland_1993` with American exercise for BS1993.
-These routes require an explicit model: Auto, QdFp and cash-dividend models are
-not supported. Model-domain validation remains server-owned.
-
-`spot_change=5` means five quote-currency units, not five percent. Alternatively,
-`spot` sets an absolute price; do not combine them. Optional `volatility` is an
-absolute annualized decimal (0.25 is 25%). `elapsed_time_years` subtracts from
-remaining life, defaults to zero and cannot exceed expiry. Exactly expiry is
-allowed. Each point starts from the original contract; shocks do not accumulate.
-Rates, yield, strike and direction remain fixed. These are conditional model
-valuations, not forecasts or market quotes.
-
-Send 1–99 points in display order for a curve or flattened grid. The base plus
-points must fit the account's price-batch limit. Duplicates remain distinct.
-The SDK rejects missing, duplicate or reordered response indexes with
-`ResponseError`, preserving available billing metadata. It never silently drops
-failed points or sorts the server's output.
-
-Evaluation uses existing price-batch rates for the base and every point. Signed
-quantity and positive multiplier scale base-relative P&L; they do not multiply
-CU charges. Prices/changes are per underlying unit. P&L excludes fees, financing,
-trade-entry cost and currency conversion. A negative quantity is short.
-
-## Solve for a target price or position P&L
+`option`, `market`, `volatility` and explicit `model` define the base valuation.
+Each `ScenarioPoint` applies independently to that base: absolute `spot` or
+additive `spot_change`, optional absolute `volatility`, and elapsed years.
+Do not supply both spot forms. Omitted assumptions stay at their base values.
+The wire permits 1–99 scenarios; account limits may be smaller.
 
 ```python
-from morphiq_sdk import MorphIQ, PriceRequest, ScenarioOptionPriceTarget, ScenarioSpotSolveRequest
+from morphiq_sdk import (
+    Market,
+    ModelSelection,
+    MorphIQ,
+    Option,
+    OptionsRevalueRequest,
+    ScenarioPoint,
+    ScenarioPosition,
+)
 
-request = ScenarioSpotSolveRequest(
-    contract=PriceRequest(
-        exercise_style="european",
-        pricing_model="black_scholes_merton",
-        option_type="call",
-        spot=100.0,
-        strike=100.0,
-        time_to_expiry_years=1.0,
-        risk_free_rate=0.05,
-        dividend_yield=0.0,
-        volatility=0.20,
-    ),
-    target=ScenarioOptionPriceTarget(kind="option_price", value=15.0),
-    min_spot=50.0,
-    max_spot=150.0,
+request = OptionsRevalueRequest(
+    option=Option(type="call", exercise_style="european", strike=100.0, time_to_expiry_years=1.0),
+    market=Market(spot=100.0, risk_free_rate=0.05, dividend_yield=0.0),
+    volatility=0.2,
+    model=ModelSelection(id="black_scholes_merton"),
+    scenarios=[ScenarioPoint(spot=90.0), ScenarioPoint(spot=110.0)],
+    position=ScenarioPosition(quantity=-2.0, multiplier=100.0),
 )
 with MorphIQ() as client:
-    print("Quoted CU:", client.quote(request).quote.total_fcu)
-    response = client.solve_spot(request, max_cu=100)
-    print(response.result.coverage.status)
-    for boundary in response.result.boundaries:
-        print(boundary.model_dump())
-    print("Commercial CU charged:", response.metadata.fcu_charged)
+    response = client.options.revalue(request)
+for item in response.result.scenarios:
+    if item.status == "success":
+        print(item.index, item.result.price, item.price_change, item.pnl)
+    elif item.status == "error":
+        print(item.index, item.error.code, item.error.detail)
+    else:
+        print(item.index, item.model_dump(exclude_unset=True))
+print(response.metadata.charged_cu)
 ```
 
-For position P&L, replace the target with:
+Duplicates remain separate ordered items. Partial failure does not discard
+successful points. `ScenarioSuccess`, `ScenarioError` and `ScenarioUnrecognized`
+retain their index and resolved inputs. Position P&L is the price change times
+signed quantity times multiplier, relative to the **base model mark**.
+It excludes entry cost, fees, financing and currency conversion.
+
+## Option targets and solve coverage
+
+`OptionsSolveScenarioRequest` uses the same base inputs plus `target`, finite
+`lower`/`upper` bounds, optional tolerances and `scenario` assumptions.
+`coordinate` defaults to spot. Accepted coordinates are `spot`, `strike`,
+`time_to_expiry`, `elapsed_time`, `rate`, `dividend_yield` and `volatility`.
+Volatility solves require a Greek target; solve price for volatility with
+`options.implied_volatility` instead. The service validates each model/coordinate
+combination and its domain.
+
+Build a target with `ScenarioSolveTargetOptionPrice`,
+`ScenarioSolveTargetPositionPnl` (including `ScenarioPosition`) or
+`ScenarioSolveTargetGreek`. These are also accepted as discriminated dictionaries:
+`{"kind": "greek", "greek": "delta", "value": 0.5}`. All ten Greeks use their
+published API units; time Greeks are annual, not per-day. Scenario assumptions
+may override volatility or elapsed time; elapsed time cannot also be held fixed
+when solving elapsed time or remaining expiry.
+
+Results retain the base, replay inputs, model identity, coordinate/target units,
+profile, evaluation counts, boundaries and sign regions. Point boundaries carry
+`coordinate`, evaluated `value`, crossing flag and refinement evidence. Interval
+boundaries carry `lower`, `upper` and representative `value`. Intervals are
+sampled evidence, not a proof for every interior coordinate.
+
+Always inspect `coverage.status`, `coverage.basis` and `outcome` together.
+An `incomplete` outcome has unresolved cells and is not a no-solution result.
+Even resolved coverage is relative to scan resolution; smaller features can be
+missed. Unknown response kinds or enum values are retained for inspection.
+The SDK performs no local root finding or verification pricing.
+
+## Books
+
+A book has an `id`, `positions`, and optional `strategies`. A `BookPosition`
+contains an option, underlying label, signed quantity, positive multiplier,
+volatility and explicit model. Its market comes from `markets[underlying]`.
+Strategies list position IDs in their book and may overlap. Book totals sum each
+position once; **do not add strategy totals together**. Every value uses the
+request's three-letter currency label, with no FX conversion.
+
+`BookScenarioDefinition` contains ordered shocks. The six request variants are:
+
+| Class | `kind` | Additional fields |
+| --- | --- | --- |
+| `BookShockSpotRelative` | `spot_relative` | `relative` |
+| `BookShockParallelVol` | `parallel_vol` | `shift` |
+| `BookShockSkew` | `skew` | `slope` |
+| `BookShockRate` | `rate` | `shift` |
+| `BookShockRollDown` | `roll_down` | `years` |
+| `BookShockVolTerm` | `vol_term` | `front_tenor`, `front_shift`, `back_tenor`, `back_shift` |
+
+Shocks compose left to right; do not sort or deduplicate them. Revaluation and
+explanation take `books=[...]` and return positions, strategies, books and
+portfolio totals in one response. Explanation adds `ScenarioPnlAttribution` at
+book and portfolio levels. Each of the expiry and strike bucket sets separately
+partitions the positions and reconciles to enclosing P&L.
+
+Book solves take one `book`, optional `strategy_id`, non-spot scenario shocks,
+`signed_reference_net_value`, optional `target_pnl` (default zero), and spot
+bounds. The solved positions must share one underlying. Their P&L is horizon
+value minus the signed reference: a debit paid is positive and a credit received
+is negative. This differs from revaluation's base-model-value reference.
+Roll-down may reach expiry but cannot pass it. The result retains selected
+positions, reference, scenario, units and the same boundary/coverage evidence
+as option solves. Wire limits and lower account limits are validated by the API.
+
+## Quotes, async calls and receipts
+
+All five request types work with `client.rate_card.quote(request)`. Use
+`BooksExplainRequest` for an explanation quote; its wire body equals a
+revaluation body, but the canonical operation is `books.explain`.
 
 ```python
-from morphiq_sdk import ScenarioPosition, ScenarioPositionPnlTarget
-
-target = ScenarioPositionPnlTarget(
-    kind="position_pnl",
-    value=500.0,
-    position=ScenarioPosition(quantity=2.0, multiplier=100.0),
-)
-```
-
-The P&L target is relative to the original model mark, before optional volatility
-or elapsed-time adjustments. Quantity is nonzero and signed; multiplier is
-positive. Option-price targets are per underlying unit; P&L is position currency.
-Bounds must be finite, positive and ordered. Positive tolerances default to
-`spot_tolerance=1e-9` and `value_tolerance=1e-6`; the latter uses target units.
-Large positions may require tighter spot tolerances to achieve the value tolerance.
-
-Async uses the same requests, types and semantics:
-
-```python
-from morphiq_sdk import AsyncMorphIQ
+from morphiq_sdk import AsyncMorphIQ, BooksExplainRequest
 
 
-async def solve(request):
+async def explain_books(body):
+    request = BooksExplainRequest.model_validate(body)
     async with AsyncMorphIQ() as client:
-        quote = await client.quote(request)
-        print(quote.quote.total_fcu)
-        return await client.solve_spot(request, max_cu=100)
+        quote = await client.rate_card.quote(request)
+        # Two explicit requests: one quote, then one capped calculation.
+        response = await client.books.explain(request, max_cu=quote.quote.total_cu)
+    return response
 ```
 
-## Flat charges and receipts
+A quote is not a reservation or a charge. `metadata.billing.charged_cu` (also
+`metadata.charged_cu`) is the commercial receipt; absence means unreported,
+not zero. Do not multiply solve charges by iterations, refinements or price
+calls. Ask the deployed rate card for the actual request's cost and set `max_cu`.
+A timeout may occur after charge commitment. Exceptions retain available
+problem, request ID and billing evidence; the SDK never automatically retries.
 
-| Model | CU per complete solve request |
-| --- | ---: |
-| BSM | 100 |
-| BS1993 | 200 |
+## Run and inspect
 
-The approved schedule includes every internal base, reference and search price.
-Target kind, position scaling, evaluation count, iterations and returned
-boundaries do not change the flat charge. `result.price_evaluations` is a
-diagnostic count, not a billing unit. No additional trial-price charge applies.
-The SDK never derives a CU amount from the count or internal `units_charged`.
+[Option revalue](../examples/option_revalue.py),
+[option solve](../examples/option_solve.py),
+[book revalue](../examples/book_revalue.py),
+[book explain](../examples/book_explain.py), and
+[book solve](../examples/book_solve.py) are standalone synthetic scripts.
+The [local spot-solver app](../examples/solver_app/README.md) separates quote and
+solve actions and retains receipts.
 
-`client.quote(request)` chooses `scenario_spot_solve` or `scenario_evaluate`
-from the request type. A solve quote resolves quantity one without executing
-numerical work. The service reserves the full known amount before execution.
-`max_cu` forwards `X-MorphIQ-Max-CU` unchanged; a ceiling below the quote refuses
-with zero charge, equality is accepted. Solver access needs its own permission
-and matching signed schedule; price-batch access alone is insufficient.
-
-The charge commits at execution start. No-root and unresolved searches, and
-numerical failures/timeouts after commitment, retain the full flat charge.
-Pre-commit validation/admission refusals or cancellation charge zero. Inspect
-`APIError.metadata`, `ResponseError.metadata`, raw bodies and request IDs.
-Absent commercial metadata is unknown, never zero. A missing response or async
-cancellation does not establish whether the server charged; do not retry blindly.
-
-## Read every returned outcome
-
-- `ScenarioSolvePoint`: evaluated spot/value, crossing flag, refinement count and
-  bracket width. Compare its value with the requested target for the residual.
-- `ScenarioSolveInterval`: sampled plateau bounds and evaluated value. It does
-  not certify every real-valued spot inside the interval.
-- `regions`: above-target, below-target or at-target segments.
-- `coverage.status == "resolved"`: candidates resolved at the declared scan
-  resolution; smaller structures can still be missed. Empty boundaries mean no
-  solution found at that resolution, not global nonexistence.
-- `coverage.status == "unresolved"`: inspect every cell's bounds, best spot,
-  absolute value error and typed reason. The SDK preserves these cells and
-  does not choose a unique answer or retry with looser tolerances.
-
-The returned profile identifies 32 scan intervals, 64 refinements per candidate
-and a conservative 4,775-price ceiling. This is a computational bound, not a CU
-reservation. `base` retains the original valuation; `inputs` contains adjusted
-fixed assumptions for repricing a boundary using `client.price()` explicitly.
-No repricing is performed automatically.
-
-Executable examples: [evaluation](../examples/scenario_evaluate.py),
-[sync solve](../examples/solve_spot.py), [async solve](../examples/solve_spot_async.py).
-They quote only unless you supply `--max-cu`. Interactive workspaces:
-[evaluation](../notebooks/scenarios/evaluate.ipynb) and
-[spot targeting](../notebooks/scenarios/solve-spot.ipynb). Setup and control edits
-send no requests; action buttons state request counts and require an explicit ceiling.
-
-For a complete client demonstration, run the [solver example app](../examples/solver_app/README.md).
-It supplies a browser form, a Python SDK adapter, explicit quote/solve actions,
-boundary/coverage tables and session receipts. Its acceptance walkthrough covers
-both models, both target types, cap refusal and incomplete/non-unique outcomes.
+Each operation has a standalone notebook in `notebooks/scenarios/` or
+`notebooks/books/`. Edit the JSON inputs or paste caller-supplied data; setup and
+edits make no requests. Quote and Execute each send exactly one request. A quote
+is consumed before execution, including failed or unknown outcomes, and edits
+invalidate the current result while preserving receipt history.

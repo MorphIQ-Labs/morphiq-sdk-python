@@ -23,8 +23,9 @@ python examples/greeks.py
 python examples/greeks_async.py
 python examples/implied_volatility.py
 python examples/implied_volatility_async.py
-python examples/analytics.py
-python examples/analytics_async.py
+python examples/standard_greeks.py
+python examples/implied_greeks.py
+python examples/implied_greeks_async.py
 python examples/batch_price.py
 python examples/batch_price_async.py
 ```
@@ -48,21 +49,32 @@ See [the quickstart](../docs/QUICKSTART.md) and [all feature guides](../docs/REA
 Start Here links to the interactive workspaces; the standalone scripts remain the
 SDK usage demonstrations.
 
-The Greeks examples submit `GreeksRequest` to `client.greeks()` and display the
-price plus all ten derivatives, with the same model/charge evidence and error
-handling. Values use annual time units and unit volatility/rate bases. See
-[the Greeks guide](../docs/GREEKS.md).
+Every request is built from the same parts: an `Option` (type, exercise style,
+strike, time to expiry), a `Market` (spot, rates, optional cash dividends), a
+`volatility` or a `market_price`, and a `ModelSelection`. Methods are grouped by
+the API's collections and spell its canonical operation ids: `client.options.price()`
+is `options.price` (`POST /v1/options:price`). Results report the resolved
+`model.id` and its exact `model.version`; a charge is read from
+`metadata.billing.charged_cu`.
+
+The Greeks examples submit `OptionsGreeksRequest` to `client.options.greeks()` and
+display the price plus all ten derivatives, with the same model/charge evidence and error
+handling. Values use annual time units and unit volatility/rate bases. The
+standard-Greeks example calls `client.options.standard_greeks()` for the price and
+delta, gamma, theta, vega and rho. See [the Greeks guide](../docs/GREEKS.md).
 
 The implied-volatility examples pass an explicit option premium to
-`client.implied_volatility()` and print IV, residual with its basis, iterations,
+`client.options.implied_volatility()` and print IV, residual with its basis, iterations,
 fallback usage and provenance. See [the IV guide](../docs/IMPLIED_VOLATILITY.md).
 
-The analytics examples submit one `AnalyticsRequest` to `client.analytics()` to
-solve IV and evaluate price and Greeks at that solved volatility. They report the
-combined response's commercial charge once. See [combined analytics](../docs/ANALYTICS.md).
+The implied-Greeks examples submit one `OptionsImpliedGreeksRequest` to
+`client.options.implied_greeks()` to solve IV from a premium and evaluate price and
+all ten Greeks at that solved volatility. They report the combined response's
+commercial charge once. See [implied Greeks](../docs/IMPLIED_GREEKS.md).
 
-The batch examples submit two explicit pricing requests in one call, preserve
-ordered item outcomes, and count the response charge once. See
+The batch examples submit two explicit pricing requests as `items` in one
+`client.options.batch_price()` call, preserve ordered item outcomes, and count the
+response charge once. See
 [batch operations and 429 handling](../docs/BATCH.md).
 
 The [chunked pricing examples](../docs/WORKFLOWS.md) prepare five synthetic spot
@@ -90,7 +102,7 @@ python examples/identify_regime_async.py
 python examples/provider_regime.py
 ```
 
-Each script submits one regime request. The first two prompt for a ticker and
+Each script submits one `client.series.identify_regime()` request. The first two prompt for a ticker and
 support a masked key prompt; the provider example uses SPY and requires the
 exported key. See [regime interpretation](../docs/REGIME.md) and
 [provider interfaces](../docs/PRICE_PROVIDERS.md). Data stays in memory; no CSV
@@ -111,16 +123,35 @@ python examples/tabular_price.py
 See [the pandas adapter guide](../docs/PANDAS.md) for partial results, identifiers,
 units and exact charge totals. Pandas is optional and conversion makes no API calls.
 
-## Scenario API
+## Model catalog and rate card
 
-`scenario_evaluate.py` quotes a +5 move or 3×3 grid. `solve_spot.py` and
-`solve_spot_async.py` quote a target price or signed position P&L. These scripts
-use synthetic inputs and require a compatible scenario deployment. Add
-`--max-cu` to explicitly execute once; otherwise they only quote. Use
-`--model bs1993` for American options. See [the guide](../docs/SCENARIOS.md).
+```sh
+python examples/list_models.py
+python examples/rate_card_quote.py
+python examples/rate_card_quote.py --batch --execute
+```
 
-The [solver example app](solver_app/README.md) provides a local browser UI for
-BSM/BS1993 target price and position P&L solves. Run
-`python examples/solver_app/app.py` after configuring the same environment.
-Get a quote, choose a CU limit, then explicitly solve. All pricing and searching
-run through the SDK against the API; the app shows coverage and request receipts.
+`list_models.py` calls the public `client.models.list()` without a key or charge
+and prints each model's canonical operation ids and validity contracts.
+`rate_card_quote.py` reads your rate card with `client.rate_card.get()` and quotes
+the exact request it would execute with `client.rate_card.quote()`; both are
+utility requests. `--execute` then sends one pricing request with the quoted
+total as its `max_cu` ceiling. See [the rate card guide](../docs/RATE_CARD.md).
+
+## Option scenarios and books
+
+Each script uses synthetic inputs and sends one calculation when run. All request
+construction and the complete returned result are visible; missing charges stay
+unreported. Set `MORPHIQ_API_KEY`, then run:
+
+```sh
+python examples/option_revalue.py
+python examples/option_solve.py
+python examples/book_revalue.py
+python examples/book_explain.py
+python examples/book_solve.py
+```
+
+[The guide](../docs/SCENARIOS.md) explains targets, units, coverage, signed values
+and quotation. The [local solver app](solver_app/README.md) separates Quote and
+Solve into explicit actions with a single-use quote and retained receipts.

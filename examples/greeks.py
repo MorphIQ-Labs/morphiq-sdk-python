@@ -7,7 +7,16 @@ import os
 import sys
 from getpass import getpass
 
-from morphiq_sdk import APIError, GreeksRequest, MorphIQ, ResponseError, TransportError
+from morphiq_sdk import (
+    APIError,
+    Market,
+    ModelSelection,
+    MorphIQ,
+    Option,
+    OptionsGreeksRequest,
+    ResponseError,
+    TransportError,
+)
 
 
 def main() -> None:
@@ -15,26 +24,30 @@ def main() -> None:
     api_key = os.environ.get("MORPHIQ_API_KEY") or getpass("MorphIQ API key: ")
 
     # Synthetic European call; spot and strike use the same currency.
-    request = GreeksRequest(
-        exercise_style="european",
-        option_type="call",
-        spot=100.0,
-        strike=100.0,
-        time_to_expiry_years=1.0,  # Years from valuation.
-        risk_free_rate=0.05,  # 5% annual rate.
-        dividend_yield=0.0,
+    request = OptionsGreeksRequest(
+        option=Option(
+            type="call",
+            exercise_style="european",
+            strike=100.0,
+            time_to_expiry_years=1.0,  # Years from valuation.
+        ),
+        market=Market(
+            spot=100.0,
+            risk_free_rate=0.05,  # 5% annual rate.
+            dividend_yield=0.0,
+        ),
         volatility=0.20,  # 20% annual volatility.
-        pricing_model="auto",
+        model=ModelSelection(id="auto"),
     )
 
     try:
         # The client uses https://api.morphiqlabs.com and closes its connection pool here.
         with MorphIQ(api_key=api_key) as client:
-            response = client.greeks(request)
+            response = client.options.greeks(request)
     except APIError as error:
-        print(f"HTTP {error.status_code}: {error.code}: {error.message}", file=sys.stderr)
+        print(f"HTTP {error.status_code}: {error.code}: {error.detail}", file=sys.stderr)
         print(f"Request ID: {error.request_id}", file=sys.stderr)
-        charged = error.metadata.fcu_charged if error.metadata else None
+        charged = error.metadata.charged_cu if error.metadata else None
         print(
             f"Commercial CU charged: {charged if charged is not None else 'not reported'}",
             file=sys.stderr,
@@ -68,12 +81,13 @@ def main() -> None:
         value = getattr(response.result.greeks, name)
         reason = response.result.greeks.unavailable.get(name)
         print(f"  {name}: {value if value is not None else reason}")
-    print(f"Model: {response.result.pricing_model} ({response.result.model_version})")
+    print(f"Model: {response.result.model.id} ({response.result.model.version})")
     print(f"Request ID: {response.metadata.request_id}")
-    for engine in response.metadata.engines:
+    for engine in response.metadata.engines or []:
         print(f"Engine: {engine.name} {engine.version} ({engine.revision})")
-    # Missing commercial CU is unreported, not zero.
-    charged = response.metadata.fcu_charged
+    # The charge is metadata.billing.charged_cu; missing means unreported, not zero.
+    billing = response.metadata.billing
+    charged = billing.charged_cu if billing is not None else None
     print("Commercial CU charged:", charged if charged is not None else "not reported")
 
 

@@ -11,7 +11,10 @@ from getpass import getpass
 from morphiq_sdk import (
     APIError,
     AsyncMorphIQ,
-    ImpliedVolatilityRequest,
+    Market,
+    ModelSelection,
+    Option,
+    OptionsImpliedVolatilityRequest,
     ResponseError,
     TransportError,
 )
@@ -22,26 +25,30 @@ async def main() -> None:
     api_key = os.environ.get("MORPHIQ_API_KEY") or getpass("MorphIQ API key: ")
 
     # Synthetic European call; spot and strike use the same currency.
-    request = ImpliedVolatilityRequest(
-        exercise_style="european",
-        option_type="call",
-        spot=100.0,
-        strike=100.0,
-        time_to_expiry_years=1.0,  # Years from valuation.
-        risk_free_rate=0.05,  # 5% annual rate.
-        dividend_yield=0.0,
+    request = OptionsImpliedVolatilityRequest(
+        option=Option(
+            type="call",
+            exercise_style="european",
+            strike=100.0,
+            time_to_expiry_years=1.0,  # Years from valuation.
+        ),
+        market=Market(
+            spot=100.0,
+            risk_free_rate=0.05,  # 5% annual rate.
+            dividend_yield=0.0,
+        ),
         market_price=10.450583572185538,  # Synthetic per-share option premium.
-        pricing_model="auto",
+        model=ModelSelection(id="auto"),
     )
 
     try:
         # The client uses https://api.morphiqlabs.com and closes its connection pool here.
         async with AsyncMorphIQ(api_key=api_key) as client:
-            response = await client.implied_volatility(request)
+            response = await client.options.implied_volatility(request)
     except APIError as error:
-        print(f"HTTP {error.status_code}: {error.code}: {error.message}", file=sys.stderr)
+        print(f"HTTP {error.status_code}: {error.code}: {error.detail}", file=sys.stderr)
         print(f"Request ID: {error.request_id}", file=sys.stderr)
-        charged = error.metadata.fcu_charged if error.metadata else None
+        charged = error.metadata.charged_cu if error.metadata else None
         print(
             f"Commercial CU charged: {charged if charged is not None else 'not reported'}",
             file=sys.stderr,
@@ -64,12 +71,13 @@ async def main() -> None:
     print(f"Used fallback: {response.result.used_fallback}")
     print(f"Residual: {response.result.residual}")
     print(f"Residual basis: {response.result.residual_basis}")
-    print(f"Model: {response.result.pricing_model} ({response.result.model_version})")
+    print(f"Model: {response.result.model.id} ({response.result.model.version})")
     print(f"Request ID: {response.metadata.request_id}")
-    for engine in response.metadata.engines:
+    for engine in response.metadata.engines or []:
         print(f"Engine: {engine.name} {engine.version} ({engine.revision})")
-    # Missing commercial CU is unreported, not zero.
-    charged = response.metadata.fcu_charged
+    # The charge is metadata.billing.charged_cu; missing means unreported, not zero.
+    billing = response.metadata.billing
+    charged = billing.charged_cu if billing is not None else None
     print("Commercial CU charged:", charged if charged is not None else "not reported")
 
 

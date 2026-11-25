@@ -11,6 +11,7 @@ from pathlib import Path
 
 import httpx
 import pytest
+from support import problem
 
 from morphiq_sdk import MorphIQ
 
@@ -19,8 +20,17 @@ SPEC = importlib.util.spec_from_file_location("solver_example", ROOT / "examples
 APP = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(APP)
 CASES = json.loads((ROOT / "tests/fixtures/scenarios.json").read_text())["cases"]
-SOLVES = [case for case in CASES if case["name"].startswith("solve-")]
-SUCCESS = [case for case in SOLVES if case["status"] == 200]
+QUOTES = json.loads((ROOT / "tests/fixtures/scenario_quotes.json").read_text())["cases"]
+SUCCESS = []
+for original in CASES:
+    if original["operation"] != "options.solve_scenario":
+        continue
+    case = copy.deepcopy(original)
+    case["quote"] = next(q["response"] for q in QUOTES if q["name"] == case["name"] + "-quote")
+    case["expected_cu"] = case["quote"]["quote"]["total_cu"]
+    case["status"] = 200
+    case["response"]["metadata"]["billing"] = {"charged_cu": case["expected_cu"]}
+    SUCCESS.append(case)
 
 
 @contextmanager
@@ -44,9 +54,9 @@ def fixture_app(case, *, fault=None):
     def upstream(request):
         calls.append(request)
         assert request.headers["authorization"] == "Bearer app-test-key"
-        if request.url.path == "/v1/cost/quote":
+        if request.url.path == "/v1/rate-card:quote":
             return httpx.Response(200, json=case["quote"])
-        assert request.url.path == "/v1/scenarios/solve-spot"
+        assert request.url.path == "/v1/options:solve-scenario"
         assert json.loads(request.content) == case["request"]
         assert request.headers["x-morphiq-max-cu"] == str(case["expected_cu"])
         if fault:
@@ -140,9 +150,9 @@ def test_local_route_and_body_validation_never_call_api():
         assert not calls
 
 
-@pytest.mark.parametrize("name", ["solve-bsm-numerical-error", "solve-bsm-invalid"])
+@pytest.mark.parametrize("name", ["numerical_error", "invalid_field"])
 def test_api_errors_preserve_known_charge_and_request_id(name):
-    error = next(case for case in SOLVES if case["name"] == name)
+    error = {"status": 422, "response": problem(name, metadata=SUCCESS[0]["response"]["metadata"])}
     case = SUCCESS[0]
     with fixture_app(
         case, fault=lambda _: httpx.Response(error["status"], json=error["response"])
@@ -153,7 +163,7 @@ def test_api_errors_preserve_known_charge_and_request_id(name):
         assert body["upstream_status"] == error["status"]
         assert json.loads(body["raw_response"]) == error["response"]
         assert body["metadata"] == error["response"]["metadata"]
-        assert body["charged_cu"] == str(error["response"]["metadata"]["fcu_charged"])
+        assert body["charged_cu"] == str(error["response"]["metadata"]["billing"]["charged_cu"])
         assert browser.post("/api/solve", json=payload).status_code == 400
         assert len(calls) == 2
 
@@ -197,7 +207,9 @@ def test_example_app_against_protected_native_api():
             assert response.status_code == 200, response.text
             result = json.loads(response.json()["raw_response"])
             assert (
-                int(quote["quoted_cu"]) == result["metadata"]["fcu_charged"] == case["expected_cu"]
+                int(quote["quoted_cu"])
+                == result["metadata"]["billing"]["charged_cu"]
+                == case["expected_cu"]
             )
             assert result["result"] == case["response"]["result"]
 
@@ -206,9 +218,9 @@ def test_example_app_against_protected_native_api():
 def test_app_keeps_missing_zero_and_large_receipts_distinct(charge):
     case = copy.deepcopy(SUCCESS[0])
     if charge is None:
-        case["response"]["metadata"].pop("fcu_charged")
+        case["response"]["metadata"]["billing"].pop("charged_cu")
     else:
-        case["response"]["metadata"]["fcu_charged"] = charge
+        case["response"]["metadata"]["billing"]["charged_cu"] = charge
     with fixture_app(case) as (browser, calls):
         _, response, _ = quote_and_solve(browser, case)
         assert response.status_code == 200

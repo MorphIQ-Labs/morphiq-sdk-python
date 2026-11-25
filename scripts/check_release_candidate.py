@@ -149,7 +149,7 @@ def check(wheel: Path, source: Path, interpreter: str, api_url: str, report: Pat
                         body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
                         received.append(body)
                         if (
-                            self.path != "/v1/price"
+                            self.path != "/v1/options:price"
                             or body != case["request"]
                             or self.headers.get("Authorization") != "Bearer release-audit-key"
                         ):
@@ -230,8 +230,9 @@ def check(wheel: Path, source: Path, interpreter: str, api_url: str, report: Pat
                                 "from morphiq_sdk.pandas import workflow_to_frames; "
                                 "from morphiq_sdk_yahoo import YahooPriceProvider; "
                                 "client=MorphIQ(api_key='release-audit-key'); "
-                                "workflow=client.price_workflow([],chunk_size=1); workflow.run(); "
-                                "assert workflow_to_frames(workflow).total_fcu_charged==0; "
+                                "workflow=client.options.price_workflow([],chunk_size=1); "
+                                "workflow.run(); "
+                                "assert workflow_to_frames(workflow).total_charged_cu==0; "
                                 "client.close(); "
                                 "print(json.dumps({x:version(x) for x in "
                                 "['pandas','jupyterlab','ipykernel','yfinance','ipywidgets','matplotlib']}))"

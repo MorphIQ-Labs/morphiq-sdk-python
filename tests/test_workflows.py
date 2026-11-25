@@ -5,32 +5,26 @@ import json
 import httpx
 import pytest
 from pydantic import ValidationError
+from support import BATCH_OPERATIONS, problem, set_charge
 
 from morphiq_sdk import (
     APIError,
     AsyncMorphIQ,
-    BatchAnalyticsRequest,
-    BatchGreeksRequest,
-    BatchImpliedVolatilityRequest,
-    BatchPriceRequest,
     MorphIQ,
+    OptionsBatchPriceRequest,
     RateLimitError,
     RequestTimeout,
     ResponseError,
 )
 
-OPERATIONS = [
-    ("price_workflow", BatchPriceRequest),
-    ("greeks_workflow", BatchGreeksRequest),
-    ("implied_volatility_workflow", BatchImpliedVolatilityRequest),
-    ("analytics_workflow", BatchAnalyticsRequest),
-]
+# (client.options workflow factory, batch request type) in batch fixture order.
+OPERATIONS = [(factory, request) for _, request, _, factory in BATCH_OPERATIONS]
 
 
 def execute(mode, handler, factory, requests, check, chunk_size=3):
     if mode == "sync":
         with MorphIQ(api_key="workflow-test", transport=httpx.MockTransport(handler)) as client:
-            workflow = getattr(client, factory)(requests, chunk_size=chunk_size)
+            workflow = getattr(client.options, factory)(requests, chunk_size=chunk_size)
             check(workflow, workflow.run)
     else:
 
@@ -38,7 +32,7 @@ def execute(mode, handler, factory, requests, check, chunk_size=3):
             async with AsyncMorphIQ(
                 api_key="workflow-test", transport=httpx.MockTransport(handler)
             ) as client:
-                workflow = getattr(client, factory)(requests, chunk_size=chunk_size)
+                workflow = getattr(client.options, factory)(requests, chunk_size=chunk_size)
                 # Test expectations run synchronously, but all HTTP calls are awaited.
                 return workflow, await check(workflow, workflow.run)
 
@@ -88,10 +82,11 @@ def test_sequential_chunks_keep_outcomes_indices_wire_and_exact_charge(
     case["response"]["results"][1] = {
         "index": 1,
         "status": "error",
-        "error": {"code": "pricing_failed", "message": "Synthetic failure"},
+        "error": problem("pricing_failed", status=500),
     }
     requests = (
-        request_type(**case["request"]).requests * 2 + request_type(**case["request"]).requests[:1]
+        request_type.model_validate(case["request"]).items * 2
+        + request_type.model_validate(case["request"]).items[:1]
     )
     calls = []
     charges = [2**53 + 1, 0, 9]
@@ -100,11 +95,10 @@ def test_sequential_chunks_keep_outcomes_indices_wire_and_exact_charge(
         body = json.loads(request.content)
         assert request.url.path == case["path"]
         start = len(calls) * 3
-        assert body == {"requests": [r.to_wire() for r in requests[start : start + 3]]}
+        assert body == {"items": [r.to_wire() for r in requests[start : start + 3]]}
         response = copy.deepcopy(case["response"])
-        response["results"] = response["results"][: len(body["requests"])]
-        response["metadata"]["fcu_charged"] = charges[len(calls)]
-        response["metadata"]["fcu_quoted"] = 99999
+        response["results"] = response["results"][: len(body["items"])]
+        set_charge(response["metadata"], charges[len(calls)], quoted=99999)
         calls.append(body)
         return httpx.Response(200, json=response)
 
@@ -112,13 +106,13 @@ def test_sequential_chunks_keep_outcomes_indices_wire_and_exact_charge(
         assert not calls and workflow.state == "ready"
         assert workflow.planned_chunk_count == 3
         assert workflow.unattempted_ranges == ((0, 3), (3, 6), (6, 7))
-        assert workflow.total_fcu_charged is None
+        assert workflow.total_charged_cu is None
 
     def after(workflow):
         assert len(calls) == 3 and workflow.state == "completed"
         assert workflow.unattempted_ranges == ()
-        assert workflow.reported_fcu_charged == 2**53 + 10
-        assert workflow.total_fcu_charged == 2**53 + 10
+        assert workflow.reported_charged_cu == 2**53 + 10
+        assert workflow.total_charged_cu == 2**53 + 10
         assert workflow.unknown_charge_count == 0
         outcomes = [
             (attempt.start + item.index, item.status)
@@ -137,12 +131,12 @@ def test_sequential_chunks_keep_outcomes_indices_wire_and_exact_charge(
         for attempt in workflow.attempts:
             assert attempt.finished and attempt.error is None
             assert (
-                json.loads(attempt.response.raw_body)["metadata"]["fcu_charged"]
-                == attempt.fcu_charged
+                json.loads(attempt.response.raw_body)["metadata"]["billing"]["charged_cu"]
+                == attempt.charged_cu
             )
         # Accounting is captured once, not recomputed from mutable response models.
-        workflow.attempts[0].response.metadata.fcu_charged = 0
-        assert workflow.total_fcu_charged == 2**53 + 10
+        workflow.attempts[0].response.metadata.billing.charged_cu = 0
+        assert workflow.total_charged_cu == 2**53 + 10
 
     execute(mode, handle, factory, requests, checks_for(mode, before, after))
 
@@ -151,7 +145,7 @@ def test_sequential_chunks_keep_outcomes_indices_wire_and_exact_charge(
 @pytest.mark.parametrize("failure", ["429", "gateway", "api", "timeout", "malformed", "interrupt"])
 def test_stop_retains_progress_failed_charge_and_never_replays(mode, failure, batch_cases):
     case = batch_cases[0]
-    requests = BatchPriceRequest(**case["request"]).requests * 3
+    requests = OptionsBatchPriceRequest.model_validate(case["request"]).items * 3
     calls = []
     failure_charge = {"429": 0, "api": 7, "malformed": 11}.get(failure)
     expected = {
@@ -166,7 +160,7 @@ def test_stop_retains_progress_failed_charge_and_never_replays(mode, failure, ba
     def handle(request):
         calls.append(request)
         response = copy.deepcopy(case["response"])
-        response["metadata"]["fcu_charged"] = 3 if len(calls) == 1 else failure_charge
+        set_charge(response["metadata"], 3 if len(calls) == 1 else failure_charge)
         if len(calls) == 2:
             if failure == "timeout":
                 raise httpx.ReadTimeout("synthetic")
@@ -177,13 +171,9 @@ def test_stop_retains_progress_failed_charge_and_never_replays(mode, failure, ba
             if failure == "malformed":
                 response["results"].reverse()
             else:
-                response = {
-                    "metadata": response["metadata"],
-                    "error": {"code": "synthetic", "message": "synthetic failure"},
-                }
-                return httpx.Response(
-                    429 if failure == "429" else 500, json=response, headers={"Retry-After": "30"}
-                )
+                status = 429 if failure == "429" else 500
+                response = problem("synthetic", status=status, metadata=response["metadata"])
+                return httpx.Response(status, json=response, headers={"Retry-After": "30"})
         return httpx.Response(200, json=response)
 
     def after(workflow):
@@ -193,11 +183,11 @@ def test_stop_retains_progress_failed_charge_and_never_replays(mode, failure, ba
         failed = workflow.attempts[1]
         assert failed.response is None and failed.finished
         assert (failed.start, failed.stop) == (3, 6)
-        assert failed.fcu_charged == failure_charge
+        assert failed.charged_cu == failure_charge
         assert workflow.unattempted_ranges == ((6, 9),)
-        assert workflow.reported_fcu_charged == 3 + (failure_charge or 0)
+        assert workflow.reported_charged_cu == 3 + (failure_charge or 0)
         assert workflow.unknown_charge_count == (1 if failure_charge is None else 0)
-        assert workflow.total_fcu_charged is None
+        assert workflow.total_charged_cu is None
         if failure in ("429", "gateway"):
             assert failed.error.retry_delay() == 30
 
@@ -209,20 +199,20 @@ def test_stop_retains_progress_failed_charge_and_never_replays(mode, failure, ba
 @pytest.mark.parametrize("mode", ["sync", "async"])
 def test_missing_charge_is_not_zero(mode, batch_cases):
     case = batch_cases[0]
-    requests = BatchPriceRequest(**case["request"]).requests * 2
+    requests = OptionsBatchPriceRequest.model_validate(case["request"]).items * 2
     calls = []
 
     def handle(request):
         response = copy.deepcopy(case["response"])
-        response["metadata"]["fcu_charged"] = None if not calls else 5
+        set_charge(response["metadata"], None if not calls else 5)
         calls.append(request)
         return httpx.Response(200, json=response)
 
     def after(workflow):
         assert workflow.state == "completed"
-        assert workflow.reported_fcu_charged == 5
+        assert workflow.reported_charged_cu == 5
         assert workflow.unknown_charge_count == 1
-        assert workflow.total_fcu_charged is None
+        assert workflow.total_charged_cu is None
 
     execute(mode, handle, "price_workflow", requests, checks_for(mode, lambda w: None, after))
 
@@ -234,7 +224,7 @@ def test_empty_workflow_has_zero_requests_and_zero_cost(mode):
 
     def after(workflow):
         assert workflow.state == "completed" and not workflow.attempts
-        assert workflow.total_fcu_charged == 0
+        assert workflow.total_charged_cu == 0
         assert workflow.planned_chunk_count == 0
 
     execute(mode, handle, "price_workflow", [], checks_for(mode, lambda w: None, after))
@@ -243,21 +233,21 @@ def test_empty_workflow_has_zero_requests_and_zero_cost(mode):
 @pytest.mark.parametrize("operation", range(4))
 def test_validate_entire_plan_before_network_and_snapshot_inputs(operation, batch_cases):
     factory, request_type = OPERATIONS[operation]
-    requests = request_type(**batch_cases[operation]["request"]).requests
+    requests = request_type.model_validate(batch_cases[operation]["request"]).items
     with MorphIQ(api_key="workflow-test") as client:
         for size in [0, -1, True, 1.5, 101]:
             with pytest.raises(ValueError):
-                getattr(client, factory)(requests, chunk_size=size)
-        assert getattr(client, factory)(requests, chunk_size=100).planned_chunk_count == 1
+                getattr(client.options, factory)(requests, chunk_size=size)
+        assert getattr(client.options, factory)(requests, chunk_size=100).planned_chunk_count == 1
         # Invalid later chunk fails preparation; no earlier request has been made.
-        requests[-1].dividend_schedule.append({"ex_time_years": float("nan"), "cash_amount": 1})
+        requests[-1].market.dividends.append({"ex_time_years": float("nan"), "cash_amount": 1})
         with pytest.raises(ValidationError):
-            getattr(client, factory)(requests, chunk_size=1)
+            getattr(client.options, factory)(requests, chunk_size=1)
 
 
 def test_input_changes_do_not_change_prepared_requests(batch_cases):
     case = batch_cases[0]
-    requests = BatchPriceRequest(**case["request"]).requests
+    requests = OptionsBatchPriceRequest.model_validate(case["request"]).items
     calls = []
 
     def handle(request):
@@ -265,8 +255,8 @@ def test_input_changes_do_not_change_prepared_requests(batch_cases):
         return httpx.Response(200, json=case["response"])
 
     with MorphIQ(api_key="workflow-test", transport=httpx.MockTransport(handle)) as client:
-        workflow = client.price_workflow(requests, chunk_size=3)
-        requests[0].dividend_schedule.append({"ex_time_years": 0.5, "cash_amount": 1.0})
+        workflow = client.options.price_workflow(requests, chunk_size=3)
+        requests[0].market.dividends.append({"ex_time_years": 0.5, "cash_amount": 1.0})
         requests.clear()
         workflow.run()
     assert calls == [case["request"]]
@@ -283,7 +273,7 @@ def test_async_cancellation_retains_inflight_unknown_and_prevents_concurrent_run
             calls.append(request)
             if len(calls) == 1:
                 response = copy.deepcopy(case["response"])
-                response["metadata"]["fcu_charged"] = 5
+                set_charge(response["metadata"], 5)
                 return httpx.Response(200, json=response)
             entered.set()
             await asyncio.Future()
@@ -291,8 +281,8 @@ def test_async_cancellation_retains_inflight_unknown_and_prevents_concurrent_run
         async with AsyncMorphIQ(
             api_key="workflow-test", transport=httpx.MockTransport(handle)
         ) as client:
-            workflow = client.price_workflow(
-                BatchPriceRequest(**case["request"]).requests * 3, chunk_size=3
+            workflow = client.options.price_workflow(
+                OptionsBatchPriceRequest.model_validate(case["request"]).items * 3, chunk_size=3
             )
             task = asyncio.create_task(workflow.run())
             await entered.wait()
@@ -308,8 +298,8 @@ def test_async_cancellation_retains_inflight_unknown_and_prevents_concurrent_run
             assert workflow.state == "stopped"
             assert workflow.attempts[1].finished
             assert isinstance(workflow.attempts[1].error, asyncio.CancelledError)
-            assert workflow.reported_fcu_charged == 5
-            assert workflow.total_fcu_charged is None
+            assert workflow.reported_charged_cu == 5
+            assert workflow.total_charged_cu is None
             assert len(calls) == 2
             with pytest.raises(RuntimeError):
                 await workflow.run()
@@ -339,20 +329,17 @@ def test_standalone_workflow_examples_report_partial_results_and_charges(
             start = len(received) * 2
             received.append(body)
             assert self.path == case["path"]
-            assert body == {"requests": case["request"]["requests"][start : min(start + 2, 5)]}
+            assert body == {"items": case["request"]["items"][start : min(start + 2, 5)]}
             response = copy.deepcopy(case["response"])
             response["results"] = response["results"][start : min(start + 2, 5)]
             for index, item in enumerate(response["results"]):
                 item["index"] = index
-            response["metadata"]["fcu_charged"] = 2**53 + 1 if start == 0 else 7
+            set_charge(response["metadata"], 2**53 + 1 if start == 0 else 7)
             status = 200
             if failure and start == 2:
                 if failure == "429":
                     status = 429
-                    response = {
-                        "metadata": response["metadata"],
-                        "error": {"code": "limited", "message": "synthetic"},
-                    }
+                    response = problem("limited", status=429, metadata=response["metadata"])
                 else:
                     response["results"] = []
             self.send_response(status)
@@ -425,8 +412,8 @@ def test_sync_concurrent_run_does_not_duplicate_submission(batch_cases):
         return httpx.Response(200, json=case["response"])
 
     with MorphIQ(api_key="workflow-test", transport=httpx.MockTransport(handle)) as client:
-        workflow = client.price_workflow(
-            BatchPriceRequest(**case["request"]).requests, chunk_size=3
+        workflow = client.options.price_workflow(
+            OptionsBatchPriceRequest.model_validate(case["request"]).items, chunk_size=3
         )
         with ThreadPoolExecutor(max_workers=1) as pool:
             future = pool.submit(workflow.run)

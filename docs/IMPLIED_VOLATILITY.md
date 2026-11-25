@@ -1,7 +1,7 @@
 # Implied volatility
 
-`MorphIQ.implied_volatility()` and `AsyncMorphIQ.implied_volatility()` call
-`POST /v1/implied-volatility`. Supply the option terms and a market premium per
+`client.options.implied_volatility()` (sync and async) calls
+`options.implied_volatility`, `POST /v1/options:implied-volatility`. Supply the option terms and a market premium per
 share. The service solves volatility; the SDK preserves the result and diagnostics.
 
 Set `MORPHIQ_API_KEY`, then run either self-contained example:
@@ -17,33 +17,27 @@ premium. Neither example downloads data or computes IV locally.
 ## Python usage
 
 ```python
-from morphiq_sdk import ImpliedVolatilityRequest, MorphIQ
+from morphiq_sdk import Market, MorphIQ, Option, OptionsImpliedVolatilityRequest
 
-request = ImpliedVolatilityRequest(
-    exercise_style="european",
-    option_type="call",
-    spot=100.0,
-    strike=100.0,
-    time_to_expiry_years=1.0,
-    risk_free_rate=0.05,
-    dividend_yield=0.0,
+request = OptionsImpliedVolatilityRequest(
+    option=Option(type="call", exercise_style="european", strike=100.0, time_to_expiry_years=1.0),
+    market=Market(spot=100.0, risk_free_rate=0.05, dividend_yield=0.0),
     market_price=10.450583572185538,
-    pricing_model="auto",
 )
 with MorphIQ() as client:
-    response = client.implied_volatility(request)
+    response = client.options.implied_volatility(request)
 print(response.result.implied_volatility)
 print(response.result.residual, response.result.residual_basis)
 print(response.model_dump_json(indent=2, exclude_unset=True))
 ```
 
-Use `async with AsyncMorphIQ()` and `await client.implied_volatility(request)` for
-async execution. `market_price` replaces the pricing request's `volatility` field;
-passing `volatility` is an error. Premium, spot and strike use the same currency
+Use `async with AsyncMorphIQ()` and `await client.options.implied_volatility(request)`
+for async execution. `market_price` replaces the pricing request's `volatility`
+field; passing `volatility` is an error. Premium, spot and strike use the same currency
 and no contract multiplier. Rates and dividend yield are decimals, time is in
 years. The service owns model selection, premium bounds and schedule support.
-Optional model version and cash-dividend schedule retain their omission/null/empty
-semantics; the SDK does not adjust inputs or prices.
+An omitted `model.version` and an empty `market.dividends` stay omitted; the SDK
+does not adjust inputs or prices.
 
 ## Interpreting the result
 
@@ -53,11 +47,11 @@ semantics; the SDK does not adjust inputs or prices.
 | `iterations` | Solver iteration count as reported by the service. |
 | `used_fallback` | Algorithm provenance, not a solution-quality flag. The value depends on the model and solver path; do not infer it from exercise style. |
 | `residual` | Solver error in the units named by `residual_basis`. |
-| `residual_basis` | `forward_normalised_price` or `option_price`; values on different bases are not directly comparable. |
-| `pricing_model`, `model_version` | Resolved model and version used for the solve. |
+| `residual_basis` | `forward_normalised_price` or `option_price`; values on different bases are not directly comparable. A newer basis name is kept as a string. |
+| `model` | `id` and `version` of the resolved model used for the solve. |
 
-The pinned native European fixture solves to `0.1999999999999992`, with 2
-iterations, `used_fallback=false` and residual `1.3200960109770371e-17` on the
+The pinned native European fixture solves to `0.19999999999999904`, with 2
+iterations, `used_fallback=false` and residual `1.3535144005987383e-17` on the
 `forward_normalised_price` basis. Its American counterpart uses the `option_price`
 basis. Full native results and provenance are retained in
 [the fixture](../tests/fixtures/implied_volatility.json).
@@ -65,9 +59,8 @@ basis. Full native results and provenance are retained in
 Required malformed or non-finite result fields produce `ResponseError`; none are
 replaced with zero. Unknown additive fields, resolved model names and residual
 basis names are retained without interpretation. `raw_body`, headers, engine
-identity, request ID and optional commercial CU remain available. Absent
-`fcu_charged` means unreported, not zero; `units_charged` is a separate internal
-compute weight. Service errors preserve charge evidence. Timeouts or malformed
+identity, request ID and optional commercial CU remain available. An absent
+`metadata.billing.charged_cu` means unreported, not zero. Service errors preserve charge evidence. Timeouts or malformed
 responses can leave execution and charges unknown; no automatic retries occur.
 
 ## Pricing workspace
