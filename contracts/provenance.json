@@ -1,10 +1,10 @@
 {
   "repository": "https://gitlab.com/prophetizo/morphiq-labs/sites/morphiq-api",
-  "source_commit": "4809233ade17132517a74dfc0ea4aebb087386d9",
+  "source_commit": "4872452f5ef06b1bed06a82290d2834909cdb67e",
   "source_path": "services/api/openapi.json",
   "contract_version": "0.1.0",
-  "sha256": "68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8",
-  "import_method": "API v0.10.0 contract (tag v0.10.0, commit 4809233a; services/api/openapi.json unchanged since 7ff9af25) copied byte-for-byte; the production API and developer-site OpenAPI documents are byte-identical to it (2026-11-25). Differs from cf2718f only in one description (ImpliedGreeksResult.implied_volatility).",
+  "sha256": "5ca0b588b10bf949890da644fc1cb3ee52af6a7fda7f4448287a251385fe6571",
+  "import_method": "Copied byte-for-byte from immutable API source 4872452f5ef06b1bed06a82290d2834909cdb67e, correcting the API 0.10.0 partial-scenario response schema in API MR !278 (#168). The beta wire contract remains 0.1.0; recorded fixture identities are unchanged.",
   "covered_operations": [
     "POST /v1/options:price",
     "POST /v1/options:batch-price",
@@ -26,5 +26,10 @@
     "POST /v1/books:explain",
     "POST /v1/books:solve-scenario"
   ],
-  "uncovered_operations": []
+  "uncovered_operations": [],
+  "recorded_pricing_fixtures": {
+    "source_commit": "4809233ade17132517a74dfc0ea4aebb087386d9",
+    "sha256": "68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8",
+    "note": "Existing synthetic pricing fixtures retain their recorded API v0.10.0 identity; their responses are validated against the current contract separately."
+  }
 }

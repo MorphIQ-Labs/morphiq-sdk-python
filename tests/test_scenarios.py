@@ -37,14 +37,7 @@ def test_native_wire_round_trip_and_contract(case):
     validate(case["request_model"], request.to_wire())
     response = getattr(sdk, case["response_model"]).model_validate(case["response"])
     assert response.model_dump(exclude_unset=True) == case["response"]
-    if case["name"] != "option-partial":
-        validate(case["response_model"], case["response"])
-    else:
-        # The service echoes the invalid spot in an error item's inputs; the
-        # OpenAPI reuses a positive-spot request schema for that echoed object.
-        assert response.result.scenarios[1].status == "error"
-        assert response.result.scenarios[1].inputs.market.spot == -1
-        validate("Problem", case["response"]["result"]["scenarios"][1]["error"])
+    validate(case["response_model"], case["response"])
 
 
 @pytest.mark.parametrize("mode", ["sync", "async"])

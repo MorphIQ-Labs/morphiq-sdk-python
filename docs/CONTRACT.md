@@ -10,12 +10,13 @@ coordinates the producer/import workflow with
 [API #106](https://gitlab.com/prophetizo/morphiq-labs/sites/morphiq-api/-/work_items/106).
 contracts/openapi.json contains the reviewed snapshot byte-for-byte.
 contracts/provenance.json records its digest, API source commit, contract
-version and covered operations. This snapshot is the API **0.10.0** contract
-(ADR 0011 naming, [API #161](https://gitlab.com/prophetizo/morphiq-labs/sites/morphiq-api/-/work_items/161)),
-tag `v0.10.0` (commit `4809233ade17132517a74dfc0ea4aebb087386d9`), SHA-256
-`68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8`. It was copied
-from the immutable v0.10.0 source and is byte-identical to the deployed production
-document. The beta wire contract version remains
+version and covered operations. This snapshot includes the API 0.10.0 surface
+and the partial-scenario response correction from
+[API !278](https://gitlab.com/prophetizo/morphiq-labs/sites/morphiq-api/-/merge_requests/278)
+([#168](https://gitlab.com/prophetizo/morphiq-labs/sites/morphiq-api/-/work_items/168)),
+commit `4872452f5ef06b1bed06a82290d2834909cdb67e`, SHA-256
+`5ca0b588b10bf949890da644fc1cb3ee52af6a7fda7f4448287a251385fe6571`. It was copied byte-for-byte
+from that immutable source. The beta wire contract version remains
 `0.1.0` (**API v1 · Beta**); API and SDK release versions are separate. The SDK
 treats `metadata.contract.version` as an opaque label (production reports
 `0.1.0`; fixtures recorded from an earlier native build report `v1`) and identifies the exact revision by `metadata.contract.sha256`. SDK tests and builds use the offline snapshot without private
@@ -115,6 +116,9 @@ Scenario and book fixtures are recorded from the same native API v0.10.0 tag,
 including all seven solve coordinates, position P&L and Greek targets, American
 pricing, duplicate scenarios, partial errors and unresolved coverage. The partial
 error fixture deliberately echoes a negative spot: the service returns that
-invalid input even though OpenAPI reuses a positive-spot input schema for the
-response. The SDK preserves the error and its inputs; it does not discard the row.
+invalid input. The corrected response schema permits refused spot and volatility
+values in echoed scenario inputs while retaining executable request bounds.
+Every recorded response, including partial errors, validates against the snapshot.
+The SDK preserves the error and its inputs; it does not discard the row. Fixture
+metadata retains the original API 0.10.0 source and schema identities.
 Quote fixtures are synthetic, clearly marked, and do not assert live policy rates.

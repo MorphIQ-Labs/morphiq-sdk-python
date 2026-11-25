@@ -12,11 +12,11 @@ valuation, sensitivity analysis, scenarios, books and market-regime identificati
 See the [documentation index](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/docs/README.md) for all feature guides and the
 [Python API reference](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/docs/API.md) for methods, models and errors.
 
-This client targets the MorphIQ API **0.10.0** contract (**API v1 · Beta**,
+This client targets the MorphIQ API **0.10** surface (**API v1 · Beta**,
 contract label `0.1.0`): `collection:verb` routes, `option` / `market` / `model`
 requests, grouped response metadata and RFC 9457 problem errors. Methods are
 grouped by collection and spell each operation's canonical id, for example
-`client.options.price(...)` for `options.price`. SDK 0.3.0 is published on PyPI
+`client.options.price(...)` for `options.price`. The SDK is published on PyPI
 for this contract; SDK 0.2.1 uses the retired API routes. See the
 [0.10.0 migration guide](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/docs/API_0_10_ADOPTION.md)
 and [model capabilities](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/docs/MODELS.md): BSM/BS1993 support batches
