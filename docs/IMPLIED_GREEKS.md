@@ -1,61 +1,54 @@
-# Combined option analytics
+# Implied Greeks
 
-`MorphIQ.analytics()` and `AsyncMorphIQ.analytics()` call `POST /v1/analytics`.
-With a market premium, the service solves implied volatility and evaluates price
-and all ten Greeks at that solved volatility in one request. Without a premium,
-it evaluates price and Greeks at the supplied volatility. The API invokes the
-Rust engine's native combined operation; the SDK sends one request rather than
-chaining separate IV and Greeks calls.
+`client.options.implied_greeks()` (sync and async) calls `options.implied_greeks`,
+`POST /v1/options:implied-greeks`. From a market premium, the service solves
+implied volatility and evaluates price and all ten Greeks at that solved
+volatility in one request. The API invokes the engine's native combined
+operation; the SDK sends one request rather than chaining separate IV and Greeks
+calls. To evaluate price and Greeks at a volatility you supply, use
+[`options.greeks`](GREEKS.md).
 
 Set `MORPHIQ_API_KEY`, then run a self-contained example:
 
 ```sh
-python -m examples.analytics
-python -m examples.analytics_async
+python -m examples.implied_greeks
+python -m examples.implied_greeks_async
 ```
 
 Each example sends one request with synthetic option terms and a synthetic
 premium, then prints price, IV diagnostics, Greeks, provenance and commercial CU.
 
 ```python
-from morphiq_sdk import AnalyticsRequest, MorphIQ
+from morphiq_sdk import Market, MorphIQ, Option, OptionsImpliedGreeksRequest
 
-request = AnalyticsRequest(
-    exercise_style="european",
-    option_type="call",
-    spot=100.0,
-    strike=100.0,
-    time_to_expiry_years=1.0,
-    risk_free_rate=0.05,
-    dividend_yield=0.0,
-    volatility=0.35,
+request = OptionsImpliedGreeksRequest(
+    option=Option(type="call", exercise_style="european", strike=100.0, time_to_expiry_years=1.0),
+    market=Market(spot=100.0, risk_free_rate=0.05, dividend_yield=0.0),
     market_price=10.450583572185538,
-    pricing_model="auto",
 )
 with MorphIQ() as client:
-    response = client.analytics(request)
+    response = client.options.implied_greeks(request)
 print(response.model_dump_json(indent=2, exclude_unset=True))
 ```
 
-The pinned contract requires `volatility` even with `market_price`; the service
-ignores it when a premium is supplied. This example solves to approximately 0.20,
-and its Greeks use that solved value, not 0.35. Omit `market_price` or pass null to
-use the supplied volatility. Omission and explicit null remain distinct on the
-wire. Cash-dividend schedules and model choices are forwarded to the service for
-validation, without local adjustment or numerical computation.
+`market_price` is required and `volatility` is not accepted. This example solves
+to approximately 0.20, and its Greeks use that solved value. Cash-dividend
+schedules and model choices are forwarded to the service for validation, without
+local adjustment or numerical computation.
 
 Time is in years, rates and volatility are decimals, and premium/spot/strike share
 a per-share currency basis. [Greek units](GREEKS.md) and
 [IV diagnostics and residual bases](IMPLIED_VOLATILITY.md) are unchanged.
-`result.implied_volatility` may be absent or null; the SDK never invents a solve.
+`result.implied_volatility` holds the nested solve and `result.model` the resolved
+model; the SDK never invents a solve.
 
 ## Commercial CU
 
-The response's `metadata.cu_charged` is the reported charge for the entire
-combined request. Count it **once**. Price, the ten Greeks and the nested IV result
-are components of that response, not separate billable responses to sum.
-Commercial policy and the calculation of this charge belong to the service.
-Do not add quotes (`cu_quoted`) or internal compute weights (`units_charged`).
+The response's `metadata.billing.charged_cu` (shorthand `metadata.charged_cu`) is
+the reported charge for the entire combined request. Count it **once**. Price,
+the ten Greeks and the nested IV result are components of that response, not
+separate billable responses to sum. Commercial policy and the calculation of this
+charge belong to the service. Do not add the quote (`billing.quoted_cu`).
 
 The [pricing workspace](../notebooks/pricing/options.ipynb) records every request
 from Price option, Price + Greeks, Solve IV, Analyze premium and Spot sensitivity:
@@ -67,7 +60,7 @@ from Price option, Price + Greeks, Solve IV, Analyze premium and Spot sensitivit
 - A malformed numerical response can still carry valid metadata. The SDK exposes
   independently validated metadata on `ResponseError.metadata`, and its reported
   charge is included. Invalid metadata is not trusted.
-- Missing/null charges, malformed metadata, transport failures and user interruptions remain unknown.
+- Missing charges, malformed metadata, transport failures and user interruptions remain unknown.
   The UI labels the sum as a **reported subtotal**, with an unknown-charge count;
   it cannot claim a complete total until every attempt has a reported charge.
 - Redrawing results does not add charges. Clicking an action again sends a new

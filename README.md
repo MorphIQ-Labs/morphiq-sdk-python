@@ -4,18 +4,21 @@ Price European and American options, calculate standard-five or all-ten Greeks, 
 volatility, and identify market regimes from price histories.
 
 `morphiq-sdk` is a typed Python client for the MorphIQ API, with synchronous and
-asynchronous calls. Pricing, Greeks, implied volatility and combined analytics
+asynchronous calls. Pricing, Greeks, implied volatility and implied Greeks
 support ordered batches. Runnable examples and interactive notebooks cover option
 valuation, sensitivity analysis and market-regime identification.
 
 See the [documentation index](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/docs/README.md) for all feature guides and the
 [Python API reference](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/docs/API.md) for methods, models and errors.
 
-This client targets API **v0.7.0**, including public model discovery,
-standard-five Greeks, cost utilities and spend caps, preferred CU fields, and
-typed regime crisis/volatility results. SDK 0.2.0 covers the routes but predates
-the typed CU and regime additions; install the release containing this update.
-See [model capabilities and migration](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/docs/MODELS.md): BSM/BS1993 support batches
+This client targets the MorphIQ API **0.10.0** contract (**API v1 · Beta**,
+contract label `0.1.0`): `collection:verb` routes, `option` / `market` / `model`
+requests, grouped response metadata and RFC 9457 problem errors. Methods are
+grouped by collection and spell each operation's canonical id, for example
+`client.options.price(...)` for `options.price`. SDK 0.2.1 on PyPI targets the
+earlier contract; this client is unreleased until the next SDK release. See the
+[0.10.0 migration guide](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/docs/API_0_10_ADOPTION.md)
+and [model capabilities](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/docs/MODELS.md): BSM/BS1993 support batches
 up to 100; QdFp and cash-dividend finite difference support single price and IV.
 
 ## Quickstart
@@ -48,21 +51,16 @@ Save the following as `price_option.py`. It prices a European call with spot and
 strike of 100, one year to expiry, 20% volatility, and a 5% interest rate:
 
 ```python
-from morphiq_sdk import MorphIQ, PriceRequest
+from morphiq_sdk import Market, MorphIQ, Option, OptionsPriceRequest
 
-request = PriceRequest(
-    exercise_style="european",
-    option_type="call",
-    spot=100.0,
-    strike=100.0,
-    time_to_expiry_years=1.0,
-    risk_free_rate=0.05,
-    dividend_yield=0.0,
+request = OptionsPriceRequest(
+    option=Option(type="call", exercise_style="european", strike=100.0, time_to_expiry_years=1.0),
+    market=Market(spot=100.0, risk_free_rate=0.05, dividend_yield=0.0),
     volatility=0.20,
 )
 
 with MorphIQ() as client:
-    response = client.price(request)
+    response = client.options.price(request)
     print(response.model_dump_json(indent=2, exclude_unset=True))
 ```
 
@@ -72,36 +70,42 @@ Run it in the same terminal where you set your API key:
 python price_option.py
 ```
 
-This sends one authenticated `POST https://api.morphiqlabs.com/v1/price` request
-and prints the JSON response. Example response from the recorded synthetic fixture:
+This sends one authenticated `POST https://api.morphiqlabs.com/v1/options:price`
+request with `model: {"id": "auto"}` and prints the JSON response. Example
+response from the recorded synthetic fixture:
 
 ```json
 {
   "metadata": {
-    "request_id": "fr-18e88a7b3977d162-0000000000000002",
-    "api_version": "v1",
-    "engine_version": "0.45.0",
+    "request_id": "fr-18eb4d3a08c36fa2-0000000000000002",
+    "service_version": "0.10.0",
+    "contract": {
+      "version": "0.1.0",
+      "sha256": "68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8"
+    },
     "engines": [
       {
         "name": "morphiq-risk",
-        "version": "0.45.0",
-        "revision": "a4df4da57ff2d53a1f1146f1c4310f0e980a497a"
+        "version": "0.46.1",
+        "revision": "1550e4e41b243b8a978677bc5e9b46916c08cb0e"
       }
     ]
   },
   "result": {
-    "price": 10.450583572185565,
-    "exercise_style": "european",
-    "option_type": "call",
-    "pricing_model": "black_scholes_merton",
-    "model_version": "black_scholes_merton/1"
+    "price": 10.450583572185577,
+    "model": {
+      "id": "black_scholes_merton",
+      "version": "black_scholes_merton/1"
+    }
   }
 }
 ```
 
 Your request ID and engine metadata will reflect the live service. This fixture
-was recorded in open development mode; authenticated responses may also report
-commercial charges in `metadata.cu_charged`. Keep the request ID for support.
+was recorded in open development mode; authenticated responses also report
+commercial charges in `metadata.billing.charged_cu`, the plan in
+`metadata.policy` and the budget estimate in `metadata.budget`. Keep the request
+ID for support.
 See [the quickstart guide](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/docs/QUICKSTART.md)
 for input units, async usage, configuration and errors.
 
@@ -147,7 +151,7 @@ Choose an analysis workspace and run all cells once to display its controls:
 - [Option pricing](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/notebooks/pricing/options.ipynb): European/American and model
   dropdowns, call/put selection, editable assumptions, automatic Yahoo daily/intraday underlying prices,
   a valuation comparison table, a price-and-Greeks panel, an implied-volatility solver,
-  combined premium analysis, a session CU total and a spot-sensitivity chart.
+  implied-Greeks premium analysis, a session CU total and a spot-sensitivity chart.
 - [Regime analysis](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/notebooks/regime/identification.ipynb): ticker selection,
   Yahoo daily/intraday price history, latest regime assessment, score charts and provenance.
 
@@ -187,12 +191,11 @@ no real credentials; native API integration is opt-in. See
 [CONTRIBUTING.md](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/CONTRIBUTING.md) and [RELEASE.md](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/RELEASE.md).
 
 Clients make no automatic retries and do not follow redirects. A timeout
-may leave work charged. Only `cu_quoted` and `cu_charged` report commercial CUs.
-Missing `cu_charged` means unreported, not zero. The `fcu_*` names are deprecated
-aliases with equal values; the SDK fills each name from the other, so older servers
-that send only `fcu_*` still work. Explicit nulls remain unreported. The retired `units_charged` and
-`compute_schedule_version` fields are optional; they remain accepted from older
-deployments and are never used to calculate a charge.
+may leave work charged. Only `metadata.billing.quoted_cu` and
+`metadata.billing.charged_cu` report commercial CUs. A missing `charged_cu` means
+unreported, not zero. Optional members are omitted by the API, never sent as
+null. Response enums may gain values: the SDK keeps an unknown value as a plain
+string and an unknown variant as an `Unrecognized` model instead of failing.
 
 The SDK preserves server results, numerical diagnostics, request IDs, engine
 provenance and commercial Compute Units (CU). Numerical engines, model selection,
@@ -204,7 +207,7 @@ pricing engines or calculate authoritative customer charges.
 ```text
 src/morphiq_sdk/    Installable, typed Python package
 scripts/           Development and package verification
-examples/          Runnable pricing, Greeks, IV, analytics, batch and regime examples
+examples/          Runnable pricing, Greeks, IV, implied-Greeks, batch and regime examples
 notebooks/         Quickstart and standalone feature notebooks
 contracts/         Reviewed OpenAPI snapshot, digest and source provenance
 docker/            Non-root notebook startup and workspace seeding
@@ -217,4 +220,4 @@ docs/              Usage guides and contract documentation
 The SDK, examples and notebooks are licensed under the
 [MIT License](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/LICENSE).
 
-See [cost schedules and request quotes](docs/COST.md) for zero-CU discovery, conditional quotes, and the optional `max_cu` execution ceiling.
+See [the rate card and request quotes](docs/RATE_CARD.md) for zero-CU discovery, conditional quotes, and the optional `max_cu` execution ceiling.

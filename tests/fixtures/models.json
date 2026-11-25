@@ -1,0 +1,588 @@
+{
+  "models": [
+    {
+      "id": "black_scholes_merton",
+      "name": "Black\u2013Scholes\u2013Merton",
+      "version": "1",
+      "model_version": "black_scholes_merton/1",
+      "underlying_model": "black_scholes_merton",
+      "method": "analytic",
+      "exercise_styles": [
+        "european"
+      ],
+      "dividend_support": [
+        "continuous_yield"
+      ],
+      "operations": [
+        "options.price",
+        "options.batch_price",
+        "options.implied_volatility",
+        "options.batch_implied_volatility",
+        "options.greeks",
+        "options.batch_greeks",
+        "options.standard_greeks",
+        "options.batch_standard_greeks",
+        "options.implied_greeks",
+        "options.batch_implied_greeks",
+        "options.revalue",
+        "options.solve_scenario",
+        "books.revalue",
+        "books.explain",
+        "books.solve_scenario"
+      ],
+      "greeks": [
+        "delta",
+        "gamma",
+        "theta",
+        "vega",
+        "rho",
+        "vanna",
+        "volga",
+        "charm",
+        "veta",
+        "color"
+      ],
+      "guidance": "European calls and puts.",
+      "constraints": [],
+      "validity": [
+        {
+          "quantity": "price",
+          "status": "validated",
+          "criterion": "strict",
+          "tolerance": {
+            "relative": 0.0001,
+            "absolute": 1e-06,
+            "absolute_unit": "max(spot, strike)"
+          },
+          "region": [],
+          "outside": "unsupported_accuracy_contract"
+        },
+        {
+          "quantity": "delta",
+          "status": "validated",
+          "criterion": "strict",
+          "tolerance": {
+            "relative": 0.0001,
+            "absolute": 1e-06,
+            "absolute_unit": "1"
+          },
+          "region": [],
+          "outside": "unsupported_accuracy_contract"
+        },
+        {
+          "quantity": "gamma",
+          "status": "validated",
+          "criterion": "strict",
+          "tolerance": {
+            "relative": 0.0001,
+            "absolute": 1e-06,
+            "absolute_unit": "1 / max(spot, strike)"
+          },
+          "region": [],
+          "outside": "unsupported_accuracy_contract"
+        },
+        {
+          "quantity": "theta",
+          "status": "validated",
+          "criterion": "strict",
+          "tolerance": {
+            "relative": 0.0001,
+            "absolute": 1e-06,
+            "absolute_unit": "max(spot, strike)"
+          },
+          "region": [],
+          "outside": "unsupported_accuracy_contract"
+        },
+        {
+          "quantity": "vega",
+          "status": "validated",
+          "criterion": "strict",
+          "tolerance": {
+            "relative": 0.0001,
+            "absolute": 1e-06,
+            "absolute_unit": "max(spot, strike)"
+          },
+          "region": [],
+          "outside": "unsupported_accuracy_contract"
+        },
+        {
+          "quantity": "rho",
+          "status": "validated",
+          "criterion": "strict",
+          "tolerance": {
+            "relative": 0.0001,
+            "absolute": 1e-06,
+            "absolute_unit": "max(spot, strike)"
+          },
+          "region": [],
+          "outside": "unsupported_accuracy_contract"
+        },
+        {
+          "quantity": "vanna",
+          "status": "validated",
+          "criterion": "strict",
+          "tolerance": {
+            "relative": 0.0001,
+            "absolute": 1e-06,
+            "absolute_unit": "1"
+          },
+          "region": [],
+          "outside": "unsupported_accuracy_contract"
+        },
+        {
+          "quantity": "volga",
+          "status": "validated",
+          "criterion": "strict",
+          "tolerance": {
+            "relative": 0.0001,
+            "absolute": 1e-06,
+            "absolute_unit": "max(spot, strike)"
+          },
+          "region": [],
+          "outside": "unsupported_accuracy_contract"
+        },
+        {
+          "quantity": "charm",
+          "status": "validated",
+          "criterion": "strict",
+          "tolerance": {
+            "relative": 0.0001,
+            "absolute": 1e-06,
+            "absolute_unit": "1"
+          },
+          "region": [],
+          "outside": "unsupported_accuracy_contract"
+        },
+        {
+          "quantity": "veta",
+          "status": "validated",
+          "criterion": "strict",
+          "tolerance": {
+            "relative": 0.0001,
+            "absolute": 1e-06,
+            "absolute_unit": "max(spot, strike)"
+          },
+          "region": [],
+          "outside": "unsupported_accuracy_contract"
+        },
+        {
+          "quantity": "color",
+          "status": "validated",
+          "criterion": "strict",
+          "tolerance": {
+            "relative": 0.0001,
+            "absolute": 1e-06,
+            "absolute_unit": "1 / max(spot, strike)"
+          },
+          "region": [],
+          "outside": "unsupported_accuracy_contract"
+        },
+        {
+          "quantity": "implied_volatility",
+          "status": "validated",
+          "criterion": "strict",
+          "tolerance": {
+            "relative": 0.0001,
+            "absolute": 1e-06,
+            "absolute_unit": "1"
+          },
+          "region": [],
+          "outside": "unsupported_accuracy_contract"
+        }
+      ],
+      "notes": "The engine enforces model-specific domains and accuracy regions. Implemented Greeks may be unavailable for particular inputs, including expiry, exercise-boundary kinks and unresolved derivatives. An empty constraints list does not imply an unrestricted domain."
+    },
+    {
+      "id": "black_scholes_merton_qdfp",
+      "name": "American Black\u2013Scholes\u2013Merton \u2014 QdFp",
+      "version": "1",
+      "model_version": "qd_fixed_point/1",
+      "underlying_model": "black_scholes_merton",
+      "method": "qd_fixed_point",
+      "exercise_styles": [
+        "american"
+      ],
+      "dividend_support": [
+        "continuous_yield"
+      ],
+      "operations": [
+        "options.price",
+        "options.implied_volatility"
+      ],
+      "greeks": [],
+      "guidance": "American calls and puts with a continuous dividend yield.",
+      "constraints": [],
+      "validity": [
+        {
+          "quantity": "price",
+          "status": "validated",
+          "criterion": "strict",
+          "tolerance": {
+            "relative": 0.0,
+            "absolute": 0.0001,
+            "absolute_unit": "max(spot, strike)"
+          },
+          "region": [
+            {
+              "kind": "interval",
+              "input": "volatility * sqrt(time_to_expiry_years)",
+              "minimum": 4e-05,
+              "maximum": 3.0
+            },
+            {
+              "kind": "condition",
+              "name": "diffusion-to-carry face",
+              "formula": "sigma sqrt(T) >= 0.0139 |r - q| T (put coordinates)"
+            },
+            {
+              "kind": "condition",
+              "name": "FP-A face",
+              "formula": "sigma sqrt(T) >= (r - q) T where QuantLib's scheme iterates FP-A and r > q (put coordinates)"
+            },
+            {
+              "kind": "interval",
+              "input": "put-coordinate rate * time_to_expiry_years",
+              "maximum": 3.0
+            },
+            {
+              "kind": "interval",
+              "input": "put-coordinate yield * time_to_expiry_years",
+              "minimum": -1.0,
+              "maximum": 3.0
+            }
+          ],
+          "outside": "unsupported_accuracy_contract"
+        },
+        {
+          "quantity": "implied_volatility",
+          "status": "validated",
+          "criterion": "inverse_of_price",
+          "region": [
+            {
+              "kind": "interval",
+              "input": "volatility * sqrt(time_to_expiry_years)",
+              "minimum": 4e-05,
+              "maximum": 3.0
+            },
+            {
+              "kind": "condition",
+              "name": "diffusion-to-carry face",
+              "formula": "sigma sqrt(T) >= 0.0139 |r - q| T (put coordinates)"
+            },
+            {
+              "kind": "condition",
+              "name": "FP-A face",
+              "formula": "sigma sqrt(T) >= (r - q) T where QuantLib's scheme iterates FP-A and r > q (put coordinates)"
+            },
+            {
+              "kind": "interval",
+              "input": "put-coordinate rate * time_to_expiry_years",
+              "maximum": 3.0
+            },
+            {
+              "kind": "interval",
+              "input": "put-coordinate yield * time_to_expiry_years",
+              "minimum": -1.0,
+              "maximum": 3.0
+            }
+          ],
+          "outside": "unsupported_accuracy_contract"
+        }
+      ],
+      "notes": "The pinned Risk engine uses optimized fixed-work pricing with absolute error at most 1e-4 * max(spot, strike) against the independent American value, including reference uncertainty. The API accepts options.price and options.implied_volatility only. Greeks, batch, scenario and book operations return HTTP 422 unsupported_operation for explicit QdFp selection. Engine derivative implementations are retained but not exposed. IV inverts the served price; its residual is not an exact-American volatility error bound. Numerical values and inverse availability change from v0.42.x despite the unchanged model_version. Engine domains and per-input refusals remain authoritative."
+    },
+    {
+      "id": "black_scholes_merton_fd",
+      "name": "Black\u2013Scholes finite difference (cash dividends)",
+      "version": "1",
+      "model_version": "cash_dividend_american/1",
+      "underlying_model": "black_scholes_merton",
+      "method": "finite_difference_tr_bdf2",
+      "exercise_styles": [
+        "american"
+      ],
+      "dividend_support": [
+        "continuous_yield",
+        "discrete_cash"
+      ],
+      "operations": [
+        "options.price",
+        "options.implied_volatility"
+      ],
+      "greeks": [],
+      "guidance": "American options with scheduled cash dividends.",
+      "constraints": [
+        {
+          "quantity": "spot / strike",
+          "minimum": 0.8,
+          "maximum": 1.2,
+          "description": "Live-contract moneyness."
+        },
+        {
+          "quantity": "time_to_expiry_years",
+          "minimum": 0.2493150684931507,
+          "maximum": 2.0,
+          "description": "Live-contract expiry in years; exact expiry has separate payoff handling."
+        },
+        {
+          "quantity": "volatility",
+          "minimum": 0.15,
+          "maximum": 0.5,
+          "description": "Annual lognormal volatility; also the implied-volatility search band."
+        },
+        {
+          "quantity": "risk_free_rate",
+          "minimum": 0.0,
+          "maximum": 0.05,
+          "description": "Annual continuously compounded rate."
+        },
+        {
+          "quantity": "dividend_yield",
+          "minimum": 0.0,
+          "maximum": 0.02,
+          "description": "Annual continuous dividend yield, in addition to cash events."
+        },
+        {
+          "quantity": "live_dividend_count",
+          "maximum": 2.0,
+          "description": "Cash events strictly before expiry; the request separately allows at most 16 supplied events."
+        },
+        {
+          "quantity": "live_dividend_sum / spot",
+          "maximum": 0.125,
+          "description": "Sum of cash amounts strictly before expiry divided by spot."
+        }
+      ],
+      "validity": [
+        {
+          "quantity": "price",
+          "status": "validated",
+          "criterion": "strict",
+          "tolerance": {
+            "relative": 0.0001,
+            "absolute": 2.220446049250313e-16,
+            "absolute_unit": "max(spot, strike)"
+          },
+          "region": [
+            {
+              "kind": "interval",
+              "input": "spot / strike",
+              "minimum": 0.8,
+              "maximum": 1.2
+            },
+            {
+              "kind": "interval",
+              "input": "time_to_expiry_years",
+              "minimum": 0.2493150684931507,
+              "maximum": 2.0
+            },
+            {
+              "kind": "interval",
+              "input": "risk_free_rate",
+              "minimum": 0.0,
+              "maximum": 0.05
+            },
+            {
+              "kind": "interval",
+              "input": "dividend_yield",
+              "minimum": 0.0,
+              "maximum": 0.02
+            },
+            {
+              "kind": "interval",
+              "input": "live_dividend_count",
+              "minimum": 0.0,
+              "maximum": 2.0
+            },
+            {
+              "kind": "condition",
+              "name": "total cash dividends",
+              "formula": "total cash dividends within the life <= 0.125 S"
+            },
+            {
+              "kind": "interval",
+              "input": "volatility",
+              "minimum": 0.15,
+              "maximum": 0.5
+            }
+          ],
+          "outside": "unsupported_accuracy_contract"
+        },
+        {
+          "quantity": "implied_volatility",
+          "status": "validated",
+          "criterion": "inverse_of_price",
+          "region": [
+            {
+              "kind": "interval",
+              "input": "spot / strike",
+              "minimum": 0.8,
+              "maximum": 1.2
+            },
+            {
+              "kind": "interval",
+              "input": "time_to_expiry_years",
+              "minimum": 0.2493150684931507,
+              "maximum": 2.0
+            },
+            {
+              "kind": "interval",
+              "input": "risk_free_rate",
+              "minimum": 0.0,
+              "maximum": 0.05
+            },
+            {
+              "kind": "interval",
+              "input": "dividend_yield",
+              "minimum": 0.0,
+              "maximum": 0.02
+            },
+            {
+              "kind": "interval",
+              "input": "live_dividend_count",
+              "minimum": 0.0,
+              "maximum": 2.0
+            },
+            {
+              "kind": "condition",
+              "name": "total cash dividends",
+              "formula": "total cash dividends within the life <= 0.125 S"
+            },
+            {
+              "kind": "interval",
+              "input": "volatility",
+              "minimum": 0.15,
+              "maximum": 0.5
+            }
+          ],
+          "outside": "unsupported_accuracy_contract"
+        }
+      ],
+      "notes": "Live-contract ranges describe the pinned finite-difference solver; expiry price is intrinsic. IV searches the stated volatility band. Events at or after expiry do not affect price. The API accepts options.price and options.implied_volatility only. Greeks, batch, scenario and book operations return HTTP 422 unsupported_operation, including Auto resolving to this model, before execution or charge. Engine derivative implementations are retained but not exposed."
+    },
+    {
+      "id": "bjerksund_stensland_1993",
+      "name": "Bjerksund\u2013Stensland 1993",
+      "version": "1",
+      "model_version": "bjerksund_stensland_1993/1",
+      "underlying_model": "black_scholes_merton",
+      "method": "bjerksund_stensland_1993_approximation",
+      "exercise_styles": [
+        "american"
+      ],
+      "dividend_support": [
+        "continuous_yield"
+      ],
+      "operations": [
+        "options.price",
+        "options.batch_price",
+        "options.implied_volatility",
+        "options.batch_implied_volatility",
+        "options.greeks",
+        "options.batch_greeks",
+        "options.standard_greeks",
+        "options.batch_standard_greeks",
+        "options.implied_greeks",
+        "options.batch_implied_greeks",
+        "options.revalue",
+        "options.solve_scenario",
+        "books.revalue",
+        "books.explain",
+        "books.solve_scenario"
+      ],
+      "greeks": [
+        "delta",
+        "gamma",
+        "theta",
+        "vega",
+        "rho",
+        "vanna",
+        "volga",
+        "charm",
+        "veta",
+        "color"
+      ],
+      "guidance": "American option pricing using the BS1993 approximation. Auto selects this model when no discrete cash-dividend schedule is supplied.",
+      "constraints": [],
+      "validity": [
+        {
+          "quantity": "price",
+          "status": "not_stated"
+        },
+        {
+          "quantity": "delta",
+          "status": "not_stated"
+        },
+        {
+          "quantity": "gamma",
+          "status": "not_stated"
+        },
+        {
+          "quantity": "theta",
+          "status": "not_stated"
+        },
+        {
+          "quantity": "vega",
+          "status": "not_stated"
+        },
+        {
+          "quantity": "rho",
+          "status": "not_stated"
+        },
+        {
+          "quantity": "vanna",
+          "status": "not_stated"
+        },
+        {
+          "quantity": "volga",
+          "status": "not_stated"
+        },
+        {
+          "quantity": "charm",
+          "status": "not_stated"
+        },
+        {
+          "quantity": "veta",
+          "status": "not_stated"
+        },
+        {
+          "quantity": "color",
+          "status": "not_stated"
+        },
+        {
+          "quantity": "implied_volatility",
+          "status": "not_stated"
+        }
+      ],
+      "notes": "The engine enforces model-specific domains and accuracy regions. Implemented Greeks may be unavailable for particular inputs, including expiry, exercise-boundary kinks and unresolved derivatives. An empty constraints list does not imply an unrestricted domain."
+    }
+  ],
+  "engines": [
+    {
+      "name": "morphiq-risk",
+      "version": "0.46.1",
+      "revision": "1550e4e41b243b8a978677bc5e9b46916c08cb0e"
+    }
+  ],
+  "greek_units": {
+    "charm": "`d\u00b2V/(dS dt)`, **per year**.",
+    "color": "`d\u00b3V/(dS\u00b2 dt)`, **per year**.",
+    "delta": "`dV/dS`.",
+    "gamma": "`d\u00b2V/dS\u00b2`.",
+    "rho": "`dV/dr`, per unit rate.",
+    "theta": "`dV/dt`, **per year**.",
+    "vanna": "`d\u00b2V/(dS d\u03c3)`, per unit volatility.",
+    "vega": "`dV/d\u03c3`, per unit volatility.",
+    "veta": "`d\u00b2V/(d\u03c3 dt)`, **per year** per unit volatility.",
+    "volga": "`d\u00b2V/d\u03c3\u00b2`, per unit volatility squared."
+  },
+  "validity_symbols": {
+    "K": "strike",
+    "S": "spot",
+    "T": "time_to_expiry_years",
+    "put coordinates": "a call is stated as the put with r and q exchanged: r is dividend_yield and q is risk_free_rate",
+    "q": "dividend_yield",
+    "r": "risk_free_rate",
+    "sigma": "volatility"
+  }
+}

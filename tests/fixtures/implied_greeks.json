@@ -1,0 +1,144 @@
+{
+  "source_commit": "4809233ade17132517a74dfc0ea4aebb087386d9",
+  "contract_sha256": "68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8",
+  "admission": "open (isolated loopback service; no commercial charge)",
+  "note": "Synthetic requests evaluated by a native release build of the API 0.10.0 contract (tag v0.10.0). American Greeks and batches explicitly use BS1993; Auto American without cash events resolves to BS1993.",
+  "cases": [
+    {
+      "name": "implied-greeks-european",
+      "path": "/v1/options:implied-greeks",
+      "request": {
+        "option": {
+          "type": "call",
+          "exercise_style": "european",
+          "strike": 100.0,
+          "time_to_expiry_years": 1.0
+        },
+        "market": {
+          "spot": 100.0,
+          "risk_free_rate": 0.05,
+          "dividend_yield": 0.0
+        },
+        "model": {
+          "id": "auto"
+        },
+        "market_price": 10.450583572185538
+      },
+      "response": {
+        "metadata": {
+          "request_id": "fr-18eb4d3a08c36fa2-000000000000000e",
+          "service_version": "0.10.0",
+          "contract": {
+            "version": "0.1.0",
+            "sha256": "68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8"
+          },
+          "engines": [
+            {
+              "name": "morphiq-risk",
+              "version": "0.46.1",
+              "revision": "1550e4e41b243b8a978677bc5e9b46916c08cb0e"
+            }
+          ]
+        },
+        "result": {
+          "price": 10.45058357218553,
+          "greeks": {
+            "delta": 0.6368306511756194,
+            "gamma": 0.01876201734584698,
+            "theta": -6.414027546438181,
+            "vega": 37.52403469169378,
+            "rho": 53.232481545376416,
+            "vanna": -0.2814302601877085,
+            "volga": 9.850059106569828,
+            "charm": -0.06566706071046419,
+            "veta": -16.463670220980635,
+            "color": 0.010530182235356622
+          },
+          "implied_volatility": {
+            "implied_volatility": 0.19999999999999904,
+            "iterations": 2,
+            "used_fallback": false,
+            "residual": 1.3535144005987383e-17,
+            "residual_basis": "forward_normalised_price",
+            "model": {
+              "id": "black_scholes_merton",
+              "version": "black_scholes_merton/1"
+            }
+          },
+          "model": {
+            "id": "black_scholes_merton",
+            "version": "black_scholes_merton/1"
+          }
+        }
+      }
+    },
+    {
+      "name": "implied-greeks-american",
+      "path": "/v1/options:implied-greeks",
+      "request": {
+        "option": {
+          "type": "put",
+          "exercise_style": "american",
+          "strike": 105.0,
+          "time_to_expiry_years": 0.5
+        },
+        "market": {
+          "spot": 100.0,
+          "risk_free_rate": 0.05,
+          "dividend_yield": 0.01
+        },
+        "model": {
+          "id": "bjerksund_stensland_1993"
+        },
+        "market_price": 7.5298454349124135
+      },
+      "response": {
+        "metadata": {
+          "request_id": "fr-18eb4d3a08c36fa2-000000000000000f",
+          "service_version": "0.10.0",
+          "contract": {
+            "version": "0.1.0",
+            "sha256": "68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8"
+          },
+          "engines": [
+            {
+              "name": "morphiq-risk",
+              "version": "0.46.1",
+              "revision": "1550e4e41b243b8a978677bc5e9b46916c08cb0e"
+            }
+          ]
+        },
+        "result": {
+          "price": 7.5298454349124135,
+          "greeks": {
+            "delta": -0.589201884524783,
+            "gamma": 0.03283315892329411,
+            "theta": -3.5549420552482287,
+            "vega": 26.586081744012898,
+            "rho": -21.612071680237182,
+            "vanna": 0.895013390590854,
+            "volga": 24.916694215773525,
+            "charm": -0.18410996878530728,
+            "veta": -28.207426026498784,
+            "color": 0.025532151457727293
+          },
+          "implied_volatility": {
+            "implied_volatility": 0.2000000000000002,
+            "iterations": 12,
+            "used_fallback": true,
+            "residual": 0.0,
+            "residual_basis": "option_price",
+            "model": {
+              "id": "bjerksund_stensland_1993",
+              "version": "bjerksund_stensland_1993/1"
+            }
+          },
+          "model": {
+            "id": "bjerksund_stensland_1993",
+            "version": "bjerksund_stensland_1993/1"
+          }
+        }
+      }
+    }
+  ]
+}

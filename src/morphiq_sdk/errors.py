@@ -3,7 +3,7 @@
 from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
 
-from .models import ErrorEnvelope, ResponseMetadata, ServiceErrorMetadata
+from .models import ErrorResponse, ResponseMetadata, SolveTrialContext
 
 
 class MorphIQError(Exception):
@@ -21,7 +21,7 @@ class RequestTimeout(TransportError):
 class ResponseError(MorphIQError):
     """A successful HTTP status carried an invalid API response.
 
-    Independently valid pricing metadata remains available even when the result
+    Independently valid response metadata remains available even when the result
     is malformed. Missing metadata does not establish a zero charge.
     """
 
@@ -43,7 +43,10 @@ class ResponseError(MorphIQError):
 class APIError(MorphIQError):
     """Non-success HTTP response, including gateway and router failures.
 
-    Inspect ``code``, ``request_id``, ``metadata``, ``headers`` and ``body``.
+    API failures are RFC 9457 problems: inspect ``code``, ``detail``, ``field``,
+    ``request_id`` and ``metadata`` (with any ``metadata.billing`` charge), or the
+    whole ``problem``. A gateway or router response that is not a MorphIQ
+    problem leaves those as ``None``; ``headers`` and ``body`` are always kept.
     The known API key is redacted if a remote server reflects it in a response.
     Missing charge metadata is never interpreted as a zero charge.
     """
@@ -52,27 +55,26 @@ class APIError(MorphIQError):
         self,
         *,
         status_code: int,
-        envelope: ErrorEnvelope | None,
+        problem: ErrorResponse | None,
         request_id: str | None,
         body: bytes,
         headers: dict[str, str],
     ) -> None:
         self.status_code = status_code
-        self.code = envelope.error.code if envelope else None
-        self.message = (
-            envelope.error.message if envelope else "Non-standard API or gateway response"
-        )
-        self.field = envelope.error.field if envelope else None
-        self.metadata: ResponseMetadata | ServiceErrorMetadata | None = (
-            envelope.metadata if envelope else None
-        )
+        self.problem = problem
+        self.code: str | None = problem.code if problem else None
+        self.title: str | None = problem.title if problem else None
+        self.detail: str = problem.detail if problem else "Non-standard API or gateway response"
+        self.field: str | None = problem.field if problem else None
+        self.solve_trial: SolveTrialContext | None = problem.solve_trial if problem else None
+        self.metadata: ResponseMetadata | None = problem.metadata if problem else None
         self.request_id = self.metadata.request_id if self.metadata else request_id
         self.body = body
         self.headers = headers
         self.retry_after = headers.get("retry-after")
-        detail = f" ({self.code})" if self.code else ""
+        code = f" ({self.code})" if self.code else ""
         support = f"; request_id={self.request_id}" if self.request_id else ""
-        super().__init__(f"HTTP {status_code}{detail}: {self.message}{support}")
+        super().__init__(f"HTTP {status_code}{code}: {self.detail}{support}")
 
 
 class RateLimitError(APIError):

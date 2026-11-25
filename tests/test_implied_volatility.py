@@ -9,59 +9,45 @@ from pathlib import Path
 
 import httpx
 import pytest
-from jsonschema import Draft202012Validator
 from pydantic import ValidationError
+from support import charged, problem
 
 from morphiq_sdk import (
     APIError,
     AsyncMorphIQ,
     DividendEvent,
-    ImpliedVolatilityRequest,
-    ImpliedVolatilityResponse,
-    ImpliedVolatilityResult,
     MorphIQ,
+    OptionsImpliedVolatilityRequest,
+    OptionsImpliedVolatilityResponse,
     RequestTimeout,
     ResponseError,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
+KEY = "implied_volatility-test-key"
 
 
 def invoke(mode, transport, request):
     if mode == "sync":
-        with MorphIQ(api_key="implied_volatility-test-key", transport=transport) as client:
-            return client.implied_volatility(request)
+        with MorphIQ(api_key=KEY, transport=transport) as client:
+            return client.options.implied_volatility(request)
 
     async def run():
-        async with AsyncMorphIQ(
-            api_key="implied_volatility-test-key", transport=transport
-        ) as client:
-            return await client.implied_volatility(request)
+        async with AsyncMorphIQ(api_key=KEY, transport=transport) as client:
+            return await client.options.implied_volatility(request)
 
     return asyncio.run(run())
 
 
-def test_implied_volatility_contract_and_native_fixture_identity(iv_cases):
+def test_implied_volatility_route_and_native_fixture_identity(iv_cases):
     schema = json.loads((ROOT / "contracts/openapi.json").read_text())
     fixture = json.loads((ROOT / "tests/fixtures/implied_volatility.json").read_text())
     pin = json.loads((ROOT / "contracts/provenance.json").read_text())
     assert fixture["source_commit"] == pin["source_commit"]
     assert fixture["contract_sha256"] == pin["sha256"]
-    assert schema["paths"]["/v1/implied-volatility"]["post"]["operationId"] == "impliedVolatility"
-    for model, name in [
-        (ImpliedVolatilityRequest, "ImpliedVolatilityRequest"),
-        (ImpliedVolatilityResult, "ImpliedVolatilityResult"),
-        (ImpliedVolatilityResponse, "ImpliedVolatilityResponse"),
-    ]:
-        assert set(model.model_fields) == set(schema["components"]["schemas"][name]["properties"])
-    for case in iv_cases:
-        for name, value in [
-            ("ImpliedVolatilityRequest", ImpliedVolatilityRequest(**case["request"]).to_wire()),
-            ("ImpliedVolatilityResponse", case["response"]),
-        ]:
-            Draft202012Validator(
-                {"$ref": f"#/components/schemas/{name}", "components": schema["components"]}
-            ).validate(value)
+    operation = schema["paths"]["/v1/options:implied-volatility"]["post"]
+    assert operation["operationId"] == "optionsImpliedVolatility"
+    assert {case["path"] for case in iv_cases} == {"/v1/options:implied-volatility"}
 
 
 @pytest.mark.parametrize("mode", ["sync", "async"])
@@ -69,38 +55,42 @@ def test_implied_volatility_contract_and_native_fixture_identity(iv_cases):
 def test_implied_volatility_roundtrip_preserves_every_value_and_evidence(mode, index, iv_cases):
     case = copy.deepcopy(iv_cases[index])
     body = case["response"]
-    body["metadata"]["fcu_charged"] = 0
+    body["metadata"]["billing"] = {"charged_cu": 0}
     body["result"]["diagnostics"] = {"future_field": [0, 1.23456789012345]}
-    body["result"]["pricing_model"] = "future_model"
+    body["result"]["model"]["id"] = "future_model"
     body["result"]["residual_basis"] = "future_basis"
     calls = []
 
     def handle(request):
         calls.append(request)
-        assert request.method == "POST" and request.url.path == "/v1/implied-volatility"
-        assert request.headers["Authorization"] == "Bearer implied_volatility-test-key"
+        assert request.method == "POST" and request.url.path == "/v1/options:implied-volatility"
+        assert request.headers["Authorization"] == f"Bearer {KEY}"
         assert request.headers["Accept"] == "application/json"
         assert json.loads(request.content) == case["request"]
         return httpx.Response(200, json=body, headers={"x-request-id": "implied_volatility-header"})
 
     response = invoke(
-        mode, httpx.MockTransport(handle), ImpliedVolatilityRequest(**case["request"])
+        mode,
+        httpx.MockTransport(handle),
+        OptionsImpliedVolatilityRequest.model_validate(case["request"]),
     )
     assert len(calls) == 1
     assert response.model_dump(exclude_unset=True) == body
     assert json.loads(response.raw_body) == body
     assert response.headers["x-request-id"] == "implied_volatility-header"
-    assert response.metadata.fcu_charged == 0
+    assert response.metadata.charged_cu == 0
     assert response.result.residual == body["result"]["residual"]
+    # Unknown residual bases and model ids are retained, not rejected.
+    assert response.result.residual_basis == "future_basis"
+    assert response.result.model.id == "future_model"
 
 
-def test_implied_volatility_request_preserves_schedule_edits_and_null(iv_cases):
-    request = ImpliedVolatilityRequest(**iv_cases[0]["request"], model_version=None)
-    request.dividend_schedule.append(DividendEvent(ex_time_years=0.25, cash_amount=1.5))
+def test_implied_volatility_request_validates_dividend_edits(iv_cases):
+    request = OptionsImpliedVolatilityRequest.model_validate(iv_cases[0]["request"])
+    request.market.dividends.append(DividendEvent(ex_time_years=0.25, cash_amount=1.5))
     wire = request.to_wire()
-    assert wire["model_version"] is None
-    assert wire["dividend_schedule"] == [{"ex_time_years": 0.25, "cash_amount": 1.5}]
-    request.dividend_schedule[0] = {"ex_time_years": float("nan"), "cash_amount": 1.5}
+    assert wire["market"]["dividends"] == [{"ex_time_years": 0.25, "cash_amount": 1.5}]
+    request.market.dividends[0] = {"ex_time_years": float("nan"), "cash_amount": 1.5}
     with pytest.raises(ValidationError):
         request.to_wire()
 
@@ -122,21 +112,25 @@ def test_implied_volatility_failures_preserve_charges_and_do_not_retry(mode, fai
             )
         return httpx.Response(
             500,
-            json={
-                "error": {"code": "pricing_failed", "message": "implied_volatility-test-key"},
-                "metadata": {**iv_cases[0]["response"]["metadata"], "fcu_charged": 7},
-            },
+            json=problem(
+                "pricing_failed",
+                KEY,
+                status=500,
+                metadata=charged(iv_cases[0]["response"]["metadata"], 7),
+            ),
         )
 
     error_type = {"api": APIError, "invalid": ResponseError, "timeout": RequestTimeout}[failure]
     with pytest.raises(error_type) as error:
         invoke(
-            mode, httpx.MockTransport(handle), ImpliedVolatilityRequest(**iv_cases[0]["request"])
+            mode,
+            httpx.MockTransport(handle),
+            OptionsImpliedVolatilityRequest.model_validate(iv_cases[0]["request"]),
         )
     assert len(calls) == 1
     if failure == "api":
-        assert error.value.metadata.fcu_charged == 7
-        assert "implied_volatility-test-key" not in str(error.value) + error.value.body.decode()
+        assert error.value.metadata.charged_cu == 7
+        assert KEY not in str(error.value) + error.value.body.decode()
     elif failure == "invalid":
         assert error.value.request_id == "implied_volatility-error"
 
@@ -146,7 +140,7 @@ def test_implied_volatility_do_not_replace_invalid_values_with_zero(iv_cases, ba
     body = copy.deepcopy(iv_cases[0]["response"])
     body["result"]["implied_volatility"] = bad
     with pytest.raises(ValidationError):
-        ImpliedVolatilityResponse.model_validate(body)
+        OptionsImpliedVolatilityResponse.model_validate(body)
 
 
 @pytest.mark.parametrize("script", ["implied_volatility", "implied_volatility_async"])
@@ -174,21 +168,23 @@ def test_implied_volatility_examples_are_self_contained(fixture_api, iv_cases, t
     ]:
         assert f"{label}: {result_values[name]}" in result.stdout
     assert "Commercial CU charged: not reported" in result.stdout
-    assert received == [("/v1/implied-volatility", "Bearer example-key", iv_cases[0]["request"])]
+    assert received == [
+        ("/v1/options:implied-volatility", "Bearer example-key", iv_cases[0]["request"])
+    ]
 
 
-def test_iv_rejects_volatility_input_and_preserves_omissions(iv_cases):
-    payload = iv_cases[0]["request"]
+def test_iv_rejects_volatility_input_and_omits_absent_members(iv_cases):
+    payload = copy.deepcopy(iv_cases[0]["request"])
     with pytest.raises(ValidationError):
-        ImpliedVolatilityRequest(**payload, volatility=0.2)
-    request = ImpliedVolatilityRequest(**payload)
-    assert "volatility" not in request.to_wire()
-    assert "dividend_schedule" not in request.to_wire()
-    assert "model_version" not in request.to_wire()
-    assert (
-        ImpliedVolatilityRequest(**payload, dividend_schedule=[]).to_wire()["dividend_schedule"]
-        == []
-    )
+        OptionsImpliedVolatilityRequest.model_validate({**payload, "volatility": 0.2})
+    with pytest.raises(ValidationError):
+        OptionsImpliedVolatilityRequest.model_validate(
+            {k: v for k, v in payload.items() if k != "market_price"}
+        )
+    wire = OptionsImpliedVolatilityRequest.model_validate(payload).to_wire()
+    assert "volatility" not in wire
+    assert "dividends" not in wire["market"]
+    assert "version" not in wire["model"]
 
 
 @pytest.mark.parametrize(
@@ -200,10 +196,11 @@ def test_iv_rejects_volatility_input_and_preserves_omissions(iv_cases):
         ("used_fallback", "false"),
         ("residual", float("nan")),
         ("residual_basis", None),
+        ("model", None),
     ],
 )
 def test_iv_rejects_invalid_diagnostics(iv_cases, field, bad):
     body = copy.deepcopy(iv_cases[0]["response"])
     body["result"][field] = bad
     with pytest.raises(ValidationError):
-        ImpliedVolatilityResponse.model_validate(body)
+        OptionsImpliedVolatilityResponse.model_validate(body)

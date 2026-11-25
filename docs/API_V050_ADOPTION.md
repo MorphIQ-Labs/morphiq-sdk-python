@@ -1,5 +1,8 @@
 # API v0.5.0 SDK adoption
 
+Historical record: this describes the retired v0.5.0 contract. The current
+contract and its migration are in [API 0.10.0 adoption](API_0_10_ADOPTION.md).
+
 The SDK consumes the deployed API contract at source
 `2284d802b5ac0b37b43ee269bbf4bfeec3777776`, SHA-256
 `e206327e13aee32c02dbfa22e1d8e8a80ea2d549083971a1cc87aa2b67f401e7`.

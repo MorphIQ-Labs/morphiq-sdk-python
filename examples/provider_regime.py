@@ -6,7 +6,7 @@ Set MORPHIQ_API_KEY, then run: python -m examples.provider_regime
 
 from datetime import date, timedelta
 
-from morphiq_sdk import MorphIQ, PriceProvider, RegimeRequest
+from morphiq_sdk import MorphIQ, PriceProvider, SeriesIdentifyRegimeRequest
 from morphiq_sdk_yahoo import YahooPriceProvider
 
 
@@ -20,11 +20,12 @@ def main() -> None:
     print(f"{history.symbol}: latest close {history.latest.close} on {history.latest.time}")
 
     # The provider knows nothing about the API or its 512-price requirement.
-    request = RegimeRequest(prices=list(history.prices[-512:]))
+    request = SeriesIdentifyRegimeRequest(prices=list(history.prices[-512:]))
     with MorphIQ() as client:  # Reads MORPHIQ_API_KEY; uses https://api.morphiqlabs.com.
-        response = client.regime(request)
-    # Includes all head results, scores, provenance, request ID and reported CU.
-    print(response.model_dump_json(indent=2))
+        response = client.series.identify_regime(request)
+    # The wire result: heads, scores, input facts, provenance, request ID and any charge.
+    # exclude_unset keeps absent members absent, as the API sent them.
+    print(response.model_dump_json(indent=2, exclude_unset=True))
 
 
 if __name__ == "__main__":

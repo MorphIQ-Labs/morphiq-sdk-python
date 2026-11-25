@@ -8,7 +8,13 @@ import httpx
 import pandas as pd
 import pytest
 
-from morphiq_sdk import MorphIQ, PriceBar, PriceHistory, PriceProvider, RegimeRequest
+from morphiq_sdk import (
+    MorphIQ,
+    PriceBar,
+    PriceHistory,
+    PriceProvider,
+    SeriesIdentifyRegimeRequest,
+)
 from morphiq_sdk_yahoo import YahooPriceProvider
 
 
@@ -161,6 +167,8 @@ def test_another_provider_feeds_the_existing_client_without_yahoo(regime_cases):
         return httpx.Response(200, json=case["response"])
 
     with MorphIQ(api_key="synthetic-test-key", transport=httpx.MockTransport(handle)) as client:
-        response = client.regime(RegimeRequest(prices=list(history.prices)))
+        response = client.series.identify_regime(
+            SeriesIdentifyRegimeRequest(prices=list(history.prices))
+        )
     assert received == [case["request"]]
     assert response.metadata.request_id == case["response"]["metadata"]["request_id"]

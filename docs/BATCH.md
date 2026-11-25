@@ -1,25 +1,26 @@
 # Batch operations
 
-See [API v0.7.0 model capabilities](MODELS.md) for supported operations,
+See [model capabilities](MODELS.md) for supported operations,
 100-item batch limits and unavailable-Greek semantics.
 
 Submit one explicit ordered batch with either `MorphIQ` or `AsyncMorphIQ`:
 
 | Method | Request | Response |
 | --- | --- | --- |
-| `price_batch()` | `BatchPriceRequest` | `BatchPriceResponse` |
-| `greeks_standard_batch()` | `BatchGreeksStandardRequest` | `BatchGreeksStandardResponse` |
-| `greeks_batch()` | `BatchGreeksRequest` | `BatchGreeksResponse` |
-| `implied_volatility_batch()` | `BatchImpliedVolatilityRequest` | `BatchImpliedVolatilityResponse` |
-| `analytics_batch()` | `BatchAnalyticsRequest` | `BatchAnalyticsResponse` |
+| `client.options.batch_price()` | `OptionsBatchPriceRequest` | `OptionsBatchPriceResponse` |
+| `client.options.batch_standard_greeks()` | `OptionsBatchStandardGreeksRequest` | `OptionsBatchStandardGreeksResponse` |
+| `client.options.batch_greeks()` | `OptionsBatchGreeksRequest` | `OptionsBatchGreeksResponse` |
+| `client.options.batch_implied_volatility()` | `OptionsBatchImpliedVolatilityRequest` | `OptionsBatchImpliedVolatilityResponse` |
+| `client.options.batch_implied_greeks()` | `OptionsBatchImpliedGreeksRequest` | `OptionsBatchImpliedGreeksResponse` |
 
-Each envelope takes `requests`, a list of the corresponding single-operation
-request models. One call sends one HTTP request. These methods do not split batches,
-create concurrent work, retry rejected requests, or replay failed items.
-For caller-sized chunks, optional async concurrency and per-request costs, use an
-explicit [batch workflow](WORKFLOWS.md).
-The reviewed wire schema allows 1–100 items; the service applies the account's
-actual limit, which may be lower. The SDK does not hardcode plan limits.
+Each envelope takes `items`, a list of the corresponding single-operation
+request models, and is sent to `POST /v1/options:batch-{method}`. One call sends
+one HTTP request. These methods do not split batches, create concurrent work,
+retry rejected requests, or replay failed items. For caller-sized chunks,
+optional async concurrency and per-request costs, use an explicit
+[batch workflow](WORKFLOWS.md). The reviewed wire schema allows 1–100 items; the
+service applies the account's actual limit, which may be lower. The SDK does not
+hardcode plan limits.
 
 Set `MORPHIQ_API_KEY`, then run a self-contained example:
 
@@ -30,72 +31,75 @@ python -m examples.batch_price_async
 
 These scripts construct two complete option requests, send one batch, handle
 individual results, and print its request ID, provenance and charge once.
-For async calls, use `async with AsyncMorphIQ()` and await the same method name.
+For async calls, use `async with AsyncMorphIQ()` and await the same method.
 
 ## Constructing each batch type
 
 This builds all five envelope types without sending requests, then submits **one
-analytics batch**. The single item is a synthetic European call. Add explicitly
-constructed items to each list to send more contracts in that batch.
+implied-Greeks batch**. The single item is a synthetic European call. Add
+explicitly constructed items to each list to send more contracts in that batch.
 
 ```python
 from morphiq_sdk import (
-    AnalyticsRequest,
-    BatchAnalyticsRequest,
-    BatchGreeksRequest,
-    BatchGreeksStandardRequest,
-    BatchImpliedVolatilityRequest,
-    BatchPriceRequest,
-    GreeksRequest,
-    GreeksStandardRequest,
-    ImpliedVolatilityRequest,
+    BatchFailure,
+    BatchSuccess,
+    Market,
     MorphIQ,
-    PriceRequest,
+    Option,
+    OptionsBatchGreeksRequest,
+    OptionsBatchImpliedGreeksRequest,
+    OptionsBatchImpliedVolatilityRequest,
+    OptionsBatchPriceRequest,
+    OptionsBatchStandardGreeksRequest,
+    OptionsGreeksRequest,
+    OptionsImpliedGreeksRequest,
+    OptionsImpliedVolatilityRequest,
+    OptionsPriceRequest,
+    OptionsStandardGreeksRequest,
 )
 
-option = {
-    "exercise_style": "european",
-    "option_type": "call",
-    "spot": 100.0,
-    "strike": 100.0,
-    "time_to_expiry_years": 1.0,
-    "risk_free_rate": 0.05,
-    "dividend_yield": 0.0,
-    "pricing_model": "auto",
+terms = {
+    "option": Option(
+        type="call", exercise_style="european", strike=100.0, time_to_expiry_years=1.0
+    ),
+    "market": Market(spot=100.0, risk_free_rate=0.05, dividend_yield=0.0),
 }
-price_batch = BatchPriceRequest(requests=[PriceRequest(**option, volatility=0.20)])
-greeks_batch = BatchGreeksRequest(requests=[GreeksRequest(**option, volatility=0.20)])
-standard_batch = BatchGreeksStandardRequest(
-    requests=[GreeksStandardRequest(**option, volatility=0.2)]
+price_batch = OptionsBatchPriceRequest(items=[OptionsPriceRequest(**terms, volatility=0.20)])
+greeks_batch = OptionsBatchGreeksRequest(items=[OptionsGreeksRequest(**terms, volatility=0.20)])
+standard_batch = OptionsBatchStandardGreeksRequest(
+    items=[OptionsStandardGreeksRequest(**terms, volatility=0.20)]
 )
-iv_batch = BatchImpliedVolatilityRequest(
-    requests=[ImpliedVolatilityRequest(**option, market_price=10.450583572185538)]
+iv_batch = OptionsBatchImpliedVolatilityRequest(
+    items=[OptionsImpliedVolatilityRequest(**terms, market_price=10.450583572185538)]
 )
-analytics_batch = BatchAnalyticsRequest(
-    requests=[AnalyticsRequest(**option, volatility=0.35, market_price=10.450583572185538)]
+implied_greeks_batch = OptionsBatchImpliedGreeksRequest(
+    items=[OptionsImpliedGreeksRequest(**terms, market_price=10.450583572185538)]
 )
 
 with MorphIQ() as client:
-    response = client.analytics_batch(analytics_batch)
+    response = client.options.batch_implied_greeks(implied_greeks_batch)
 
 for item in response.results:
-    if item.status == "success":
+    if isinstance(item, BatchSuccess):
         print(item.index, item.result.model_dump(exclude_unset=True))
+    elif isinstance(item, BatchFailure):
+        print(item.index, item.error.code, item.error.detail)
     else:
-        print(item.index, item.error.code, item.error.message)
-charged = response.metadata.cu_charged
+        print(item.index, "unrecognized status:", item.status)
+charged = response.metadata.charged_cu
 print("Batch CU:", charged if charged is not None else "not reported")
 print("Request ID:", response.metadata.request_id)
 ```
 
-The other calls are `client.price_batch(price_batch)`,
-`client.greeks_standard_batch(standard_batch)`,
-`client.greeks_batch(greeks_batch)` and `client.implied_volatility_batch(iv_batch)`.
-Each sends a separate request if executed. Each operation keeps the corresponding
-[single-request fields and units](API.md#option-request-fields).
+The other calls are `client.options.batch_price(price_batch)`,
+`client.options.batch_standard_greeks(standard_batch)`,
+`client.options.batch_greeks(greeks_batch)` and
+`client.options.batch_implied_volatility(iv_batch)`. Each sends a separate
+request if executed. Each operation keeps the corresponding
+[single-request fields and units](API.md#option-requests).
 
 For async execution, reuse the constructed envelope with this replacement for
-the synchronous call; this sends one analytics batch when run:
+the synchronous call; this sends one implied-Greeks batch when run:
 
 ```python
 import asyncio
@@ -105,7 +109,7 @@ from morphiq_sdk import AsyncMorphIQ
 
 async def analyze():
     async with AsyncMorphIQ() as client:
-        return await client.analytics_batch(analytics_batch)
+        return await client.options.batch_implied_greeks(implied_greeks_batch)
 
 
 response = asyncio.run(analyze())  # In Jupyter: response = await analyze()
@@ -115,7 +119,10 @@ response = asyncio.run(analyze())  # In Jupyter: response = await analyze()
 
 `response.results` retains submission order and explicit zero-based `index`.
 Each entry is a typed `BatchSuccess` with `status="success"` and `result`, or a
-`BatchFailure` with `status="error"` and `error` (code, message, optional field).
+`BatchFailure` with `status="error"` and `error`, an RFC 9457 `Problem` (`code`,
+`title`, `detail`, `status` and an optional `field` such as `market.spot`). A
+status this SDK version does not know is kept as `BatchUnrecognized`, with its
+`index`, `status` and all wire members.
 A numerical failure can coexist with successes in an accepted batch. Structural
 or admission failures can reject the whole request and raise `APIError`.
 
@@ -124,10 +131,10 @@ A missing/extra outcome, duplicate or reordered index, or malformed result raise
 `ResponseError`. Valid billing metadata remains accessible on that exception;
 the raw body and headers retain evidence. There is no automatic replay.
 
-`response.metadata.cu_charged` covers the entire batch. Count it once, including
-when some items fail. Do not multiply it by item count, add it once per row, or
-infer per-item costs. Missing/null means unreported, not zero. Quotes and internal
-`units_charged` are not charges. The pricing notebook's session ledger includes
+`response.metadata.billing.charged_cu` (shorthand `metadata.charged_cu`) covers
+the entire batch. Count it once, including when some items fail. Do not multiply
+it by item count, add it once per row, or infer per-item costs. Missing means
+unreported, not zero. The quote (`billing.quoted_cu`) is not a charge. The pricing notebook's session ledger includes
 reported batch-level charges on successes and failures and flags unknown totals.
 
 The notebook's **Spot sensitivity** action submits nine spots in one batch.
@@ -161,9 +168,3 @@ remain unknown; use the request ID and account records to reconcile them.
 Use the optional [pandas adapter](PANDAS.md) to convert batch results into ordered
 analysis rows and a separate per-request charge table. Core SDK calls do not
 require pandas.
-
-Standard-five batching uses `BatchGreeksStandardRequest(requests=[...])` and
-`client.greeks_standard_batch(...)` (or `await` with `AsyncMorphIQ`). The batch
-contains `GreeksStandardRequest` items; ordering, error and charge handling match
-the other batch families. Public `client.pricing_models()` returns a typed
-`PricingModelCatalog` without authentication; see [model discovery](MODELS.md).

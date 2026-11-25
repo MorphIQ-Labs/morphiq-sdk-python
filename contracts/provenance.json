@@ -1,24 +1,31 @@
 {
   "repository": "https://gitlab.com/prophetizo/morphiq-labs/sites/morphiq-api",
-  "source_commit": "525627cd2334053270214208a70d15450934e54b",
+  "source_commit": "4809233ade17132517a74dfc0ea4aebb087386d9",
   "source_path": "services/api/openapi.json",
   "contract_version": "0.1.0",
-  "sha256": "89aed6a6d6af982251c2cdac455113228f0ccb823e693f7f3fa0e8709071d33a",
-  "import_method": "Reviewed API v0.7.0 release source copied byte-for-byte; production API and developer-site OpenAPI digests match this immutable source (2026-11-16).",
+  "sha256": "68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8",
+  "import_method": "API v0.10.0 contract (tag v0.10.0, commit 4809233a; services/api/openapi.json unchanged since 7ff9af25) copied byte-for-byte; the production API and developer-site OpenAPI documents are byte-identical to it (2026-11-25). Differs from cf2718f only in one description (ImpliedGreeksResult.implied_volatility).",
   "covered_operations": [
-    "POST /v1/price",
-    "POST /v1/regime",
-    "POST /v1/greeks",
-    "POST /v1/implied-volatility",
-    "POST /v1/analytics",
-    "POST /v1/price:batch",
-    "POST /v1/greeks:batch",
-    "POST /v1/implied-volatility:batch",
-    "POST /v1/analytics:batch",
-    "GET /v1/cost/schedule",
-    "POST /v1/cost/quote",
-    "GET /v1/pricing/models",
-    "POST /v1/greeks/standard",
-    "POST /v1/greeks/standard:batch"
+    "POST /v1/options:price",
+    "POST /v1/options:batch-price",
+    "POST /v1/options:implied-volatility",
+    "POST /v1/options:batch-implied-volatility",
+    "POST /v1/options:greeks",
+    "POST /v1/options:batch-greeks",
+    "POST /v1/options:standard-greeks",
+    "POST /v1/options:batch-standard-greeks",
+    "POST /v1/options:implied-greeks",
+    "POST /v1/options:batch-implied-greeks",
+    "POST /v1/series:identify-regime",
+    "GET /v1/models",
+    "GET /v1/rate-card",
+    "POST /v1/rate-card:quote"
+  ],
+  "uncovered_operations": [
+    "POST /v1/options:revalue",
+    "POST /v1/options:solve-scenario",
+    "POST /v1/books:revalue",
+    "POST /v1/books:explain",
+    "POST /v1/books:solve-scenario"
   ]
 }

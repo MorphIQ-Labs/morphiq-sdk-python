@@ -37,19 +37,19 @@ the same method without inheriting from a framework class.
 ## Supply prices to the API
 
 ```python
-from morphiq_sdk import MorphIQ, RegimeRequest
+from morphiq_sdk import MorphIQ, SeriesIdentifyRegimeRequest
 
 if history.adjustment != "split":
     raise ValueError("Regime requires split-adjusted prices without dividend adjustment")
-request = RegimeRequest(prices=list(history.prices[-512:]))
+request = SeriesIdentifyRegimeRequest(prices=list(history.prices[-512:]))
 with MorphIQ() as client:  # MORPHIQ_API_KEY must be set.
-    response = client.regime(request)
+    response = client.series.identify_regime(request)
 print(response.model_dump_json(indent=2))
 ```
 
 The caller selects the 512-price window; the request model rejects too few prices.
 The provider has no knowledge of regime, pricing models, API credentials or CU.
-For an option request, the caller can use `history.latest.close` as `PriceRequest.spot`
+For an option request, the caller can use `history.latest.close` as `Market.spot`
 and supply the remaining option inputs normally.
 
 The executable [provider example](../examples/provider_regime.py) combines these
@@ -64,7 +64,7 @@ continue to work independently of this prototype.
   multiple sessions. No values are inserted for market closures or missing bars.
 - Daily labels are session dates. Intraday labels are timezone-aware bar starts;
   the final bar may still be forming or delayed. Neither label establishes an
-  exact final observation time for `RegimeRequest.as_of`.
+  exact final observation time for `SeriesIdentifyRegimeRequest.as_of`.
 - Prices must be finite and positive, with unique labels in chronological order.
   Invalid returned bars cause an error; they are not replaced with older prices.
   Units remain those quoted by the source; no currency conversion is performed.

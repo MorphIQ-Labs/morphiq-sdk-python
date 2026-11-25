@@ -1,18 +1,30 @@
-"""API wire models for the reviewed HTTP contract; no pricing logic lives here."""
+"""API wire models for the reviewed HTTP contract; no pricing logic lives here.
+
+Class names follow the contract's schema names (``OptionsPriceRequest``,
+``ResponseMetadata``, ``Problem``) so each model can be checked against the
+pinned OpenAPI document. Requests are closed: unknown fields and enum values
+are rejected before sending. Responses are open: additive fields are retained,
+and an enum value or variant this SDK does not know is kept as a plain string or
+an ``Unrecognized*`` model instead of failing the whole response.
+"""
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from typing import Annotated, Any, Generic, Literal, TypeVar
 
 from pydantic import (
     BaseModel,
     ConfigDict,
+    Discriminator,
     Field,
     FiniteFloat,
-    ModelWrapValidatorHandler,
     PrivateAttr,
+    SerializerFunctionWrapHandler,
+    Tag,
     ValidationInfo,
     field_validator,
+    model_serializer,
     model_validator,
 )
 
@@ -21,17 +33,35 @@ OptionType = Literal["call", "put"]
 PricingModel = Literal[
     "auto",
     "black_scholes_merton",
-    "bjerksund_stensland_2002",
     "bjerksund_stensland_1993",
     "black_scholes_merton_qdfp",
     "black_scholes_merton_fd",
-    "qd_fixed_point",
-    "cash_dividend_american",
 ]
+"""Model selectors accepted in requests (``model.id``)."""
+
+ResolvedPricingModel = Literal[
+    "black_scholes_merton",
+    "bjerksund_stensland_1993",
+    "black_scholes_merton_qdfp",
+    "black_scholes_merton_fd",
+]
+"""Model ids the pinned contract can report; responses may carry newer ids."""
+
+ResidualBasis = Literal["forward_normalised_price", "option_price"]
 
 
 class _Request(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True, allow_inf_nan=False, frozen=True)
+
+    def to_wire(self) -> dict[str, Any]:
+        """Revalidate current inputs and return the JSON body.
+
+        Freezing a model does not freeze its lists, so in-place edits are
+        validated again here. Absent optional members are omitted, never null.
+        """
+        # In-place edits may hold plain dicts; they are revalidated, not serialized as-is.
+        validated = type(self).model_validate(self.model_dump(warnings=False))
+        return validated.model_dump(mode="json", exclude_none=True)
 
 
 class DividendEvent(_Request):
@@ -41,119 +71,262 @@ class DividendEvent(_Request):
     cash_amount: FiniteFloat
 
 
-class _OptionRequest(_Request):
-    """Common option inputs. Rates and yield are decimals; time is in years.
+class Option(_Request):
+    """Contract terms: option type, exercise style, strike and time to expiry in years."""
+
+    type: OptionType
+    exercise_style: ExerciseStyle
+    strike: FiniteFloat
+    time_to_expiry_years: FiniteFloat
+
+
+class Market(_Request):
+    """The underlying's market. Rates and yield are continuously compounded decimals.
+
+    ``dividends`` holds discrete cash dividends; only the cash-dividend model
+    accepts a nonempty schedule. An empty schedule is omitted from the request.
+    """
+
+    spot: FiniteFloat
+    risk_free_rate: FiniteFloat
+    dividend_yield: FiniteFloat
+    dividends: list[DividendEvent] = Field(default_factory=list, max_length=16)
+
+    @model_serializer(mode="wrap")
+    def _omit_empty_dividends(self, handler: SerializerFunctionWrapHandler) -> Any:
+        data = handler(self)
+        if isinstance(data, dict) and not data.get("dividends"):
+            data.pop("dividends", None)
+        return data
+
+
+class ModelSelection(_Request):
+    """Model selector; ``auto`` lets the service choose. ``version`` pins an algorithm."""
+
+    id: PricingModel = "auto"
+    version: str | None = None
+
+
+class _ForwardOptionRequest(_Request):
+    """Option, market, a supplied annual volatility (decimal) and the model selection.
 
     Numeric/model-domain validation belongs to the service. The SDK rejects
     malformed wire types and non-finite values without clamping or repricing.
     """
 
-    exercise_style: ExerciseStyle
-    option_type: OptionType
-    spot: FiniteFloat
-    strike: FiniteFloat
-    time_to_expiry_years: FiniteFloat
-    risk_free_rate: FiniteFloat
-    dividend_yield: FiniteFloat
-    pricing_model: PricingModel = "auto"
-    model_version: str | None = None
-    dividend_schedule: list[DividendEvent] = Field(default_factory=list, max_length=16)
-
-    def to_wire(self) -> dict[str, Any]:
-        """Validate current inputs, preserving omission and explicit null/empty values."""
-        values = self.model_dump(exclude={"dividend_schedule"}, exclude_unset=True)
-        # Freezing the model does not freeze lists or track their in-place edits.
-        # Include nonempty schedules and revalidate edits before JSON serialization.
-        if self.dividend_schedule or "dividend_schedule" in self.model_fields_set:
-            values["dividend_schedule"] = self.dividend_schedule
-        validated = type(self).model_validate(values)
-        result = validated.model_dump(mode="json", exclude_unset=True)
-        # This required wire field has a convenience default in Python.
-        result["pricing_model"] = self.pricing_model
-        return result
-
-
-class PriceRequest(_OptionRequest):
-    """Price an option at a supplied annual volatility, expressed as a decimal."""
-
+    option: Option
+    market: Market
     volatility: FiniteFloat
+    model: ModelSelection = Field(default_factory=ModelSelection)
 
 
-class ImpliedVolatilityRequest(_OptionRequest):
-    """Solve volatility from a per-share market price in the spot/strike currency.
+class _InverseOptionRequest(_Request):
+    """Option, market, a per-share market price and the model selection.
 
     Volatility is an output, not a request field. The service validates premiums
     and numerical domains without SDK-side clamping or local solving.
     """
 
+    option: Option
+    market: Market
     market_price: FiniteFloat
+    model: ModelSelection = Field(default_factory=ModelSelection)
+
+
+class OptionsPriceRequest(_ForwardOptionRequest):
+    """``options.price``: price an option at a supplied volatility."""
+
+
+class OptionsGreeksRequest(_ForwardOptionRequest):
+    """``options.greeks``: price and all ten Greeks at a supplied volatility."""
+
+
+class OptionsStandardGreeksRequest(_ForwardOptionRequest):
+    """``options.standard_greeks``: price and delta, gamma, theta, vega and rho."""
+
+
+class OptionsImpliedVolatilityRequest(_InverseOptionRequest):
+    """``options.implied_volatility``: solve volatility from an option premium."""
+
+
+class OptionsImpliedGreeksRequest(_InverseOptionRequest):
+    """``options.implied_greeks``: solve IV from a premium, then price and all ten Greeks."""
+
+
+OptionRequest = (
+    OptionsPriceRequest
+    | OptionsGreeksRequest
+    | OptionsStandardGreeksRequest
+    | OptionsImpliedVolatilityRequest
+    | OptionsImpliedGreeksRequest
+)
+_ItemType = TypeVar("_ItemType", bound=_Request)
+
+
+class _BatchRequest(_Request, Generic[_ItemType]):
+    # This is the reviewed wire limit, not an account/plan limit.
+    items: list[_ItemType] = Field(min_length=1, max_length=100)
+
+    def to_wire(self) -> dict[str, Any]:
+        validated = type(self).model_validate({"items": self.items})
+        return {"items": [item.to_wire() for item in validated.items]}
+
+
+class OptionsBatchPriceRequest(_BatchRequest[OptionsPriceRequest]):
+    """``options.batch_price``: one explicit batch of pricing requests in caller order."""
+
+
+class OptionsBatchGreeksRequest(_BatchRequest[OptionsGreeksRequest]):
+    """``options.batch_greeks``: one explicit batch of price-and-Greeks requests."""
+
+
+class OptionsBatchStandardGreeksRequest(_BatchRequest[OptionsStandardGreeksRequest]):
+    """``options.batch_standard_greeks``: one ordered batch of standard-Greeks requests."""
+
+
+class OptionsBatchImpliedVolatilityRequest(_BatchRequest[OptionsImpliedVolatilityRequest]):
+    """``options.batch_implied_volatility``: one explicit batch of IV solves."""
+
+
+class OptionsBatchImpliedGreeksRequest(_BatchRequest[OptionsImpliedGreeksRequest]):
+    """``options.batch_implied_greeks``: one explicit batch of implied-Greeks requests."""
+
+
+class SeriesIdentifyRegimeRequest(_Request):
+    """``series.identify_regime``: comparable positive prices, oldest first.
+
+    V1 requires 512 prices and consumes the latest 507. Supply split-adjusted
+    closes without cash-dividend total-return adjustment. No sampling interval is
+    assumed. The service validates timestamp/domain semantics and request byte
+    limits; no cropping occurs here.
+    """
+
+    prices: list[Annotated[FiniteFloat, Field(gt=0)]] = Field(min_length=512)
+    as_of: str | None = Field(default=None, max_length=64)
+
+
+# Responses -----------------------------------------------------------------
 
 
 class _Response(BaseModel):
     # Retain additive fields. A new resolved model name must not break decoding.
     model_config = ConfigDict(extra="allow", strict=True, allow_inf_nan=False)
 
-    @model_validator(mode="wrap")
-    @classmethod
-    def _mirror_cu_names(cls, data: Any, handler: ModelWrapValidatorHandler[Any]) -> Any:
-        """Prefer ``cu_*`` wire names and fall back to the deprecated ``fcu_*`` names.
 
-        API 0.7.0 publishes both names with equal values; older servers publish
-        only ``fcu_*``. Each declared pair is filled from whichever name is present,
-        never overriding a value the server sent, so both attributes are populated.
-        A name the server did not send is not marked as set, so
-        ``model_dump(exclude_unset=True)`` still reproduces the wire payload.
-        """
-        if not isinstance(data, dict):
-            return handler(data)
-        names = cls.model_fields
-        filled: set[str] = set()
-        values = data
-        for legacy in names:
-            current = legacy.replace("fcu", "cu")
-            if legacy == current or current not in names:
-                continue
-            for target, source in ((current, legacy), (legacy, current)):
-                if target not in values and values.get(source) is not None:
-                    if target not in data:
-                        filled.add(target)
-                    values = {**values, target: values[source]}
-                    break
-        model = handler(values)
-        if filled and isinstance(model, BaseModel):
-            model.__pydantic_fields_set__.difference_update(filled)
-        return model
+def _variant(field: str, known: Iterable[str]) -> Discriminator:
+    """Select a union member by ``field``; unknown values select ``unrecognized``.
+
+    Response enums may gain values. An unknown variant is retained with its
+    wire members instead of failing the whole response.
+    """
+    names = frozenset(known)
+
+    def pick(value: Any) -> str:
+        tag = value.get(field) if isinstance(value, dict) else getattr(value, field, None)
+        return tag if isinstance(tag, str) and tag in names else "unrecognized"
+
+    return Discriminator(pick)
 
 
-class ErrorDetails(_Response):
+class Unrecognized(_Response):
+    """A response variant this SDK version does not know. All wire members are kept."""
+
+    status: str
+
+
+class SolveTrialContext(_Response):
+    """Where a target solve refused a level."""
+
+    phase: Literal["domain_check", "search"] | str
+    coordinate: str
+    coordinate_value: FiniteFloat
+    evaluations: int = Field(ge=0)
+
+
+class Problem(_Response):
+    """RFC 9457 problem details. ``code`` is the stable machine-readable reason."""
+
+    type: str
+    title: str
+    status: int = Field(ge=0)
+    detail: str
     code: str
-    message: str
     field: str | None = None
+    solve_trial: SolveTrialContext | None = None
 
 
-class GreeksStandardRequest(PriceRequest):
-    """Price and delta, gamma, theta, vega and rho for a supported model."""
+class ContractIdentity(_Response):
+    """The served HTTP contract: its version label and exact document digest."""
+
+    version: str
+    sha256: str
 
 
-class GreeksRequest(PriceRequest):
-    """Price and all ten Greeks at a supplied volatility, using the pricing inputs.
+class EngineIdentity(_Response):
+    name: str
+    version: str
+    revision: str
 
-    Cash-dividend schedules are forwarded unchanged. The service owns model
-    selection, schedule support and numerical-domain validation.
+
+class RateCardIdentity(_Response):
+    id: str
+    version: str
+
+
+class BillingMetadata(_Response):
+    """Commercial CU evidence. A missing ``charged_cu`` means unreported, not zero."""
+
+    quoted_cu: int | None = Field(default=None, ge=0)
+    charged_cu: int | None = Field(default=None, ge=0)
+    rate_card: RateCardIdentity | None = None
+
+
+class BudgetMetadata(_Response):
+    period: str | None = None
+    resets_at: str | None = None
+    remaining_estimate_cu: int | None = Field(default=None, ge=0)
+
+
+class PolicyMetadata(_Response):
+    plan: str
+    revision: str
+
+
+class ResponseMetadata(_Response):
+    """Shared metadata on every response, success or error.
+
+    ``billing``, ``budget`` and ``policy`` are present on metered responses and
+    omitted otherwise. ``engines`` is absent when no numerical engine was selected.
     """
 
+    request_id: str
+    service_version: str
+    contract: ContractIdentity
+    engines: list[EngineIdentity] | None = None
+    billing: BillingMetadata | None = None
+    budget: BudgetMetadata | None = None
+    policy: PolicyMetadata | None = None
 
-class AnalyticsRequest(PriceRequest):
-    """Price and Greeks, optionally evaluated at IV solved from a market premium.
-
-    The wire contract requires volatility even with a premium; the service uses
-    it only when market_price is absent or null. Preserve both fields unchanged.
-    """
-
-    market_price: FiniteFloat | None = None
+    @property
+    def charged_cu(self) -> int | None:
+        """``billing.charged_cu``; ``None`` means the charge was not reported."""
+        return self.billing.charged_cu if self.billing is not None else None
 
 
-class GreeksStandard(_Response):
+class ErrorResponse(Problem):
+    """A non-success response: the problem details plus the shared metadata."""
+
+    metadata: ResponseMetadata
+
+
+class ModelIdentity(_Response):
+    """The resolved model and its exact algorithm pin."""
+
+    id: ResolvedPricingModel | str
+    version: str
+
+
+class StandardGreeks(_Response):
     """Unscaled derivatives; omitted quantities have typed unavailable reasons.
 
     Time derivatives are per year, volatility/rate derivatives per unit.
@@ -166,7 +339,7 @@ class GreeksStandard(_Response):
     theta: FiniteFloat | None = None
     vega: FiniteFloat | None = None
     rho: FiniteFloat | None = None
-    unavailable: dict[str, ErrorDetails] = Field(default_factory=dict)
+    unavailable: dict[str, Problem] = Field(default_factory=dict)
 
     @field_validator("*", mode="before")
     @classmethod
@@ -176,7 +349,7 @@ class GreeksStandard(_Response):
         return value
 
     @model_validator(mode="after")
-    def require_availability_evidence(self) -> GreeksStandard:
+    def require_availability_evidence(self) -> StandardGreeks:
         for name in type(self).model_fields:
             if name == "unavailable":
                 continue
@@ -187,7 +360,7 @@ class GreeksStandard(_Response):
         return self
 
 
-class Greeks(GreeksStandard):
+class Greeks(StandardGreeks):
     """All ten derivatives, retaining partial results and unavailable reasons."""
 
     vanna: FiniteFloat | None = None
@@ -197,18 +370,21 @@ class Greeks(GreeksStandard):
     color: FiniteFloat | None = None
 
 
-class GreeksStandardResult(_Response):
+class PriceResult(_Response):
     price: FiniteFloat
-    greeks: GreeksStandard
-    pricing_model: str
-    model_version: str
+    model: ModelIdentity
+
+
+class StandardGreeksResult(_Response):
+    price: FiniteFloat
+    greeks: StandardGreeks
+    model: ModelIdentity
 
 
 class GreeksResult(_Response):
     price: FiniteFloat
     greeks: Greeks
-    pricing_model: str
-    model_version: str
+    model: ModelIdentity
 
 
 class ImpliedVolatilityResult(_Response):
@@ -223,76 +399,14 @@ class ImpliedVolatilityResult(_Response):
     iterations: int = Field(ge=0)
     used_fallback: bool
     residual: FiniteFloat
-    residual_basis: str
-    pricing_model: str
-    model_version: str
+    residual_basis: ResidualBasis | str
+    model: ModelIdentity
 
 
-class AnalyticsResult(GreeksResult):
-    """Combined result; the nested IV solve has no separate commercial charge."""
+class ImpliedGreeksResult(GreeksResult):
+    """Price and Greeks at the solved IV; the nested solve has no separate charge."""
 
     implied_volatility: ImpliedVolatilityResult | None = None
-
-
-class EngineIdentity(_Response):
-    name: str
-    version: str
-    revision: str
-
-
-class PolicyMetadata(_Response):
-    snapshot_id: str
-    revision: str
-    plan: str
-    records: list[str]
-
-
-class _CommercialMetadata(_Response):
-    cu_quoted: int | None = Field(default=None, ge=0)
-    cu_charged: int | None = Field(default=None, ge=0)
-    cu_schedule_id: str | None = None
-    cu_schedule_version: str | None = None
-    # Deprecated aliases with equal values; kept for older callers and servers.
-    fcu_quoted: int | None = Field(default=None, ge=0)
-    fcu_charged: int | None = Field(default=None, ge=0)
-    fcu_schedule_id: str | None = None
-    fcu_schedule_version: str | None = None
-    policy: PolicyMetadata | None = None
-    remaining_cu_instance_estimate: int | None = Field(default=None, ge=0)
-    remaining_fcu_instance_estimate: int | None = Field(default=None, ge=0)
-    budget_period: str | None = None
-    budget_reset_at: str | None = None
-
-
-class ResponseMetadata(_CommercialMetadata):
-    """Server provenance and optional commercial CU evidence.
-
-    Only ``cu_quoted`` and ``cu_charged`` are commercial CU evidence; the
-    ``fcu_*`` names are deprecated aliases with equal values.
-    Retired capacity fields are optional for compatibility with older deployments.
-    Missing ``cu_charged`` means unreported, not zero.
-    """
-
-    request_id: str
-    api_version: str
-    engine_version: str
-    engines: list[EngineIdentity]
-    units_charged: int | None = Field(default=None, ge=0, deprecated=True)
-    compute_schedule_version: str | None = Field(default=None, deprecated=True)
-
-
-class ServiceErrorMetadata(_CommercialMetadata):
-    request_id: str
-    api_version: str
-    service_version: str
-
-
-class PriceResult(_Response):
-    price: FiniteFloat
-    exercise_style: ExerciseStyle
-    option_type: OptionType
-    pricing_model: str
-    model_version: str
 
 
 class _EvidenceResponse(_Response):
@@ -310,86 +424,138 @@ class _EvidenceResponse(_Response):
         return self._headers.copy()
 
 
-class PriceResponse(_EvidenceResponse):
+class OptionsPriceResponse(_EvidenceResponse):
     result: PriceResult
     metadata: ResponseMetadata
 
 
-class GreeksStandardResponse(_EvidenceResponse):
-    result: GreeksStandardResult
+class OptionsStandardGreeksResponse(_EvidenceResponse):
+    result: StandardGreeksResult
     metadata: ResponseMetadata
 
 
-class GreeksResponse(_EvidenceResponse):
+class OptionsGreeksResponse(_EvidenceResponse):
     result: GreeksResult
     metadata: ResponseMetadata
 
 
-class ImpliedVolatilityResponse(_EvidenceResponse):
+class OptionsImpliedVolatilityResponse(_EvidenceResponse):
     result: ImpliedVolatilityResult
     metadata: ResponseMetadata
 
 
-class AnalyticsResponse(_EvidenceResponse):
-    result: AnalyticsResult
+class OptionsImpliedGreeksResponse(_EvidenceResponse):
+    result: ImpliedGreeksResult
     metadata: ResponseMetadata
 
 
-class RegimeRequest(_Request):
-    """Comparable positive prices, oldest first; no sampling interval is assumed.
+_ResultType = TypeVar("_ResultType", bound=_Response)
 
-    V1 requires 512 prices and consumes the latest 507. Supply split-adjusted
-    closes without cash-dividend total-return adjustment. The service validates
-    timestamp/domain semantics and request byte limits; no cropping occurs here.
-    """
 
-    prices: list[Annotated[FiniteFloat, Field(gt=0)]] = Field(min_length=512)
-    as_of: str | None = Field(default=None, max_length=64)
+class BatchSuccess(_Response, Generic[_ResultType]):
+    index: int = Field(ge=0)
+    status: Literal["success"]
+    result: _ResultType
 
-    def to_wire(self) -> dict[str, Any]:
-        # Revalidate mutable price lists without dropping explicit null timestamps.
-        values = self.model_dump(exclude={"prices"}, exclude_unset=True)
-        values["prices"] = self.prices
-        validated = type(self).model_validate(values)
-        return validated.model_dump(mode="json", exclude_unset=True)
 
+class BatchFailure(_Response):
+    index: int = Field(ge=0)
+    status: Literal["error"]
+    error: Problem
+
+
+class BatchUnrecognized(Unrecognized):
+    """A batch outcome status this SDK version does not know."""
+
+    index: int = Field(ge=0)
+
+
+class _BatchResponse(_EvidenceResponse, Generic[_ResultType]):
+    metadata: ResponseMetadata
+    results: list[
+        Annotated[
+            Annotated[BatchSuccess[_ResultType], Tag("success")]
+            | Annotated[BatchFailure, Tag("error")]
+            | Annotated[BatchUnrecognized, Tag("unrecognized")],
+            _variant("status", ["success", "error"]),
+        ]
+    ]
+
+
+class OptionsBatchPriceResponse(_BatchResponse[PriceResult]):
+    """Ordered outcomes and one metadata/charge block for the entire batch."""
+
+
+class OptionsBatchStandardGreeksResponse(_BatchResponse[StandardGreeksResult]):
+    """Ordered standard-Greeks outcomes with batch-level charge evidence."""
+
+
+class OptionsBatchGreeksResponse(_BatchResponse[GreeksResult]):
+    """Ordered Greeks outcomes and batch-level charge evidence."""
+
+
+class OptionsBatchImpliedVolatilityResponse(_BatchResponse[ImpliedVolatilityResult]):
+    """Ordered IV outcomes and batch-level charge evidence."""
+
+
+class OptionsBatchImpliedGreeksResponse(_BatchResponse[ImpliedGreeksResult]):
+    """Ordered implied-Greeks outcomes and batch-level charge evidence."""
+
+
+# Regime ---------------------------------------------------------------------
 
 RegimeDecisionLabel = Literal["not_eligible", "supported", "unsupported", "unresolved"]
-RegimeDirectionLabel = Literal["UP", "DOWN", "NEUTRAL"]
-RegimeStateLabel = Literal["LOWER_VOL", "HIGHER_VOL"]
-_Label = TypeVar("_Label")
-_Prediction = TypeVar("_Prediction")
+RegimeDirectionLabel = Literal["up", "down", "neutral"]
+RegimeStateLabel = Literal["lower_vol", "higher_vol"]
+RegimeVolatilityLabel = Literal["low", "high", "crisis"]
+RegimeTarget = Literal[
+    "reference_procedure_outcome",
+    "selected_state_tendency",
+    "filtered_scale_order_membership",
+]
+RegimeCrisisUnavailableReason = Literal["short_reference", "degenerate_reference"]
+_HEAD_STATUSES = ["available", "not_applicable", "unavailable"]
 
 
-class RegimeScore(_Response, Generic[_Label]):
-    label: _Label
+class RegimeDecisionScore(_Response):
+    label: RegimeDecisionLabel | str
     value: FiniteFloat = Field(ge=0, le=1)
 
 
-class RegimePrediction(_Response, Generic[_Label]):
-    label: _Label
-    scores: list[RegimeScore[_Label]]
-    selection: Literal["argmax"]
+class RegimeDirectionScore(_Response):
+    label: RegimeDirectionLabel | str
+    value: FiniteFloat = Field(ge=0, le=1)
 
 
-class RegimeDecisionPrediction(RegimePrediction[RegimeDecisionLabel]):
-    scores: list[RegimeScore[RegimeDecisionLabel]] = Field(min_length=4, max_length=4)
+class RegimeStateScore(_Response):
+    label: RegimeStateLabel | str
+    value: FiniteFloat = Field(ge=0, le=1)
 
 
-class RegimeDirectionPrediction(RegimePrediction[RegimeDirectionLabel]):
-    scores: list[RegimeScore[RegimeDirectionLabel]] = Field(min_length=3, max_length=3)
+# Score lists keep the contract's minimum; a label added later may lengthen them.
+class RegimeDecisionPrediction(_Response):
+    label: RegimeDecisionLabel | str
+    scores: list[RegimeDecisionScore] = Field(min_length=4)
+    selection: Literal["argmax"] | str
 
 
-class RegimeStatePrediction(RegimePrediction[RegimeStateLabel]):
-    scores: list[RegimeScore[RegimeStateLabel]] = Field(min_length=2, max_length=2)
+class RegimeDirectionPrediction(_Response):
+    label: RegimeDirectionLabel | str
+    scores: list[RegimeDirectionScore] = Field(min_length=3)
+    selection: Literal["argmax"] | str
+
+
+class RegimeStatePrediction(_Response):
+    label: RegimeStateLabel | str
+    scores: list[RegimeStateScore] = Field(min_length=2)
+    selection: Literal["argmax"] | str
 
 
 class RegimeBasis(_Response):
-    target: Literal[
-        "reference_procedure_outcome",
-        "selected_state_tendency",
-        "filtered_scale_order_membership",
-    ]
+    target: RegimeTarget | str
+
+
+_Prediction = TypeVar("_Prediction", bound=_Response)
 
 
 class RegimeAvailable(_Response, Generic[_Prediction]):
@@ -399,35 +565,56 @@ class RegimeAvailable(_Response, Generic[_Prediction]):
 
 
 class RegimeNotApplicable(_Response):
+    """The head does not apply; ``prediction`` is omitted and ``reason_code`` says why."""
+
     status: Literal["not_applicable"]
     basis: RegimeBasis
-    prediction: None
-    reason_code: Literal["predicted_not_eligible"]
+    reason_code: Literal["predicted_not_eligible"] | str
 
 
 class RegimeUnavailable(_Response):
+    """No prediction is available; ``prediction`` is omitted and ``reason_code`` says why."""
+
     status: Literal["unavailable"]
     basis: RegimeBasis
-    prediction: None
-    reason_code: Literal["prediction_unavailable"]
+    reason_code: Literal["prediction_unavailable"] | str
+
+
+RegimeDecisionHead = Annotated[
+    Annotated[RegimeAvailable[RegimeDecisionPrediction], Tag("available")]
+    | Annotated[RegimeNotApplicable, Tag("not_applicable")]
+    | Annotated[RegimeUnavailable, Tag("unavailable")]
+    | Annotated[Unrecognized, Tag("unrecognized")],
+    _variant("status", _HEAD_STATUSES),
+]
+RegimeDirectionHead = Annotated[
+    Annotated[RegimeAvailable[RegimeDirectionPrediction], Tag("available")]
+    | Annotated[RegimeNotApplicable, Tag("not_applicable")]
+    | Annotated[RegimeUnavailable, Tag("unavailable")]
+    | Annotated[Unrecognized, Tag("unrecognized")],
+    _variant("status", _HEAD_STATUSES),
+]
+RegimeStateHead = Annotated[
+    Annotated[RegimeAvailable[RegimeStatePrediction], Tag("available")]
+    | Annotated[RegimeNotApplicable, Tag("not_applicable")]
+    | Annotated[RegimeUnavailable, Tag("unavailable")]
+    | Annotated[Unrecognized, Tag("unrecognized")],
+    _variant("status", _HEAD_STATUSES),
+]
 
 
 class RegimeScoreContract(_Response):
-    kind: Literal["uncalibrated_softmax"]
+    kind: Literal["uncalibrated_softmax"] | str
     version: str
     sum_tolerance: FiniteFloat
 
 
-RegimeVolatilityLabel = Literal["low", "high", "crisis"]
-RegimeCrisisUnavailableReason = Literal["short_reference", "degenerate_reference"]
-
-
 class RegimeVolatilityBasis(_Response):
-    target: Literal["current_volatility"]
+    target: Literal["current_volatility"] | str
 
 
 class RegimeVolatilityPrediction(_Response):
-    label: RegimeVolatilityLabel
+    label: RegimeVolatilityLabel | str
 
 
 class RegimeVolatilityAvailable(_Response):
@@ -439,20 +626,21 @@ class RegimeVolatilityAvailable(_Response):
 class RegimeVolatilityNotApplicable(_Response):
     status: Literal["not_applicable"]
     basis: RegimeVolatilityBasis
-    prediction: None
-    reason_code: Literal["predicted_not_eligible"]
+    reason_code: Literal["predicted_not_eligible"] | str
 
 
 class RegimeVolatilityUnavailable(_Response):
     status: Literal["unavailable"]
     basis: RegimeVolatilityBasis
-    prediction: None
-    reason_code: Literal["prediction_unavailable"]
+    reason_code: Literal["prediction_unavailable"] | str
 
 
 RegimeVolatilityHead = Annotated[
-    RegimeVolatilityAvailable | RegimeVolatilityNotApplicable | RegimeVolatilityUnavailable,
-    Field(discriminator="status"),
+    Annotated[RegimeVolatilityAvailable, Tag("available")]
+    | Annotated[RegimeVolatilityNotApplicable, Tag("not_applicable")]
+    | Annotated[RegimeVolatilityUnavailable, Tag("unavailable")]
+    | Annotated[Unrecognized, Tag("unrecognized")],
+    _variant("status", _HEAD_STATUSES),
 ]
 
 
@@ -463,28 +651,32 @@ class RegimeCrisisActive(_Response):
 
 
 class RegimeNotCrisis(_Response):
+    """No crisis; ``episode_start_price_index`` is omitted."""
+
     status: Literal["not_crisis"]
     score: FiniteFloat
-    episode_start_price_index: None
 
 
 class RegimeCrisisUnavailable(_Response):
+    """No crisis score; ``score`` and ``episode_start_price_index`` are omitted."""
+
     status: Literal["unavailable"]
-    score: None
-    episode_start_price_index: None
-    reason_code: RegimeCrisisUnavailableReason
+    reason_code: RegimeCrisisUnavailableReason | str
 
 
 RegimeCrisis = Annotated[
-    RegimeCrisisActive | RegimeNotCrisis | RegimeCrisisUnavailable,
-    Field(discriminator="status"),
+    Annotated[RegimeCrisisActive, Tag("crisis")]
+    | Annotated[RegimeNotCrisis, Tag("not_crisis")]
+    | Annotated[RegimeCrisisUnavailable, Tag("unavailable")]
+    | Annotated[Unrecognized, Tag("unrecognized")],
+    _variant("status", ["crisis", "not_crisis", "unavailable"]),
 ]
 
 
 class RegimeCrisisScoreContract(_Response):
     """Unbounded linear readout; neither a probability nor a softmax score."""
 
-    kind: Literal["linear_readout"]
+    kind: Literal["linear_readout"] | str
     version: str
     theta_in: FiniteFloat
     theta_out: FiniteFloat
@@ -504,34 +696,14 @@ class RegimeVolatilityLabelProvenance(_Response):
     crisis_parameters_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
 
 
-class RegimeResult(_Response):
-    # Production supplies these fields; optional only for older server responses.
-    volatility: RegimeVolatilityHead | None = None
-    crisis: RegimeCrisis | None = None
-    crisis_score_contract: RegimeCrisisScoreContract | None = None
-    score_contract: RegimeScoreContract
-    decision: Annotated[
-        RegimeAvailable[RegimeDecisionPrediction] | RegimeNotApplicable | RegimeUnavailable,
-        Field(discriminator="status"),
-    ]
-    direction: Annotated[
-        RegimeAvailable[RegimeDirectionPrediction] | RegimeNotApplicable | RegimeUnavailable,
-        Field(discriminator="status"),
-    ]
-    state: Annotated[
-        RegimeAvailable[RegimeStatePrediction] | RegimeNotApplicable | RegimeUnavailable,
-        Field(discriminator="status"),
-    ]
-
-
 class RegimeProvenance(_Response):
-    crisis: RegimeCrisisProvenance | None = None
-    volatility_label: RegimeVolatilityLabelProvenance | None = None
     model_id: str
     model_status: str
     model_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     preprocessing: str
     teacher_executed: bool
+    volatility_label: RegimeVolatilityLabelProvenance
+    crisis: RegimeCrisisProvenance
 
 
 class RegimeConsumedPriceRange(_Response):
@@ -539,13 +711,9 @@ class RegimeConsumedPriceRange(_Response):
     end_index_exclusive: int = Field(ge=0)
 
 
-class RegimeMetadata(_CommercialMetadata):
-    response_contract_version: str
-    request_id: str
-    api_version: str
-    service_version: str
-    engines: list[EngineIdentity]
-    provenance: RegimeProvenance
+class RegimeInput(_Response):
+    """Window and return facts. ``as_of`` is present only when the request supplied it."""
+
     received_price_count: int = Field(ge=0)
     window_price_count: int = Field(ge=0)
     price_count: int = Field(ge=0)
@@ -553,163 +721,108 @@ class RegimeMetadata(_CommercialMetadata):
     consumed_price_range: RegimeConsumedPriceRange
     observation_index: int = Field(ge=0)
     input_price_index: int = Field(ge=0)
-    as_of: str | None
-    return_type: Literal["log"]
-    return_unit: Literal["fraction"]
-    inference_time_us: int = Field(ge=0)
-    crisis_time_us: int | None = Field(default=None, ge=0)
     all_prices_consumed: bool
+    return_type: Literal["log"] | str
+    return_unit: Literal["fraction"] | str
+    as_of: str | None = None
 
 
-class RegimeResponse(_EvidenceResponse):
+class RegimeTiming(_Response):
+    """Server-side inference times in microseconds."""
+
+    inference_us: int = Field(ge=0)
+    crisis_us: int = Field(ge=0)
+
+
+class RegimeEstimates(_Response):
+    score_contract: RegimeScoreContract
+    decision: RegimeDecisionHead
+    direction: RegimeDirectionHead
+    state: RegimeStateHead
+    volatility: RegimeVolatilityHead
+    crisis_score_contract: RegimeCrisisScoreContract
+    crisis: RegimeCrisis
+
+
+class RegimeResult(RegimeEstimates):
+    """The estimates plus input facts, timing, provenance and the regime contract version."""
+
+    response_contract_version: str
+    provenance: RegimeProvenance
+    input: RegimeInput
+    timing: RegimeTiming
+
+
+class SeriesIdentifyRegimeResponse(_EvidenceResponse):
     result: RegimeResult
-    metadata: RegimeMetadata
-
-
-class ErrorEnvelope(_Response):
-    error: ErrorDetails
-    metadata: ResponseMetadata | ServiceErrorMetadata
-
-
-_OptionRequestType = TypeVar("_OptionRequestType", bound=_OptionRequest)
-_OptionResultType = TypeVar("_OptionResultType", bound=_Response)
-
-
-class _BatchRequest(_Request, Generic[_OptionRequestType]):
-    # This is the reviewed wire limit, not an account/plan limit.
-    requests: list[_OptionRequestType] = Field(min_length=1, max_length=100)
-
-    def to_wire(self) -> dict[str, Any]:
-        validated = type(self).model_validate({"requests": self.requests})
-        return {"requests": [request.to_wire() for request in validated.requests]}
-
-
-class BatchPriceRequest(_BatchRequest[PriceRequest]):
-    """One explicit batch of pricing requests in caller order."""
-
-
-class BatchGreeksStandardRequest(_BatchRequest[GreeksStandardRequest]):
-    """One ordered batch of standard-five requests, at most 100 contracts."""
-
-
-class BatchGreeksRequest(_BatchRequest[GreeksRequest]):
-    """One explicit batch of price-and-Greeks requests."""
-
-
-class BatchImpliedVolatilityRequest(_BatchRequest[ImpliedVolatilityRequest]):
-    """One explicit batch of IV solves."""
-
-
-class BatchAnalyticsRequest(_BatchRequest[AnalyticsRequest]):
-    """One explicit batch of combined analytics requests."""
-
-
-class BatchSuccess(_Response, Generic[_OptionResultType]):
-    index: int = Field(ge=0)
-    status: Literal["success"]
-    result: _OptionResultType
-
-
-class BatchFailure(_Response):
-    index: int = Field(ge=0)
-    status: Literal["error"]
-    error: ErrorDetails
-
-
-class _BatchResponse(_EvidenceResponse, Generic[_OptionResultType]):
     metadata: ResponseMetadata
-    results: list[
-        Annotated[BatchSuccess[_OptionResultType] | BatchFailure, Field(discriminator="status")]
-    ]
 
 
-class BatchPriceResponse(_BatchResponse[PriceResult]):
-    """Ordered outcomes and one metadata/charge block for the entire batch."""
+# Rate card -----------------------------------------------------------------
 
 
-class BatchGreeksStandardResponse(_BatchResponse[GreeksStandardResult]):
-    """Ordered standard-five outcomes with batch-level charge evidence."""
-
-
-class BatchGreeksResponse(_BatchResponse[GreeksResult]):
-    """Ordered Greeks outcomes and batch-level charge evidence."""
-
-
-class BatchImpliedVolatilityResponse(_BatchResponse[ImpliedVolatilityResult]):
-    """Ordered IV outcomes and batch-level charge evidence."""
-
-
-class BatchAnalyticsResponse(_BatchResponse[AnalyticsResult]):
-    """Ordered combined analytics outcomes and batch-level charge evidence."""
-
-
-class CostRate(_Response):
+class Rate(_Response):
     """One published rate; its presence does not establish entitlement or availability."""
 
-    operation: str
+    rate_class: str
     model: str
     billing_unit: str
-    cu_per_unit: int
-    fcu_per_unit: int  # deprecated alias of cu_per_unit
-    max_discrete_dividends: int
+    cu_per_unit: int = Field(ge=0)
+    max_discrete_dividends: int = Field(ge=0)
 
 
-class CostSchedule(_Response):
+class RateCard(_Response):
     schedule_id: str
     schedule_version: str
-    record_version: int
+    record_version: int = Field(ge=0)
     policy_revision: str
     effective_from: str
-    effective_until: str | None
-    fixed_request_cu: int
-    minimum_charge_cu: int
-    fixed_request_fcu: int  # deprecated alias of fixed_request_cu
-    minimum_charge_fcu: int  # deprecated alias of minimum_charge_cu
+    effective_until: str | None = None
+    fixed_request_cu: int = Field(ge=0)
+    minimum_charge_cu: int = Field(ge=0)
     rounding: str
     failure_charging: str
-    rates: list[CostRate]
+    rates: list[Rate]
 
 
-class CostLine(_Response):
-    operation: str
+class QuoteLine(_Response):
+    rate_class: str
     model: str
     billing_unit: str
-    quantity: int
-    cu_per_unit: int
-    variable_cu: int
-    fcu_per_unit: int  # deprecated alias of cu_per_unit
-    variable_fcu: int  # deprecated alias of variable_cu
+    quantity: int = Field(ge=0)
+    cu_per_unit: int = Field(ge=0)
+    variable_cu: int = Field(ge=0)
 
 
-class CostBreakdown(_Response):
-    total_cu: int
-    fixed_cu: int
-    variable_cu: int
-    minimum_charge_cu: int
-    # Deprecated aliases of the cu_* fields above.
-    total_fcu: int
-    fixed_fcu: int
-    variable_fcu: int
-    minimum_charge_fcu: int
-    lines: list[CostLine]
+class Quote(_Response):
+    total_cu: int = Field(ge=0)
+    fixed_cu: int = Field(ge=0)
+    variable_cu: int = Field(ge=0)
+    minimum_charge_cu: int = Field(ge=0)
+    lines: list[QuoteLine]
 
 
-class ResolvedCostModel(_Response):
+class QuotedModel(_Response):
     model: str
-    quantity: int
+    quantity: int = Field(ge=0)
 
 
-class CostScheduleResponse(_EvidenceResponse):
-    schedule: CostSchedule
-    metadata: ServiceErrorMetadata
+class RateCardGetResponse(_EvidenceResponse):
+    """Your active rate card. Reading it executes nothing and charges no CUs."""
+
+    schedule: RateCard
+    metadata: ResponseMetadata
 
 
-class CostQuoteResponse(_EvidenceResponse):
+class RateCardQuoteResponse(_EvidenceResponse):
     """Exact conditional quote. No funds, execution capacity, or price are reserved."""
 
-    quote: CostBreakdown
-    resolved_models: list[ResolvedCostModel]
-    metadata: ServiceErrorMetadata
+    quote: Quote
+    resolved_models: list[QuotedModel]
+    metadata: ResponseMetadata
+
+
+# Model catalog --------------------------------------------------------------
 
 
 class ModelConstraint(_Response):
@@ -719,27 +832,71 @@ class ModelConstraint(_Response):
     maximum: FiniteFloat | None = None
 
 
-class PricingModelDescriptor(_Response):
-    id: str
+class ValidityInterval(_Response):
+    kind: Literal["interval"]
+    input: str
+    minimum: FiniteFloat | None = None
+    maximum: FiniteFloat | None = None
+
+
+class ValidityCondition(_Response):
+    kind: Literal["condition"]
+    name: str
+    formula: str
+
+
+class UnrecognizedValidityBound(_Response):
+    """A validity bound kind this SDK version does not know. All wire members are kept."""
+
+    kind: str
+
+
+ValidityBound = Annotated[
+    Annotated[ValidityInterval, Tag("interval")]
+    | Annotated[ValidityCondition, Tag("condition")]
+    | Annotated[UnrecognizedValidityBound, Tag("unrecognized")],
+    _variant("kind", ["interval", "condition"]),
+]
+
+
+class ValidityTolerance(_Response):
+    relative: FiniteFloat
+    absolute: FiniteFloat
+    absolute_unit: str
+
+
+class QuantityValidity(_Response):
+    """The engine's stated validity contract for one served quantity."""
+
+    quantity: str
+    status: Literal["validated", "not_stated", "not_offered"] | str
+    criterion: Literal["strict", "approximation", "inverse_of_price"] | str | None = None
+    tolerance: ValidityTolerance | None = None
+    region: list[ValidityBound] | None = None
+    outside: str | None = None
+
+
+class ModelDescriptor(_Response):
+    id: ResolvedPricingModel | str
     name: str
     version: str
     model_version: str
-    aliases: list[str]
     underlying_model: str
     method: str
-    exercise_styles: list[ExerciseStyle]
+    exercise_styles: list[ExerciseStyle | str]
     dividend_support: list[str]
     operations: list[str]
-    batch_operations: list[str]
     greeks: list[str]
     guidance: str
     constraints: list[ModelConstraint]
+    validity: list[QuantityValidity]
     notes: str
 
 
-class PricingModelCatalog(_EvidenceResponse):
+class ModelsListResponse(_EvidenceResponse):
     """Public compiled capabilities; account entitlements and rates are separate."""
 
-    models: list[PricingModelDescriptor]
+    models: list[ModelDescriptor]
     engines: list[EngineIdentity]
     greek_units: dict[str, str]
+    validity_symbols: dict[str, str]

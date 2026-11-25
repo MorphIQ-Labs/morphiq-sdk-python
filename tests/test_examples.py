@@ -25,12 +25,13 @@ def test_examples_import_without_credentials_or_requests():
         [
             sys.executable,
             "-c",
-            "import examples.cost_quote, examples.price_european, examples.price_american, "
+            "import examples.rate_card_quote, examples.list_models, "
+            "examples.price_european, examples.price_american, "
             "examples.price_async, examples.quickstart, "
             "examples.identify_regime, examples.identify_regime_async, "
-            "examples.greeks, examples.greeks_async, "
+            "examples.greeks, examples.greeks_async, examples.standard_greeks, "
             "examples.implied_volatility, examples.implied_volatility_async, "
-            "examples.analytics, examples.analytics_async, "
+            "examples.implied_greeks, examples.implied_greeks_async, "
             "examples.batch_price, examples.batch_price_async, "
             "examples.chunked_price, examples.chunked_price_async, examples.tabular_price",
         ],
@@ -73,11 +74,12 @@ def test_scripts_use_same_requests_and_preserve_unreported_charges(
             expected = cases
         for case in expected:
             assert f"Price: {case['response']['result']['price']}" in result.stdout
-            assert case["response"]["result"]["model_version"] in result.stdout
+            assert case["response"]["result"]["model"]["version"] in result.stdout
             assert case["response"]["metadata"]["request_id"] in result.stdout
             assert case["response"]["metadata"]["engines"][0]["revision"] in result.stdout
     assert len(received) == 6
-    assert [request[2]["exercise_style"] for request in received] == [
+    assert all(request[0] == "/v1/options:price" for request in received)
+    assert [request[2]["option"]["exercise_style"] for request in received] == [
         "european",
         "american",
         "european",
@@ -102,7 +104,7 @@ def test_readme_request_and_response_match_executable_example(fixture_api, cases
         text=True,
         check=True,
     )
-    assert received == [("/v1/price", "Bearer readme-test-key", cases[0]["request"])]
+    assert received == [("/v1/options:price", "Bearer readme-test-key", cases[0]["request"])]
     assert json.loads(result.stdout) == json.loads(documented_response.group(1))
     assert json.loads(result.stdout) == cases[0]["response"]
     assert "readme-test-key" not in result.stdout + result.stderr
@@ -119,8 +121,9 @@ def test_scripts_report_failures_without_retry(failing_api, tmp_path):
         "greeks_async",
         "implied_volatility",
         "implied_volatility_async",
-        "analytics",
-        "analytics_async",
+        "standard_greeks",
+        "implied_greeks",
+        "implied_greeks_async",
         "batch_price",
         "batch_price_async",
     ):
@@ -140,7 +143,7 @@ def test_scripts_report_failures_without_retry(failing_api, tmp_path):
         assert expected in result.stderr
         assert "error-test-key" not in result.stdout + result.stderr
         assert "Price:" not in result.stdout
-    assert len(received) == 12
+    assert len(received) == 13
 
 
 @pytest.mark.parametrize("filename", NOTEBOOK_CASES)
@@ -149,8 +152,9 @@ def test_generated_notebook_executes_without_source_tree(
     cases,
     regime_cases,
     greeks_cases,
+    standard_greeks_cases,
     iv_cases,
-    analytics_cases,
+    implied_greeks_cases,
     batch_cases,
     tmp_path,
     filename,
@@ -189,7 +193,13 @@ def test_generated_notebook_executes_without_source_tree(
     )
     by_name = {
         case["name"]: case
-        for case in cases + regime_cases + greeks_cases + iv_cases + analytics_cases + batch_cases
+        for case in cases
+        + regime_cases
+        + greeks_cases
+        + standard_greeks_cases
+        + iv_cases
+        + implied_greeks_cases
+        + batch_cases
     }
     assert [item[2] for item in received] == [
         by_name[name]["request"] for name in NOTEBOOK_CASES[filename]
@@ -216,7 +226,9 @@ def test_batch_examples_are_standalone_and_count_one_request(
         text=True,
         check=True,
     )
-    assert received == [("/v1/price:batch", "Bearer batch-example", batch_cases[-1]["request"])]
+    assert received == [
+        ("/v1/options:batch-price", "Bearer batch-example", batch_cases[-1]["request"])
+    ]
     assert result.stdout.count("Commercial CU charged:") == 1
     assert "Item 0:" in result.stdout and "Item 1:" in result.stdout
     assert "batch-example" not in result.stdout + result.stderr

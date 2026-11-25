@@ -13,7 +13,7 @@ def test_sweep_429_shows_retry_after_and_keeps_charge_unknown_when_absent(cases,
     class Handler(BaseHTTPRequestHandler):
         def do_POST(self):
             received.append(json.loads(self.rfile.read(int(self.headers["Content-Length"]))))
-            assert self.path == "/v1/price:batch"
+            assert self.path == "/v1/options:batch-price"
             self.send_response(429)
             self.send_header("Retry-After", "120")
             self.send_header("x-request-id", "throttle-check")
@@ -24,8 +24,15 @@ def test_sweep_429_shows_retry_after_and_keeps_charge_unknown_when_absent(cases,
                 self.wfile.write(
                     json.dumps(
                         {
-                            "metadata": {**cases[0]["response"]["metadata"], "fcu_charged": 0},
-                            "error": {"code": "concurrency_limited", "message": "Try later"},
+                            "type": "https://developers.morphiqlabs.com/docs/errors#concurrency_limited",
+                            "title": "Concurrency limited",
+                            "status": 429,
+                            "detail": "Try later",
+                            "code": "concurrency_limited",
+                            "metadata": {
+                                **cases[0]["response"]["metadata"],
+                                "billing": {"charged_cu": 0},
+                            },
                         }
                     ).encode()
                 )
@@ -50,7 +57,7 @@ assert not any(control.disabled for control in controls)
         run_workspace(
             "pricing/options.ipynb", code, f"http://127.0.0.1:{server.server_port}", tmp_path
         )
-        assert len(received) == 1 and len(received[0]["requests"]) == 9
+        assert len(received) == 1 and len(received[0]["items"]) == 9
     finally:
         server.shutdown()
         server.server_close()
