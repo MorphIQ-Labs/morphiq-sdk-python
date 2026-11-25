@@ -41,7 +41,7 @@ def invoke(mode, transport, request):
 def test_greeks_route_and_native_fixture_identity(greeks_cases):
     schema = json.loads((ROOT / "contracts/openapi.json").read_text())
     fixture = json.loads((ROOT / "tests/fixtures/greeks.json").read_text())
-    pin = json.loads((ROOT / "contracts/provenance.json").read_text())
+    pin = json.loads((ROOT / "contracts/provenance.json").read_text())["recorded_pricing_fixtures"]
     assert fixture["source_commit"] == pin["source_commit"]
     assert fixture["contract_sha256"] == pin["sha256"]
     operation = schema["paths"]["/v1/options:greeks"]["post"]

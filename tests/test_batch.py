@@ -39,7 +39,7 @@ def invoke(mode, transport, method, request):
 
 def test_batch_fixture_identity_and_routes(batch_cases):
     fixture = json.loads((ROOT / "tests/fixtures/batch.json").read_text())
-    pin = json.loads((ROOT / "contracts/provenance.json").read_text())
+    pin = json.loads((ROOT / "contracts/provenance.json").read_text())["recorded_pricing_fixtures"]
     assert fixture["source_commit"] == pin["source_commit"]
     assert fixture["contract_sha256"] == pin["sha256"]
     for case, (method, request, response) in zip(batch_cases, OPERATIONS, strict=False):

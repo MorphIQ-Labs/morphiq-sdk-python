@@ -26,5 +26,10 @@
     "POST /v1/books:explain",
     "POST /v1/books:solve-scenario"
   ],
-  "uncovered_operations": []
+  "uncovered_operations": [],
+  "recorded_pricing_fixtures": {
+    "source_commit": "4809233ade17132517a74dfc0ea4aebb087386d9",
+    "sha256": "68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8",
+    "note": "Existing synthetic pricing fixtures retain their recorded API v0.10.0 identity; their responses are validated against the current contract separately."
+  }
 }
