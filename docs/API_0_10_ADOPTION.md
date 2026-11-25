@@ -125,8 +125,8 @@ variant of a tagged union as `Unrecognized`, `BatchUnrecognized` or
 `UnrecognizedValidityBound` with all its wire members. Handle the values you know
 and treat others as unhandled, rather than failing the response.
 
-## Not yet covered
+## Scenarios and books
 
-`options.revalue`, `options.solve_scenario`, `books.revalue`, `books.explain` and
-`books.solve_scenario` are served by the contract but not covered by this SDK
-release; see the [roadmap](ROADMAP.md).
+The SDK also covers `options.revalue`, `options.solve_scenario`, `books.revalue`,
+`books.explain` and `books.solve_scenario`, sync and async. These are new SDK
+methods; see [the scenario and book guide](SCENARIOS.md).

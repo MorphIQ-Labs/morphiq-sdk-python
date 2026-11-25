@@ -14,6 +14,8 @@ from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = (
+    "scenarios",
+    "scenario_quotes",
     "pricing",
     "regime",
     "greeks",

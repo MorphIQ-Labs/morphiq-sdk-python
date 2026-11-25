@@ -67,6 +67,7 @@ targets the API 0.10.0 contract: sync/async `options.price`, `options.greeks`,
 `options.standard_greeks`, `options.implied_volatility` and
 `options.implied_greeks` with their batches and optional bounded-concurrency
 workflows, `series.identify_regime`, `models.list` and the `rate_card` utilities.
-Scenario and book operations are not yet covered. PyPI publication is live;
+It also covers option revaluation and scenario solving, and book revaluation,
+P&L attribution and scenario solving. PyPI publication is live;
 notebook images and hosted notebooks remain separate work. Keep availability
 statements precise.

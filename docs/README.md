@@ -8,10 +8,12 @@ and unavailable-Greek semantics.
 Start with [API access, installation and your first request](QUICKSTART.md).
 The [client and model reference](API.md) lists every supported method, its inputs,
 response types, configuration and errors. Methods are grouped by collection:
-`client.options`, `client.series`, `client.models` and `client.rate_card`.
+`client.options`, `client.books`, `client.series`, `client.models` and `client.rate_card`.
 
 | Task | Guide | Executable examples |
 | --- | --- | --- |
+| Revalue options and solve targets | [Scenarios](SCENARIOS.md) | [Revalue](../examples/option_revalue.py), [solve](../examples/option_solve.py) |
+| Revalue, explain and solve books | [Books and signed P&L](SCENARIOS.md#books) | [Revalue](../examples/book_revalue.py), [explain](../examples/book_explain.py), [solve](../examples/book_solve.py) |
 | Discover models | [Model capabilities](MODELS.md) | [Public discovery](../examples/list_models.py) |
 | Calculate standard Greeks | [Greeks and units](GREEKS.md#standard-five) | [Standard Greeks](../examples/standard_greeks.py) |
 | Read your rate card and quote requests | [Rate card and quotes](RATE_CARD.md) | [Quote and optional capped execution](../examples/rate_card_quote.py) |

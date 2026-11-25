@@ -23,7 +23,7 @@ repository or numerical engine access.
 
 ## Coverage
 
-The SDK covers 14 operations, each spelled by its canonical `collection.method`
+The SDK covers 19 operations, each spelled by its canonical `collection.method`
 id:
 
 | Operation id | Route | SDK method |
@@ -42,13 +42,14 @@ id:
 | `models.list` | `GET /v1/models` | `client.models.list` |
 | `rate_card.get` | `GET /v1/rate-card` | `client.rate_card.get` |
 | `rate_card.quote` | `POST /v1/rate-card:quote` | `client.rate_card.quote` |
+| `options.revalue` | `POST /v1/options:revalue` | `client.options.revalue` |
+| `options.solve_scenario` | `POST /v1/options:solve-scenario` | `client.options.solve_scenario` |
+| `books.revalue` | `POST /v1/books:revalue` | `client.books.revalue` |
+| `books.explain` | `POST /v1/books:explain` | `client.books.explain` |
+| `books.solve_scenario` | `POST /v1/books:solve-scenario` | `client.books.solve_scenario` |
 
-The contract also serves `options.revalue`, `options.solve_scenario`,
-`books.revalue`, `books.explain` and `books.solve_scenario`. They are listed as
-`uncovered_operations` in contracts/provenance.json and are not part of this SDK
-release; [PR #46](https://github.com/MorphIQ-Labs/morphiq-sdk-python/pull/46)
-carries scenario work on the earlier contract. A test requires every served
-operation to be listed as covered or uncovered.
+All served v1 operations are covered. Tests require the coverage inventory to match
+the pinned schema. Scenario outcome unions are checked variant-by-variant.
 
 ## Checks against the snapshot
 
@@ -109,3 +110,11 @@ fixture scores.
 An open-admission service has no signed policy publication, so it refuses the
 rate-card utilities with `policy_unavailable`. Rate-card and quote tests use
 synthetic responses in the contract's shape.
+
+Scenario and book fixtures are recorded from the same native API v0.10.0 tag,
+including all seven solve coordinates, position P&L and Greek targets, American
+pricing, duplicate scenarios, partial errors and unresolved coverage. The partial
+error fixture deliberately echoes a negative spot: the service returns that
+invalid input even though OpenAPI reuses a positive-spot input schema for the
+response. The SDK preserves the error and its inputs; it does not discard the row.
+Quote fixtures are synthetic, clearly marked, and do not assert live policy rates.

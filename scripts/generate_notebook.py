@@ -88,6 +88,12 @@ Open a workspace and select **Run → Run All Cells** once to display its contro
 Then use its buttons. Running the setup makes no MorphIQ requests; each action button
 states how many requests it sends. All market data stays in memory.
 
+- [options.revalue](scenarios/revalue.ipynb): quote, execute and inspect the result.
+- [options.solve_scenario](scenarios/solve.ipynb): quote, execute and inspect the result.
+- [books.revalue](books/revalue.ipynb): quote, execute and inspect the result.
+- [books.explain](books/explain.ipynb): quote, execute and inspect the result.
+- [books.solve_scenario](books/solve.ipynb): quote, execute and inspect the result.
+
 ## API access
 
 Get your API key from [the developer portal](https://developers.morphiqlabs.com).
@@ -116,6 +122,11 @@ def notebooks() -> dict[str, dict[str, Any]]:
     result = {"start-here.ipynb": notebook()}
     # Analysis notebooks are authored directly; tests verify their SDK requests.
     for filename in (
+        "scenarios/revalue.ipynb",
+        "scenarios/solve.ipynb",
+        "books/revalue.ipynb",
+        "books/explain.ipynb",
+        "books/solve.ipynb",
         "pricing/options.ipynb",
         "pricing/models.ipynb",
         "pricing/standard-five.ipynb",

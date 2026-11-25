@@ -900,3 +900,720 @@ class ModelsListResponse(_EvidenceResponse):
     engines: list[EngineIdentity]
     greek_units: dict[str, str]
     validity_symbols: dict[str, str]
+
+
+# Scenario and book wire types, from the pinned API 0.10.0 contract.
+# Input domains and account limits remain server-owned; no client repricing.
+
+
+class UnrecognizedKind(_Response):
+    """An unknown kind-tagged response, preserved without interpretation."""
+
+    kind: str
+
+
+class BookPosition(_Request):
+    """One held option: signed quantity of contracts, each worth `multiplier`
+    underlying units. Its market is the request's `markets[underlying]`; its
+    volatility and model are its own. Net value is quantity × multiplier ×
+    option price, in the request `currency`."""
+
+    id: str = Field(pattern="^[A-Za-z0-9._:/-]{1,64}$")
+    model: ModelSelection
+    multiplier: FiniteFloat
+    option: Option
+    quantity: FiniteFloat
+    underlying: str = Field(pattern="^[A-Za-z0-9._:/-]{1,64}$")
+    volatility: FiniteFloat
+
+
+class BookStrategy(_Request):
+    """A named grouping of positions in one book. Strategies may overlap, so strategy
+    totals are not additive; book totals always sum positions once."""
+
+    id: str = Field(pattern="^[A-Za-z0-9._:/-]{1,64}$")
+    position_ids: list[str] = Field(max_length=50)
+
+
+class Book(_Request):
+    """A book of positions and its optional strategies."""
+
+    id: str = Field(pattern="^[A-Za-z0-9._:/-]{1,64}$")
+    positions: list[BookPosition] = Field(max_length=50)
+    strategies: list[BookStrategy] | None = Field(default=None, max_length=64)
+
+
+class BookShockSpotRelative(_Request):
+    """Multiply the underlying by 1 + relative; relative must exceed -1."""
+
+    kind: Literal["spot_relative"]
+    relative: FiniteFloat
+
+
+class BookShockParallelVol(_Request):
+    """Add an absolute shift to volatility."""
+
+    kind: Literal["parallel_vol"]
+    shift: FiniteFloat
+
+
+class BookShockSkew(_Request):
+    """Skew slope per unit of log-moneyness ln(K / F); positive raises
+    higher-strike volatility."""
+
+    kind: Literal["skew"]
+    slope: FiniteFloat
+
+
+class BookShockRate(_Request):
+    """Add an absolute shift to the continuously compounded rate, per year."""
+
+    kind: Literal["rate"]
+    shift: FiniteFloat
+
+
+class BookShockRollDown(_Request):
+    """Move the valuation later by `years` (nonnegative) with spot held."""
+
+    kind: Literal["roll_down"]
+    years: FiniteFloat
+
+
+class BookShockVolTerm(_Request):
+    """Linear volatility ramp over remaining tenor, flat outside the anchors."""
+
+    back_shift: FiniteFloat
+    back_tenor: FiniteFloat
+    front_shift: FiniteFloat
+    front_tenor: FiniteFloat
+    kind: Literal["vol_term"]
+
+
+BookShock = Annotated[
+    BookShockSpotRelative
+    | BookShockParallelVol
+    | BookShockSkew
+    | BookShockRate
+    | BookShockRollDown
+    | BookShockVolTerm,
+    Field(discriminator="kind"),
+]
+
+
+class BookScenarioDefinition(_Request):
+    """A named, ordered scenario applied to every position of every book."""
+
+    name: str | None = Field(default=None)
+    shocks: list[BookShock] | None = Field(default=None, max_length=16)
+
+
+class BooksRevalueRequest(_Request):
+    """Reprice one or more books under one composed scenario (`books.revalue`,
+    and the same body for `books.explain`). More than one book returns
+    portfolio totals. Every position costs a base and a shocked price
+    calculation at its model's price rate."""
+
+    books: list[Book] = Field(max_length=50)
+    currency: str = Field(pattern="^[A-Z]{3}$")
+    markets: dict[str, Market]
+    scenario: BookScenarioDefinition
+
+
+class BooksSolveScenarioRequest(_Request):
+    """Find every spot level at which a book's (or one strategy's) modeled P&L
+    equals a target (`books.solve_scenario`), under an ordered non-spot scenario. P&L
+    is horizon value minus `signed_reference_net_value`. Solved positions
+    share one underlying, so its single market's spot is the solved axis.
+    Roll-down may reach expiry (including engine roundoff tolerance) but not pass it."""
+
+    book: Book
+    coordinate_tolerance: FiniteFloat | None = Field(default=None)
+    currency: str = Field(pattern="^[A-Z]{3}$")
+    lower: FiniteFloat
+    markets: dict[str, Market]
+    pnl_tolerance: FiniteFloat | None = Field(default=None)
+    scenario: BookScenarioDefinition
+    signed_reference_net_value: FiniteFloat
+    strategy_id: str | None = Field(default=None, pattern="^[A-Za-z0-9._:/-]{1,64}$")
+    target_pnl: FiniteFloat | None = Field(default=None)
+    upper: FiniteFloat
+
+
+class ScenarioPosition(_Request):
+    """Optional signed position scaling. P&L is relative to the base model value
+    (`pnl_basis: base_model_value`), not trade entry cost. No currency
+    conversion, fees or financing are applied."""
+
+    multiplier: FiniteFloat
+    quantity: FiniteFloat
+
+
+class ScenarioPoint(_Request):
+    """Changes applied independently to the base contract. Monetary values use the
+    contract's quote currency; volatility is annualized decimal volatility."""
+
+    elapsed_time_years: FiniteFloat | None = Field(default=None)
+    spot: FiniteFloat | None = Field(default=None)
+    spot_change: FiniteFloat | None = Field(default=None)
+    volatility: FiniteFloat | None = Field(default=None)
+
+
+class OptionsRevalueRequest(_Request):
+    """Independently reprice one option at explicit points (`options.revalue`).
+    Send a curve or a flattened grid in the desired order. Only explicit BSM
+    and BS1993 are supported."""
+
+    market: Market
+    model: ModelSelection
+    option: Option
+    position: ScenarioPosition | None = Field(default=None)
+    scenarios: list[ScenarioPoint] = Field(min_length=1, max_length=99)
+    volatility: FiniteFloat
+
+
+class OptionsSolveScenarioAssumptions(_Request):
+    """Scenario assumptions a target solve holds fixed while it searches its
+    coordinate."""
+
+    elapsed_time_years: FiniteFloat | None = Field(default=None)
+    volatility: FiniteFloat | None = Field(default=None)
+
+
+ScenarioSolveCoordinate = Literal[
+    "spot", "strike", "time_to_expiry", "elapsed_time", "rate", "dividend_yield", "volatility"
+]
+
+
+class ScenarioSolveTargetOptionPrice(_Request):
+    """ScenarioSolveTargetOptionPrice"""
+
+    kind: Literal["option_price"]
+    value: FiniteFloat
+
+
+class ScenarioSolveTargetPositionPnl(_Request):
+    """ScenarioSolveTargetPositionPnl"""
+
+    kind: Literal["position_pnl"]
+    position: ScenarioPosition
+    value: FiniteFloat
+
+
+ScenarioSolveGreek = Literal[
+    "delta", "gamma", "theta", "vega", "rho", "vanna", "volga", "charm", "veta", "color"
+]
+
+
+class ScenarioSolveTargetGreek(_Request):
+    """One per-option Greek in the units the Greek endpoints publish (annual
+    time units for theta, charm, veta and color). Not scaled by any position."""
+
+    greek: ScenarioSolveGreek
+    kind: Literal["greek"]
+    value: FiniteFloat
+
+
+ScenarioSolveTarget = Annotated[
+    ScenarioSolveTargetOptionPrice | ScenarioSolveTargetPositionPnl | ScenarioSolveTargetGreek,
+    Field(discriminator="kind"),
+]
+
+
+class OptionsSolveScenarioRequest(_Request):
+    """Solve one input of one option for a target price, P&L or Greek
+    (`options.solve_scenario`)."""
+
+    coordinate: ScenarioSolveCoordinate | None = Field(default=None)
+    coordinate_tolerance: FiniteFloat | None = Field(default=None)
+    lower: FiniteFloat
+    market: Market
+    model: ModelSelection
+    option: Option
+    scenario: OptionsSolveScenarioAssumptions | None = Field(default=None)
+    target: ScenarioSolveTarget
+    upper: FiniteFloat
+    value_tolerance: FiniteFloat | None = Field(default=None)
+    volatility: FiniteFloat
+
+
+class DividendEventEcho(_Response):
+    """One discrete cash dividend."""
+
+    cash_amount: FiniteFloat
+    ex_time_years: FiniteFloat
+
+
+class MarketEcho(_Response):
+    """Market state of the underlying: one per underlying in a book."""
+
+    dividend_yield: FiniteFloat
+    dividends: list[DividendEventEcho] | None = Field(default=None, max_length=16)
+    risk_free_rate: FiniteFloat
+    spot: FiniteFloat
+
+
+class ModelSelectionEcho(_Response):
+    """Model selection for a request: a selector from `GET /v1/models`, or `auto`."""
+
+    id: PricingModel | str
+    version: str | None = Field(default=None)
+
+
+class OptionEcho(_Response):
+    """The option's contract terms (ADR 0011). Market state and the model are
+    separate objects, so scenarios and books change one without restating the
+    others."""
+
+    exercise_style: ExerciseStyle | str
+    strike: FiniteFloat
+    time_to_expiry_years: FiniteFloat = Field(ge=0)
+    type: OptionType | str
+
+
+class OptionsPriceRequestEcho(_Response):
+    """Price one option at a supplied volatility."""
+
+    market: MarketEcho
+    model: ModelSelectionEcho
+    option: OptionEcho
+    volatility: FiniteFloat = Field(ge=0)
+
+
+class ScenarioItemBase(_Response):
+    """ScenarioItemBase"""
+
+    index: int = Field(ge=0)
+    inputs: OptionsPriceRequestEcho
+
+
+class ScenarioSuccess(ScenarioItemBase):
+    """ScenarioSuccess"""
+
+    pnl: FiniteFloat | None = Field(default=None)
+    price_change: FiniteFloat
+    result: PriceResult
+    status: Literal["success"]
+
+
+class ScenarioError(ScenarioItemBase):
+    """ScenarioError"""
+
+    error: Problem
+    status: Literal["error"]
+
+
+class ScenarioUnrecognized(ScenarioItemBase):
+    status: str
+
+
+ScenarioItem = Annotated[
+    Annotated[ScenarioSuccess, Tag("success")]
+    | Annotated[ScenarioError, Tag("error")]
+    | Annotated[ScenarioUnrecognized, Tag("unrecognized")],
+    _variant("status", ("success", "error")),
+]
+
+
+class BookPositionScenario(_Response):
+    """One position's base and shocked valuation, in the request currency."""
+
+    base_net_value: FiniteFloat
+    base_unit_price: FiniteFloat
+    contract: OptionsPriceRequestEcho
+    id: str
+    model: ModelIdentity
+    multiplier: FiniteFloat
+    pnl: FiniteFloat
+    quantity: FiniteFloat
+    shocked_net_value: FiniteFloat
+    shocked_unit_price: FiniteFloat
+    underlying: str
+
+
+class ExpiryPnlBucket(_Response):
+    """Positions sharing exactly the same base expiry (bitwise-equal years)."""
+
+    base_net_value: FiniteFloat
+    pnl: FiniteFloat
+    shocked_net_value: FiniteFloat
+    time_to_expiry_years: FiniteFloat
+
+
+class StrikePnlBucket(_Response):
+    """Positions sharing exactly the same strike (bitwise-equal)."""
+
+    base_net_value: FiniteFloat
+    pnl: FiniteFloat
+    shocked_net_value: FiniteFloat
+    strike: FiniteFloat
+
+
+class ScenarioPnlAttribution(_Response):
+    """P&L attribution. The expiry buckets and the strike buckets each partition
+    the positions and reconcile to the enclosing P&L."""
+
+    expiry_buckets: list[ExpiryPnlBucket]
+    strike_buckets: list[StrikePnlBucket]
+
+
+class BookStrategyScenario(_Response):
+    """One strategy's member set; overlapping strategies are not additive."""
+
+    base_net_value: FiniteFloat
+    id: str
+    pnl: FiniteFloat
+    position_ids: list[str] = Field(max_length=50)
+    shocked_net_value: FiniteFloat
+
+
+class BookScenarioBook(_Response):
+    """One book's base and shocked valuation, in the request currency."""
+
+    attribution: ScenarioPnlAttribution | None = Field(default=None)
+    base_net_value: FiniteFloat
+    id: str
+    pnl: FiniteFloat
+    positions: list[BookPositionScenario]
+    shocked_net_value: FiniteFloat
+    strategies: list[BookStrategyScenario]
+
+
+class BookSolvePosition(_Response):
+    """One solved position and its base valuation, in the request currency."""
+
+    base_net_value: FiniteFloat
+    contract: OptionsPriceRequestEcho
+    id: str
+    model: ModelIdentity
+    multiplier: FiniteFloat
+    quantity: FiniteFloat
+    underlying: str
+
+
+PnlBasis = Literal["base_model_value", "signed_reference_net_value"]
+
+
+class BookShockEchoSpotRelative(_Response):
+    """Multiply the underlying by 1 + relative; relative must exceed -1."""
+
+    kind: Literal["spot_relative"]
+    relative: FiniteFloat
+
+
+class BookShockEchoParallelVol(_Response):
+    """Add an absolute shift to volatility."""
+
+    kind: Literal["parallel_vol"]
+    shift: FiniteFloat
+
+
+class BookShockEchoSkew(_Response):
+    """Skew slope per unit of log-moneyness ln(K / F); positive raises
+    higher-strike volatility."""
+
+    kind: Literal["skew"]
+    slope: FiniteFloat
+
+
+class BookShockEchoRate(_Response):
+    """Add an absolute shift to the continuously compounded rate, per year."""
+
+    kind: Literal["rate"]
+    shift: FiniteFloat
+
+
+class BookShockEchoRollDown(_Response):
+    """Move the valuation later by `years` (nonnegative) with spot held."""
+
+    kind: Literal["roll_down"]
+    years: FiniteFloat
+
+
+class BookShockEchoVolTerm(_Response):
+    """Linear volatility ramp over remaining tenor, flat outside the anchors."""
+
+    back_shift: FiniteFloat
+    back_tenor: FiniteFloat
+    front_shift: FiniteFloat
+    front_tenor: FiniteFloat
+    kind: Literal["vol_term"]
+
+
+BookShockEcho = Annotated[
+    Annotated[BookShockEchoSpotRelative, Tag("spot_relative")]
+    | Annotated[BookShockEchoParallelVol, Tag("parallel_vol")]
+    | Annotated[BookShockEchoSkew, Tag("skew")]
+    | Annotated[BookShockEchoRate, Tag("rate")]
+    | Annotated[BookShockEchoRollDown, Tag("roll_down")]
+    | Annotated[BookShockEchoVolTerm, Tag("vol_term")]
+    | Annotated[UnrecognizedKind, Tag("unrecognized")],
+    _variant("kind", ("spot_relative", "parallel_vol", "skew", "rate", "roll_down", "vol_term")),
+]
+
+
+class BookScenarioDefinitionEcho(_Response):
+    """A named, ordered scenario applied to every position of every book."""
+
+    name: str | None = Field(default=None)
+    shocks: list[BookShockEcho] | None = Field(default=None, max_length=16)
+
+
+class BooksRevalueResult(_Response):
+    """Book and portfolio scenario valuation. `:explain` returns exactly this result
+    with `attribution` added at book and portfolio level, so one parser handles both."""
+
+    attribution: ScenarioPnlAttribution | None = Field(default=None)
+    base_net_value: FiniteFloat
+    books: list[BookScenarioBook]
+    currency: str
+    pnl: FiniteFloat
+    pnl_basis: PnlBasis | str
+    price_evaluations: int = Field(ge=0)
+    scenario: BookScenarioDefinitionEcho
+    shocked_net_value: FiniteFloat
+
+
+class BooksRevalueResponse(_EvidenceResponse):
+    """BooksRevalueResponse"""
+
+    metadata: ResponseMetadata
+    result: BooksRevalueResult
+
+
+class ScenarioSolveBoundaryPoint(_Response):
+    """ScenarioSolveBoundaryPoint"""
+
+    bracket_width: FiniteFloat
+    coordinate: FiniteFloat
+    crossing: bool
+    kind: Literal["point"]
+    refinements: int = Field(ge=0)
+    value: FiniteFloat
+
+
+class ScenarioSolveBoundaryInterval(_Response):
+    """ScenarioSolveBoundaryInterval"""
+
+    kind: Literal["interval"]
+    lower: FiniteFloat
+    upper: FiniteFloat
+    value: FiniteFloat
+
+
+ScenarioSolveBoundary = Annotated[
+    Annotated[ScenarioSolveBoundaryPoint, Tag("point")]
+    | Annotated[ScenarioSolveBoundaryInterval, Tag("interval")]
+    | Annotated[UnrecognizedKind, Tag("unrecognized")],
+    _variant("kind", ("point", "interval")),
+]
+
+
+ScenarioSolveCoordinateUnit = Literal["price", "years", "annual_rate", "annual_volatility"]
+
+
+ScenarioSolveCoverageBasis = Literal["scan_resolution"]
+
+
+class ScenarioSolveCoverageResolved(_Response):
+    """Every candidate resolved at `basis`; smaller structures can be missed."""
+
+    basis: ScenarioSolveCoverageBasis | str
+    status: Literal["resolved"]
+
+
+ScenarioSolveUnresolvedReason = Literal[
+    "refinement_budget_exhausted",
+    "bracket_collapsed_above_tolerance",
+    "coordinate_tolerance_reached",
+    "representative_out_of_band",
+]
+
+
+class ScenarioSolveUnresolvedCell(_Response):
+    """ScenarioSolveUnresolvedCell"""
+
+    best_abs_value_error: FiniteFloat
+    best_coordinate: FiniteFloat
+    lower: FiniteFloat
+    reason: ScenarioSolveUnresolvedReason | str
+    upper: FiniteFloat
+
+
+class ScenarioSolveCoverageUnresolved(_Response):
+    """At least one cell could not be resolved; see `cells`."""
+
+    basis: ScenarioSolveCoverageBasis | str
+    cells: list[ScenarioSolveUnresolvedCell]
+    status: Literal["unresolved"]
+
+
+ScenarioSolveCoverage = Annotated[
+    Annotated[ScenarioSolveCoverageResolved, Tag("resolved")]
+    | Annotated[ScenarioSolveCoverageUnresolved, Tag("unresolved")]
+    | Annotated[Unrecognized, Tag("unrecognized")],
+    _variant("status", ("resolved", "unresolved")),
+]
+
+
+ScenarioSolveOutcome = Literal["solutions_found", "no_solution_detected", "incomplete"]
+
+
+class ScenarioSolveProfile(_Response):
+    """Fixed bounded work profile, independent of user tolerances and target."""
+
+    id: str
+    max_price_evaluations: int = Field(ge=0)
+    max_refinements: int = Field(ge=0)
+    scan_intervals: int = Field(ge=0)
+
+
+ScenarioSolveSign = Literal["above_target", "below_target", "at_target"]
+
+
+class ScenarioSolveRegion(_Response):
+    """ScenarioSolveRegion"""
+
+    lower: FiniteFloat
+    sign: ScenarioSolveSign | str
+    upper: FiniteFloat
+
+
+class BooksSolveScenarioResult(_Response):
+    """Spot levels at which the solved positions' P&L meets the target, with the
+    sign regions and coverage of the search."""
+
+    book_id: str
+    boundaries: list[ScenarioSolveBoundary]
+    coordinate: ScenarioSolveCoordinate | str
+    coordinate_tolerance: FiniteFloat
+    coordinate_unit: ScenarioSolveCoordinateUnit | str
+    coverage: ScenarioSolveCoverage
+    currency: str
+    evaluations: int = Field(ge=0)
+    lower: FiniteFloat
+    outcome: ScenarioSolveOutcome | str
+    pnl_basis: PnlBasis | str
+    pnl_tolerance: FiniteFloat
+    positions: list[BookSolvePosition]
+    price_evaluations: int = Field(ge=0)
+    profile: ScenarioSolveProfile
+    regions: list[ScenarioSolveRegion]
+    scenario: BookScenarioDefinitionEcho
+    signed_reference_net_value: FiniteFloat
+    strategy_id: str | None = Field(default=None)
+    target_pnl: FiniteFloat
+    target_unit: str
+    underlying: str
+    upper: FiniteFloat
+
+
+class BooksSolveScenarioResponse(_EvidenceResponse):
+    """BooksSolveScenarioResponse"""
+
+    metadata: ResponseMetadata
+    result: BooksSolveScenarioResult
+
+
+class ScenarioValuation(_Response):
+    """One valuation and the full inputs it was computed from."""
+
+    inputs: OptionsPriceRequestEcho
+    result: PriceResult
+
+
+class ScenarioPositionEcho(_Response):
+    """Optional signed position scaling. P&L is relative to the base model value
+    (`pnl_basis: base_model_value`), not trade entry cost. No currency
+    conversion, fees or financing are applied."""
+
+    multiplier: FiniteFloat
+    quantity: FiniteFloat
+
+
+class OptionsRevalueResult(_Response):
+    """The base valuation and one revaluation per submitted scenario point."""
+
+    base: ScenarioValuation
+    pnl_basis: PnlBasis | str | None = Field(default=None)
+    position: ScenarioPositionEcho | None = Field(default=None)
+    scenarios: list[ScenarioItem]
+
+
+class OptionsRevalueResponse(_EvidenceResponse):
+    """OptionsRevalueResponse"""
+
+    metadata: ResponseMetadata
+    result: OptionsRevalueResult
+
+
+class ScenarioSolveTargetEchoOptionPrice(_Response):
+    """ScenarioSolveTargetEchoOptionPrice"""
+
+    kind: Literal["option_price"]
+    value: FiniteFloat
+
+
+class ScenarioSolveTargetEchoPositionPnl(_Response):
+    """ScenarioSolveTargetEchoPositionPnl"""
+
+    kind: Literal["position_pnl"]
+    position: ScenarioPositionEcho
+    value: FiniteFloat
+
+
+class ScenarioSolveTargetEchoGreek(_Response):
+    """One per-option Greek in the units the Greek endpoints publish (annual
+    time units for theta, charm, veta and color). Not scaled by any position."""
+
+    greek: ScenarioSolveGreek | str
+    kind: Literal["greek"]
+    value: FiniteFloat
+
+
+ScenarioSolveTargetEcho = Annotated[
+    Annotated[ScenarioSolveTargetEchoOptionPrice, Tag("option_price")]
+    | Annotated[ScenarioSolveTargetEchoPositionPnl, Tag("position_pnl")]
+    | Annotated[ScenarioSolveTargetEchoGreek, Tag("greek")]
+    | Annotated[UnrecognizedKind, Tag("unrecognized")],
+    _variant("kind", ("option_price", "position_pnl", "greek")),
+]
+
+
+class OptionsSolveScenarioResult(_Response):
+    """Where over the search range one option's target quantity meets the target,
+    with the sign regions and coverage of the search."""
+
+    base: ScenarioValuation
+    boundaries: list[ScenarioSolveBoundary]
+    coordinate: ScenarioSolveCoordinate | str
+    coordinate_tolerance: FiniteFloat
+    coordinate_unit: ScenarioSolveCoordinateUnit | str
+    coverage: ScenarioSolveCoverage
+    inputs: OptionsPriceRequestEcho
+    lower: FiniteFloat
+    model: ModelIdentity
+    outcome: ScenarioSolveOutcome | str
+    pnl_basis: PnlBasis | str | None = Field(default=None)
+    price_evaluations: int = Field(ge=0)
+    profile: ScenarioSolveProfile
+    reference_net_value: FiniteFloat | None = Field(default=None)
+    regions: list[ScenarioSolveRegion]
+    target: ScenarioSolveTargetEcho
+    target_unit: str
+    upper: FiniteFloat
+    value_tolerance: FiniteFloat
+
+
+class OptionsSolveScenarioResponse(_EvidenceResponse):
+    """OptionsSolveScenarioResponse"""
+
+    metadata: ResponseMetadata
+    result: OptionsSolveScenarioResult
+
+
+class BooksExplainRequest(BooksRevalueRequest):
+    """books.explain uses the same body as revalue, but requests attribution."""
+
+
+class BooksExplainResponse(BooksRevalueResponse):
+    """Book revaluation with expiry and strike P&L attribution."""

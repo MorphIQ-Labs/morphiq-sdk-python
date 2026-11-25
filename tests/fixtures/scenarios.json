@@ -1,0 +1,3651 @@
+{
+  "provenance": {
+    "api_source_commit": "4809233ade17132517a74dfc0ea4aebb087386d9",
+    "contract_sha256": "68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8",
+    "admission": "open",
+    "note": "Synthetic inputs recorded against native API v0.10.0; no production calls. Billing is unreported."
+  },
+  "cases": [
+    {
+      "name": "option_revalue",
+      "path": "/v1/options:revalue",
+      "request_model": "OptionsRevalueRequest",
+      "response_model": "OptionsRevalueResponse",
+      "operation": "options.revalue",
+      "request": {
+        "option": {
+          "type": "call",
+          "exercise_style": "european",
+          "strike": 100.0,
+          "time_to_expiry_years": 1.0
+        },
+        "market": {
+          "spot": 100.0,
+          "risk_free_rate": 0.05,
+          "dividend_yield": 0.0
+        },
+        "volatility": 0.2,
+        "model": {
+          "id": "black_scholes_merton"
+        },
+        "scenarios": [
+          {
+            "spot": 90.0
+          },
+          {
+            "spot": 110.0
+          },
+          {
+            "spot": 110.0
+          }
+        ],
+        "position": {
+          "quantity": -2.0,
+          "multiplier": 100.0
+        }
+      },
+      "response": {
+        "metadata": {
+          "request_id": "fr-18eb557eac12fd34-00000000000000c3",
+          "service_version": "0.10.0",
+          "contract": {
+            "version": "0.1.0",
+            "sha256": "68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8"
+          },
+          "engines": [
+            {
+              "name": "morphiq-risk",
+              "version": "0.46.1",
+              "revision": "1550e4e41b243b8a978677bc5e9b46916c08cb0e"
+            }
+          ]
+        },
+        "result": {
+          "base": {
+            "inputs": {
+              "option": {
+                "type": "call",
+                "exercise_style": "european",
+                "strike": 100.0,
+                "time_to_expiry_years": 1.0
+              },
+              "market": {
+                "spot": 100.0,
+                "risk_free_rate": 0.05,
+                "dividend_yield": 0.0
+              },
+              "volatility": 0.2,
+              "model": {
+                "id": "black_scholes_merton"
+              }
+            },
+            "result": {
+              "price": 10.450583572185577,
+              "model": {
+                "id": "black_scholes_merton",
+                "version": "black_scholes_merton/1"
+              }
+            }
+          },
+          "position": {
+            "quantity": -2.0,
+            "multiplier": 100.0
+          },
+          "pnl_basis": "base_model_value",
+          "scenarios": [
+            {
+              "index": 0,
+              "inputs": {
+                "option": {
+                  "type": "call",
+                  "exercise_style": "european",
+                  "strike": 100.0,
+                  "time_to_expiry_years": 1.0
+                },
+                "market": {
+                  "spot": 90.0,
+                  "risk_free_rate": 0.05,
+                  "dividend_yield": 0.0
+                },
+                "volatility": 0.2,
+                "model": {
+                  "id": "black_scholes_merton"
+                }
+              },
+              "status": "success",
+              "result": {
+                "price": 5.091222078817559,
+                "model": {
+                  "id": "black_scholes_merton",
+                  "version": "black_scholes_merton/1"
+                }
+              },
+              "price_change": -5.359361493368018,
+              "pnl": 1071.8722986736036
+            },
+            {
+              "index": 1,
+              "inputs": {
+                "option": {
+                  "type": "call",
+                  "exercise_style": "european",
+                  "strike": 100.0,
+                  "time_to_expiry_years": 1.0
+                },
+                "market": {
+                  "spot": 110.0,
+                  "risk_free_rate": 0.05,
+                  "dividend_yield": 0.0
+                },
+                "volatility": 0.2,
+                "model": {
+                  "id": "black_scholes_merton"
+                }
+              },
+              "status": "success",
+              "result": {
+                "price": 17.662953740590442,
+                "model": {
+                  "id": "black_scholes_merton",
+                  "version": "black_scholes_merton/1"
+                }
+              },
+              "price_change": 7.212370168404865,
+              "pnl": -1442.474033680973
+            },
+            {
+              "index": 2,
+              "inputs": {
+                "option": {
+                  "type": "call",
+                  "exercise_style": "european",
+                  "strike": 100.0,
+                  "time_to_expiry_years": 1.0
+                },
+                "market": {
+                  "spot": 110.0,
+                  "risk_free_rate": 0.05,
+                  "dividend_yield": 0.0
+                },
+                "volatility": 0.2,
+                "model": {
+                  "id": "black_scholes_merton"
+                }
+              },
+              "status": "success",
+              "result": {
+                "price": 17.662953740590442,
+                "model": {
+                  "id": "black_scholes_merton",
+                  "version": "black_scholes_merton/1"
+                }
+              },
+              "price_change": 7.212370168404865,
+              "pnl": -1442.474033680973
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "option_solve",
+      "path": "/v1/options:solve-scenario",
+      "request_model": "OptionsSolveScenarioRequest",
+      "response_model": "OptionsSolveScenarioResponse",
+      "operation": "options.solve_scenario",
+      "request": {
+        "option": {
+          "type": "call",
+          "exercise_style": "european",
+          "strike": 100.0,
+          "time_to_expiry_years": 1.0
+        },
+        "market": {
+          "spot": 100.0,
+          "risk_free_rate": 0.05,
+          "dividend_yield": 0.0
+        },
+        "volatility": 0.2,
+        "model": {
+          "id": "black_scholes_merton"
+        },
+        "target": {
+          "kind": "option_price",
+          "value": 10.0
+        },
+        "coordinate": "spot",
+        "lower": 50.0,
+        "upper": 150.0
+      },
+      "response": {
+        "metadata": {
+          "request_id": "fr-18eb557eac12fd34-00000000000000c4",
+          "service_version": "0.10.0",
+          "contract": {
+            "version": "0.1.0",
+            "sha256": "68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8"
+          },
+          "engines": [
+            {
+              "name": "morphiq-risk",
+              "version": "0.46.1",
+              "revision": "1550e4e41b243b8a978677bc5e9b46916c08cb0e"
+            }
+          ]
+        },
+        "result": {
+          "model": {
+            "id": "black_scholes_merton",
+            "version": "black_scholes_merton/1"
+          },
+          "base": {
+            "inputs": {
+              "option": {
+                "type": "call",
+                "exercise_style": "european",
+                "strike": 100.0,
+                "time_to_expiry_years": 1.0
+              },
+              "market": {
+                "spot": 100.0,
+                "risk_free_rate": 0.05,
+                "dividend_yield": 0.0
+              },
+              "volatility": 0.2,
+              "model": {
+                "id": "black_scholes_merton"
+              }
+            },
+            "result": {
+              "price": 10.450583572185577,
+              "model": {
+                "id": "black_scholes_merton",
+                "version": "black_scholes_merton/1"
+              }
+            }
+          },
+          "inputs": {
+            "option": {
+              "type": "call",
+              "exercise_style": "european",
+              "strike": 100.0,
+              "time_to_expiry_years": 1.0
+            },
+            "market": {
+              "spot": 100.0,
+              "risk_free_rate": 0.05,
+              "dividend_yield": 0.0
+            },
+            "volatility": 0.2,
+            "model": {
+              "id": "black_scholes_merton"
+            }
+          },
+          "target": {
+            "kind": "option_price",
+            "value": 10.0
+          },
+          "coordinate": "spot",
+          "coordinate_unit": "price",
+          "target_unit": "per_option_price",
+          "lower": 50.0,
+          "upper": 150.0,
+          "coordinate_tolerance": 1e-09,
+          "value_tolerance": 1e-06,
+          "profile": {
+            "id": "scenario_solve/1",
+            "scan_intervals": 32,
+            "max_refinements": 64,
+            "max_price_evaluations": 4774
+          },
+          "outcome": "solutions_found",
+          "boundaries": [
+            {
+              "kind": "point",
+              "coordinate": 99.28487712095375,
+              "value": 9.999999999780227,
+              "crossing": true,
+              "refinements": 32,
+              "bracket_width": 7.275957614183426e-10
+            }
+          ],
+          "regions": [
+            {
+              "lower": 50.0,
+              "upper": 99.28487712095375,
+              "sign": "below_target"
+            },
+            {
+              "lower": 99.28487712095375,
+              "upper": 150.0,
+              "sign": "above_target"
+            }
+          ],
+          "coverage": {
+            "status": "resolved",
+            "basis": "scan_resolution"
+          },
+          "price_evaluations": 66
+        }
+      }
+    },
+    {
+      "name": "book_revalue",
+      "path": "/v1/books:revalue",
+      "request_model": "BooksRevalueRequest",
+      "response_model": "BooksRevalueResponse",
+      "operation": "books.revalue",
+      "request": {
+        "currency": "USD",
+        "markets": {
+          "SPY": {
+            "spot": 100.0,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0.0
+          }
+        },
+        "books": [
+          {
+            "id": "spread",
+            "positions": [
+              {
+                "id": "long-call",
+                "underlying": "SPY",
+                "quantity": 1.0,
+                "multiplier": 100.0,
+                "option": {
+                  "type": "call",
+                  "exercise_style": "european",
+                  "strike": 100.0,
+                  "time_to_expiry_years": 1.0
+                },
+                "volatility": 0.2,
+                "model": {
+                  "id": "black_scholes_merton"
+                }
+              },
+              {
+                "id": "short-call",
+                "underlying": "SPY",
+                "quantity": -1.0,
+                "multiplier": 100.0,
+                "option": {
+                  "type": "call",
+                  "exercise_style": "european",
+                  "strike": 110.0,
+                  "time_to_expiry_years": 1.0
+                },
+                "volatility": 0.2,
+                "model": {
+                  "id": "black_scholes_merton"
+                }
+              }
+            ],
+            "strategies": [
+              {
+                "id": "vertical",
+                "position_ids": [
+                  "long-call",
+                  "short-call"
+                ]
+              },
+              {
+                "id": "long-leg",
+                "position_ids": [
+                  "long-call"
+                ]
+              }
+            ]
+          }
+        ],
+        "scenario": {
+          "name": "up-and-steeper",
+          "shocks": [
+            {
+              "kind": "spot_relative",
+              "relative": 0.05
+            },
+            {
+              "kind": "parallel_vol",
+              "shift": 0.01
+            }
+          ]
+        }
+      },
+      "response": {
+        "metadata": {
+          "request_id": "fr-18eb557eac12fd34-00000000000000c5",
+          "service_version": "0.10.0",
+          "contract": {
+            "version": "0.1.0",
+            "sha256": "68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8"
+          },
+          "engines": [
+            {
+              "name": "morphiq-risk",
+              "version": "0.46.1",
+              "revision": "1550e4e41b243b8a978677bc5e9b46916c08cb0e"
+            }
+          ]
+        },
+        "result": {
+          "currency": "USD",
+          "pnl_basis": "base_model_value",
+          "scenario": {
+            "name": "up-and-steeper",
+            "shocks": [
+              {
+                "kind": "spot_relative",
+                "relative": 0.05
+              },
+              {
+                "kind": "parallel_vol",
+                "shift": 0.01
+              }
+            ]
+          },
+          "books": [
+            {
+              "id": "spread",
+              "positions": [
+                {
+                  "id": "long-call",
+                  "underlying": "SPY",
+                  "quantity": 1.0,
+                  "multiplier": 100.0,
+                  "model": {
+                    "id": "black_scholes_merton",
+                    "version": "black_scholes_merton/1"
+                  },
+                  "contract": {
+                    "option": {
+                      "type": "call",
+                      "exercise_style": "european",
+                      "strike": 100.0,
+                      "time_to_expiry_years": 1.0
+                    },
+                    "market": {
+                      "spot": 100.0,
+                      "risk_free_rate": 0.05,
+                      "dividend_yield": 0.0
+                    },
+                    "volatility": 0.2,
+                    "model": {
+                      "id": "black_scholes_merton"
+                    }
+                  },
+                  "base_unit_price": 10.450583572185577,
+                  "shocked_unit_price": 14.211015715776282,
+                  "base_net_value": 1045.0583572185576,
+                  "shocked_net_value": 1421.1015715776282,
+                  "pnl": 376.0432143590706
+                },
+                {
+                  "id": "short-call",
+                  "underlying": "SPY",
+                  "quantity": -1.0,
+                  "multiplier": 100.0,
+                  "model": {
+                    "id": "black_scholes_merton",
+                    "version": "black_scholes_merton/1"
+                  },
+                  "contract": {
+                    "option": {
+                      "type": "call",
+                      "exercise_style": "european",
+                      "strike": 110.0,
+                      "time_to_expiry_years": 1.0
+                    },
+                    "market": {
+                      "spot": 100.0,
+                      "risk_free_rate": 0.05,
+                      "dividend_yield": 0.0
+                    },
+                    "volatility": 0.2,
+                    "model": {
+                      "id": "black_scholes_merton"
+                    }
+                  },
+                  "base_unit_price": 6.040088129724242,
+                  "shocked_unit_price": 8.948869290199454,
+                  "base_net_value": -604.0088129724242,
+                  "shocked_net_value": -894.8869290199455,
+                  "pnl": -290.8781160475213
+                }
+              ],
+              "strategies": [
+                {
+                  "id": "vertical",
+                  "position_ids": [
+                    "long-call",
+                    "short-call"
+                  ],
+                  "base_net_value": 441.04954424613345,
+                  "shocked_net_value": 526.2146425576827,
+                  "pnl": 85.16509831154929
+                },
+                {
+                  "id": "long-leg",
+                  "position_ids": [
+                    "long-call"
+                  ],
+                  "base_net_value": 1045.0583572185576,
+                  "shocked_net_value": 1421.1015715776282,
+                  "pnl": 376.0432143590706
+                }
+              ],
+              "base_net_value": 441.04954424613345,
+              "shocked_net_value": 526.2146425576827,
+              "pnl": 85.16509831154929
+            }
+          ],
+          "base_net_value": 441.04954424613345,
+          "shocked_net_value": 526.2146425576827,
+          "pnl": 85.16509831154929,
+          "price_evaluations": 4
+        }
+      }
+    },
+    {
+      "name": "book_explain",
+      "path": "/v1/books:explain",
+      "request_model": "BooksExplainRequest",
+      "response_model": "BooksExplainResponse",
+      "operation": "books.explain",
+      "request": {
+        "currency": "USD",
+        "markets": {
+          "SPY": {
+            "spot": 100.0,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0.0
+          }
+        },
+        "books": [
+          {
+            "id": "spread",
+            "positions": [
+              {
+                "id": "long-call",
+                "underlying": "SPY",
+                "quantity": 1.0,
+                "multiplier": 100.0,
+                "option": {
+                  "type": "call",
+                  "exercise_style": "european",
+                  "strike": 100.0,
+                  "time_to_expiry_years": 1.0
+                },
+                "volatility": 0.2,
+                "model": {
+                  "id": "black_scholes_merton"
+                }
+              },
+              {
+                "id": "short-call",
+                "underlying": "SPY",
+                "quantity": -1.0,
+                "multiplier": 100.0,
+                "option": {
+                  "type": "call",
+                  "exercise_style": "european",
+                  "strike": 110.0,
+                  "time_to_expiry_years": 1.0
+                },
+                "volatility": 0.2,
+                "model": {
+                  "id": "black_scholes_merton"
+                }
+              }
+            ],
+            "strategies": [
+              {
+                "id": "vertical",
+                "position_ids": [
+                  "long-call",
+                  "short-call"
+                ]
+              },
+              {
+                "id": "long-leg",
+                "position_ids": [
+                  "long-call"
+                ]
+              }
+            ]
+          }
+        ],
+        "scenario": {
+          "name": "up-and-steeper",
+          "shocks": [
+            {
+              "kind": "spot_relative",
+              "relative": 0.05
+            },
+            {
+              "kind": "parallel_vol",
+              "shift": 0.01
+            }
+          ]
+        }
+      },
+      "response": {
+        "metadata": {
+          "request_id": "fr-18eb557eac12fd34-00000000000000c6",
+          "service_version": "0.10.0",
+          "contract": {
+            "version": "0.1.0",
+            "sha256": "68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8"
+          },
+          "engines": [
+            {
+              "name": "morphiq-risk",
+              "version": "0.46.1",
+              "revision": "1550e4e41b243b8a978677bc5e9b46916c08cb0e"
+            }
+          ]
+        },
+        "result": {
+          "currency": "USD",
+          "pnl_basis": "base_model_value",
+          "scenario": {
+            "name": "up-and-steeper",
+            "shocks": [
+              {
+                "kind": "spot_relative",
+                "relative": 0.05
+              },
+              {
+                "kind": "parallel_vol",
+                "shift": 0.01
+              }
+            ]
+          },
+          "books": [
+            {
+              "id": "spread",
+              "positions": [
+                {
+                  "id": "long-call",
+                  "underlying": "SPY",
+                  "quantity": 1.0,
+                  "multiplier": 100.0,
+                  "model": {
+                    "id": "black_scholes_merton",
+                    "version": "black_scholes_merton/1"
+                  },
+                  "contract": {
+                    "option": {
+                      "type": "call",
+                      "exercise_style": "european",
+                      "strike": 100.0,
+                      "time_to_expiry_years": 1.0
+                    },
+                    "market": {
+                      "spot": 100.0,
+                      "risk_free_rate": 0.05,
+                      "dividend_yield": 0.0
+                    },
+                    "volatility": 0.2,
+                    "model": {
+                      "id": "black_scholes_merton"
+                    }
+                  },
+                  "base_unit_price": 10.450583572185577,
+                  "shocked_unit_price": 14.211015715776282,
+                  "base_net_value": 1045.0583572185576,
+                  "shocked_net_value": 1421.1015715776282,
+                  "pnl": 376.0432143590706
+                },
+                {
+                  "id": "short-call",
+                  "underlying": "SPY",
+                  "quantity": -1.0,
+                  "multiplier": 100.0,
+                  "model": {
+                    "id": "black_scholes_merton",
+                    "version": "black_scholes_merton/1"
+                  },
+                  "contract": {
+                    "option": {
+                      "type": "call",
+                      "exercise_style": "european",
+                      "strike": 110.0,
+                      "time_to_expiry_years": 1.0
+                    },
+                    "market": {
+                      "spot": 100.0,
+                      "risk_free_rate": 0.05,
+                      "dividend_yield": 0.0
+                    },
+                    "volatility": 0.2,
+                    "model": {
+                      "id": "black_scholes_merton"
+                    }
+                  },
+                  "base_unit_price": 6.040088129724242,
+                  "shocked_unit_price": 8.948869290199454,
+                  "base_net_value": -604.0088129724242,
+                  "shocked_net_value": -894.8869290199455,
+                  "pnl": -290.8781160475213
+                }
+              ],
+              "strategies": [
+                {
+                  "id": "vertical",
+                  "position_ids": [
+                    "long-call",
+                    "short-call"
+                  ],
+                  "base_net_value": 441.04954424613345,
+                  "shocked_net_value": 526.2146425576827,
+                  "pnl": 85.16509831154929
+                },
+                {
+                  "id": "long-leg",
+                  "position_ids": [
+                    "long-call"
+                  ],
+                  "base_net_value": 1045.0583572185576,
+                  "shocked_net_value": 1421.1015715776282,
+                  "pnl": 376.0432143590706
+                }
+              ],
+              "base_net_value": 441.04954424613345,
+              "shocked_net_value": 526.2146425576827,
+              "pnl": 85.16509831154929,
+              "attribution": {
+                "expiry_buckets": [
+                  {
+                    "time_to_expiry_years": 1.0,
+                    "base_net_value": 441.04954424613345,
+                    "shocked_net_value": 526.2146425576827,
+                    "pnl": 85.16509831154929
+                  }
+                ],
+                "strike_buckets": [
+                  {
+                    "strike": 100.0,
+                    "base_net_value": 1045.0583572185576,
+                    "shocked_net_value": 1421.1015715776282,
+                    "pnl": 376.0432143590706
+                  },
+                  {
+                    "strike": 110.0,
+                    "base_net_value": -604.0088129724242,
+                    "shocked_net_value": -894.8869290199455,
+                    "pnl": -290.8781160475213
+                  }
+                ]
+              }
+            }
+          ],
+          "base_net_value": 441.04954424613345,
+          "shocked_net_value": 526.2146425576827,
+          "pnl": 85.16509831154929,
+          "attribution": {
+            "expiry_buckets": [
+              {
+                "time_to_expiry_years": 1.0,
+                "base_net_value": 441.04954424613345,
+                "shocked_net_value": 526.2146425576827,
+                "pnl": 85.16509831154929
+              }
+            ],
+            "strike_buckets": [
+              {
+                "strike": 100.0,
+                "base_net_value": 1045.0583572185576,
+                "shocked_net_value": 1421.1015715776282,
+                "pnl": 376.0432143590706
+              },
+              {
+                "strike": 110.0,
+                "base_net_value": -604.0088129724242,
+                "shocked_net_value": -894.8869290199455,
+                "pnl": -290.8781160475213
+              }
+            ]
+          },
+          "price_evaluations": 4
+        }
+      }
+    },
+    {
+      "name": "book_solve",
+      "path": "/v1/books:solve-scenario",
+      "request_model": "BooksSolveScenarioRequest",
+      "response_model": "BooksSolveScenarioResponse",
+      "operation": "books.solve_scenario",
+      "request": {
+        "currency": "USD",
+        "markets": {
+          "SPY": {
+            "spot": 100.0,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0.0
+          }
+        },
+        "book": {
+          "id": "spread",
+          "positions": [
+            {
+              "id": "long-call",
+              "underlying": "SPY",
+              "quantity": 1.0,
+              "multiplier": 100.0,
+              "option": {
+                "type": "call",
+                "exercise_style": "european",
+                "strike": 100.0,
+                "time_to_expiry_years": 1.0
+              },
+              "volatility": 0.2,
+              "model": {
+                "id": "black_scholes_merton"
+              }
+            },
+            {
+              "id": "short-call",
+              "underlying": "SPY",
+              "quantity": -1.0,
+              "multiplier": 100.0,
+              "option": {
+                "type": "call",
+                "exercise_style": "european",
+                "strike": 110.0,
+                "time_to_expiry_years": 1.0
+              },
+              "volatility": 0.2,
+              "model": {
+                "id": "black_scholes_merton"
+              }
+            }
+          ],
+          "strategies": [
+            {
+              "id": "vertical",
+              "position_ids": [
+                "long-call",
+                "short-call"
+              ]
+            },
+            {
+              "id": "long-leg",
+              "position_ids": [
+                "long-call"
+              ]
+            }
+          ]
+        },
+        "scenario": {
+          "name": "at-expiry",
+          "shocks": [
+            {
+              "kind": "roll_down",
+              "years": 1.0
+            }
+          ]
+        },
+        "signed_reference_net_value": 200.0,
+        "target_pnl": 0.0,
+        "lower": 50.0,
+        "upper": 150.0
+      },
+      "response": {
+        "metadata": {
+          "request_id": "fr-18eb557eac12fd34-00000000000000c7",
+          "service_version": "0.10.0",
+          "contract": {
+            "version": "0.1.0",
+            "sha256": "68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8"
+          },
+          "engines": [
+            {
+              "name": "morphiq-risk",
+              "version": "0.46.1",
+              "revision": "1550e4e41b243b8a978677bc5e9b46916c08cb0e"
+            }
+          ]
+        },
+        "result": {
+          "currency": "USD",
+          "underlying": "SPY",
+          "scenario": {
+            "name": "at-expiry",
+            "shocks": [
+              {
+                "kind": "roll_down",
+                "years": 1.0
+              }
+            ]
+          },
+          "book_id": "spread",
+          "positions": [
+            {
+              "id": "long-call",
+              "underlying": "SPY",
+              "quantity": 1.0,
+              "multiplier": 100.0,
+              "model": {
+                "id": "black_scholes_merton",
+                "version": "black_scholes_merton/1"
+              },
+              "contract": {
+                "option": {
+                  "type": "call",
+                  "exercise_style": "european",
+                  "strike": 100.0,
+                  "time_to_expiry_years": 1.0
+                },
+                "market": {
+                  "spot": 100.0,
+                  "risk_free_rate": 0.05,
+                  "dividend_yield": 0.0
+                },
+                "volatility": 0.2,
+                "model": {
+                  "id": "black_scholes_merton"
+                }
+              },
+              "base_net_value": 1045.0583572185576
+            },
+            {
+              "id": "short-call",
+              "underlying": "SPY",
+              "quantity": -1.0,
+              "multiplier": 100.0,
+              "model": {
+                "id": "black_scholes_merton",
+                "version": "black_scholes_merton/1"
+              },
+              "contract": {
+                "option": {
+                  "type": "call",
+                  "exercise_style": "european",
+                  "strike": 110.0,
+                  "time_to_expiry_years": 1.0
+                },
+                "market": {
+                  "spot": 100.0,
+                  "risk_free_rate": 0.05,
+                  "dividend_yield": 0.0
+                },
+                "volatility": 0.2,
+                "model": {
+                  "id": "black_scholes_merton"
+                }
+              },
+              "base_net_value": -604.0088129724242
+            }
+          ],
+          "coordinate": "spot",
+          "coordinate_unit": "price",
+          "target_unit": "position_value",
+          "pnl_basis": "signed_reference_net_value",
+          "signed_reference_net_value": 200.0,
+          "target_pnl": 0.0,
+          "lower": 50.0,
+          "upper": 150.0,
+          "coordinate_tolerance": 1e-09,
+          "pnl_tolerance": 1e-06,
+          "profile": {
+            "id": "book_scenario_solve/1",
+            "scan_intervals": 32,
+            "max_refinements": 64,
+            "max_price_evaluations": 9548
+          },
+          "outcome": "solutions_found",
+          "boundaries": [
+            {
+              "kind": "point",
+              "coordinate": 101.99999999967986,
+              "value": -3.2014213502407074e-08,
+              "crossing": true,
+              "refinements": 32,
+              "bracket_width": 7.275957614183426e-10
+            }
+          ],
+          "regions": [
+            {
+              "lower": 50.0,
+              "upper": 101.99999999967986,
+              "sign": "below_target"
+            },
+            {
+              "lower": 101.99999999967986,
+              "upper": 150.0,
+              "sign": "above_target"
+            }
+          ],
+          "coverage": {
+            "status": "resolved",
+            "basis": "scan_resolution"
+          },
+          "evaluations": 65,
+          "price_evaluations": 132
+        }
+      }
+    },
+    {
+      "name": "option-partial",
+      "path": "/v1/options:revalue",
+      "request_model": "OptionsRevalueRequest",
+      "response_model": "OptionsRevalueResponse",
+      "operation": "options.revalue",
+      "request": {
+        "option": {
+          "type": "call",
+          "exercise_style": "european",
+          "strike": 100.0,
+          "time_to_expiry_years": 1.0
+        },
+        "market": {
+          "spot": 100.0,
+          "risk_free_rate": 0.05,
+          "dividend_yield": 0.0
+        },
+        "volatility": 0.2,
+        "model": {
+          "id": "black_scholes_merton"
+        },
+        "scenarios": [
+          {
+            "spot": 90.0
+          },
+          {
+            "spot": -1.0
+          },
+          {
+            "spot": 90.0
+          }
+        ],
+        "position": {
+          "quantity": -2.0,
+          "multiplier": 100.0
+        }
+      },
+      "response": {
+        "metadata": {
+          "request_id": "fr-18eb557eac12fd34-00000000000000c8",
+          "service_version": "0.10.0",
+          "contract": {
+            "version": "0.1.0",
+            "sha256": "68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8"
+          },
+          "engines": [
+            {
+              "name": "morphiq-risk",
+              "version": "0.46.1",
+              "revision": "1550e4e41b243b8a978677bc5e9b46916c08cb0e"
+            }
+          ]
+        },
+        "result": {
+          "base": {
+            "inputs": {
+              "option": {
+                "type": "call",
+                "exercise_style": "european",
+                "strike": 100.0,
+                "time_to_expiry_years": 1.0
+              },
+              "market": {
+                "spot": 100.0,
+                "risk_free_rate": 0.05,
+                "dividend_yield": 0.0
+              },
+              "volatility": 0.2,
+              "model": {
+                "id": "black_scholes_merton"
+              }
+            },
+            "result": {
+              "price": 10.450583572185577,
+              "model": {
+                "id": "black_scholes_merton",
+                "version": "black_scholes_merton/1"
+              }
+            }
+          },
+          "position": {
+            "quantity": -2.0,
+            "multiplier": 100.0
+          },
+          "pnl_basis": "base_model_value",
+          "scenarios": [
+            {
+              "index": 0,
+              "inputs": {
+                "option": {
+                  "type": "call",
+                  "exercise_style": "european",
+                  "strike": 100.0,
+                  "time_to_expiry_years": 1.0
+                },
+                "market": {
+                  "spot": 90.0,
+                  "risk_free_rate": 0.05,
+                  "dividend_yield": 0.0
+                },
+                "volatility": 0.2,
+                "model": {
+                  "id": "black_scholes_merton"
+                }
+              },
+              "status": "success",
+              "result": {
+                "price": 5.091222078817559,
+                "model": {
+                  "id": "black_scholes_merton",
+                  "version": "black_scholes_merton/1"
+                }
+              },
+              "price_change": -5.359361493368018,
+              "pnl": 1071.8722986736036
+            },
+            {
+              "index": 1,
+              "inputs": {
+                "option": {
+                  "type": "call",
+                  "exercise_style": "european",
+                  "strike": 100.0,
+                  "time_to_expiry_years": 1.0
+                },
+                "market": {
+                  "spot": -1.0,
+                  "risk_free_rate": 0.05,
+                  "dividend_yield": 0.0
+                },
+                "volatility": 0.2,
+                "model": {
+                  "id": "black_scholes_merton"
+                }
+              },
+              "status": "error",
+              "error": {
+                "type": "https://developers.morphiqlabs.com/docs/errors#invalid_field",
+                "title": "Invalid field",
+                "status": 422,
+                "detail": "invalid input: spot = -1",
+                "code": "invalid_field",
+                "field": "market.spot"
+              }
+            },
+            {
+              "index": 2,
+              "inputs": {
+                "option": {
+                  "type": "call",
+                  "exercise_style": "european",
+                  "strike": 100.0,
+                  "time_to_expiry_years": 1.0
+                },
+                "market": {
+                  "spot": 90.0,
+                  "risk_free_rate": 0.05,
+                  "dividend_yield": 0.0
+                },
+                "volatility": 0.2,
+                "model": {
+                  "id": "black_scholes_merton"
+                }
+              },
+              "status": "success",
+              "result": {
+                "price": 5.091222078817559,
+                "model": {
+                  "id": "black_scholes_merton",
+                  "version": "black_scholes_merton/1"
+                }
+              },
+              "price_change": -5.359361493368018,
+              "pnl": 1071.8722986736036
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "option-american",
+      "path": "/v1/options:solve-scenario",
+      "request_model": "OptionsSolveScenarioRequest",
+      "response_model": "OptionsSolveScenarioResponse",
+      "operation": "options.solve_scenario",
+      "request": {
+        "option": {
+          "type": "put",
+          "exercise_style": "american",
+          "strike": 100.0,
+          "time_to_expiry_years": 1.0
+        },
+        "market": {
+          "spot": 100.0,
+          "risk_free_rate": 0.05,
+          "dividend_yield": 0.0
+        },
+        "volatility": 0.2,
+        "model": {
+          "id": "bjerksund_stensland_1993"
+        },
+        "target": {
+          "kind": "option_price",
+          "value": 10.0
+        },
+        "coordinate": "spot",
+        "lower": 50.0,
+        "upper": 150.0
+      },
+      "response": {
+        "metadata": {
+          "request_id": "fr-18eb557eac12fd34-00000000000000c9",
+          "service_version": "0.10.0",
+          "contract": {
+            "version": "0.1.0",
+            "sha256": "68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8"
+          },
+          "engines": [
+            {
+              "name": "morphiq-risk",
+              "version": "0.46.1",
+              "revision": "1550e4e41b243b8a978677bc5e9b46916c08cb0e"
+            }
+          ]
+        },
+        "result": {
+          "model": {
+            "id": "bjerksund_stensland_1993",
+            "version": "bjerksund_stensland_1993/1"
+          },
+          "base": {
+            "inputs": {
+              "option": {
+                "type": "put",
+                "exercise_style": "american",
+                "strike": 100.0,
+                "time_to_expiry_years": 1.0
+              },
+              "market": {
+                "spot": 100.0,
+                "risk_free_rate": 0.05,
+                "dividend_yield": 0.0
+              },
+              "volatility": 0.2,
+              "model": {
+                "id": "bjerksund_stensland_1993"
+              }
+            },
+            "result": {
+              "price": 5.9829739726237845,
+              "model": {
+                "id": "bjerksund_stensland_1993",
+                "version": "bjerksund_stensland_1993/1"
+              }
+            }
+          },
+          "inputs": {
+            "option": {
+              "type": "put",
+              "exercise_style": "american",
+              "strike": 100.0,
+              "time_to_expiry_years": 1.0
+            },
+            "market": {
+              "spot": 100.0,
+              "risk_free_rate": 0.05,
+              "dividend_yield": 0.0
+            },
+            "volatility": 0.2,
+            "model": {
+              "id": "bjerksund_stensland_1993"
+            }
+          },
+          "target": {
+            "kind": "option_price",
+            "value": 10.0
+          },
+          "coordinate": "spot",
+          "coordinate_unit": "price",
+          "target_unit": "per_option_price",
+          "lower": 50.0,
+          "upper": 150.0,
+          "coordinate_tolerance": 1e-09,
+          "value_tolerance": 1e-06,
+          "profile": {
+            "id": "scenario_solve/1",
+            "scan_intervals": 32,
+            "max_refinements": 64,
+            "max_price_evaluations": 4774
+          },
+          "outcome": "solutions_found",
+          "boundaries": [
+            {
+              "kind": "point",
+              "coordinate": 92.12777312932303,
+              "value": 9.999999999867152,
+              "crossing": true,
+              "refinements": 32,
+              "bracket_width": 7.275957614183426e-10
+            }
+          ],
+          "regions": [
+            {
+              "lower": 50.0,
+              "upper": 92.12777312932303,
+              "sign": "above_target"
+            },
+            {
+              "lower": 92.12777312932303,
+              "upper": 150.0,
+              "sign": "below_target"
+            }
+          ],
+          "coverage": {
+            "status": "resolved",
+            "basis": "scan_resolution"
+          },
+          "price_evaluations": 66
+        }
+      }
+    },
+    {
+      "name": "option-unresolved",
+      "path": "/v1/options:solve-scenario",
+      "request_model": "OptionsSolveScenarioRequest",
+      "response_model": "OptionsSolveScenarioResponse",
+      "operation": "options.solve_scenario",
+      "request": {
+        "option": {
+          "type": "call",
+          "exercise_style": "european",
+          "strike": 100.0,
+          "time_to_expiry_years": 1.0
+        },
+        "market": {
+          "spot": 100.0,
+          "risk_free_rate": 0.05,
+          "dividend_yield": 0.0
+        },
+        "volatility": 0.2,
+        "model": {
+          "id": "black_scholes_merton"
+        },
+        "target": {
+          "kind": "option_price",
+          "value": 10.0
+        },
+        "coordinate": "spot",
+        "lower": 50.0,
+        "upper": 150.0,
+        "coordinate_tolerance": 1e-100,
+        "value_tolerance": 1e-100
+      },
+      "response": {
+        "metadata": {
+          "request_id": "fr-18eb557eac12fd34-00000000000000ca",
+          "service_version": "0.10.0",
+          "contract": {
+            "version": "0.1.0",
+            "sha256": "68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8"
+          },
+          "engines": [
+            {
+              "name": "morphiq-risk",
+              "version": "0.46.1",
+              "revision": "1550e4e41b243b8a978677bc5e9b46916c08cb0e"
+            }
+          ]
+        },
+        "result": {
+          "model": {
+            "id": "black_scholes_merton",
+            "version": "black_scholes_merton/1"
+          },
+          "base": {
+            "inputs": {
+              "option": {
+                "type": "call",
+                "exercise_style": "european",
+                "strike": 100.0,
+                "time_to_expiry_years": 1.0
+              },
+              "market": {
+                "spot": 100.0,
+                "risk_free_rate": 0.05,
+                "dividend_yield": 0.0
+              },
+              "volatility": 0.2,
+              "model": {
+                "id": "black_scholes_merton"
+              }
+            },
+            "result": {
+              "price": 10.450583572185577,
+              "model": {
+                "id": "black_scholes_merton",
+                "version": "black_scholes_merton/1"
+              }
+            }
+          },
+          "inputs": {
+            "option": {
+              "type": "call",
+              "exercise_style": "european",
+              "strike": 100.0,
+              "time_to_expiry_years": 1.0
+            },
+            "market": {
+              "spot": 100.0,
+              "risk_free_rate": 0.05,
+              "dividend_yield": 0.0
+            },
+            "volatility": 0.2,
+            "model": {
+              "id": "black_scholes_merton"
+            }
+          },
+          "target": {
+            "kind": "option_price",
+            "value": 10.0
+          },
+          "coordinate": "spot",
+          "coordinate_unit": "price",
+          "target_unit": "per_option_price",
+          "lower": 50.0,
+          "upper": 150.0,
+          "coordinate_tolerance": 1e-100,
+          "value_tolerance": 1e-100,
+          "profile": {
+            "id": "scenario_solve/1",
+            "scan_intervals": 32,
+            "max_refinements": 64,
+            "max_price_evaluations": 4774
+          },
+          "outcome": "incomplete",
+          "boundaries": [],
+          "regions": [
+            {
+              "lower": 50.0,
+              "upper": 96.875,
+              "sign": "below_target"
+            },
+            {
+              "lower": 100.0,
+              "upper": 150.0,
+              "sign": "above_target"
+            }
+          ],
+          "coverage": {
+            "status": "unresolved",
+            "basis": "scan_resolution",
+            "cells": [
+              {
+                "lower": 96.875,
+                "upper": 100.0,
+                "best_coordinate": 99.28487712130637,
+                "best_abs_value_error": 7.105427357601002e-15,
+                "reason": "bracket_collapsed_above_tolerance"
+              }
+            ]
+          },
+          "price_evaluations": 84
+        }
+      }
+    },
+    {
+      "name": "option-solve-strike",
+      "path": "/v1/options:solve-scenario",
+      "request_model": "OptionsSolveScenarioRequest",
+      "response_model": "OptionsSolveScenarioResponse",
+      "operation": "options.solve_scenario",
+      "request": {
+        "option": {
+          "type": "call",
+          "exercise_style": "european",
+          "strike": 100.0,
+          "time_to_expiry_years": 1.0
+        },
+        "market": {
+          "spot": 100.0,
+          "risk_free_rate": 0.05,
+          "dividend_yield": 0.0
+        },
+        "volatility": 0.2,
+        "model": {
+          "id": "black_scholes_merton"
+        },
+        "target": {
+          "kind": "option_price",
+          "value": 10.0
+        },
+        "coordinate": "strike",
+        "lower": 50.0,
+        "upper": 150.0
+      },
+      "response": {
+        "metadata": {
+          "request_id": "fr-18eb557eac12fd34-00000000000000cb",
+          "service_version": "0.10.0",
+          "contract": {
+            "version": "0.1.0",
+            "sha256": "68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8"
+          },
+          "engines": [
+            {
+              "name": "morphiq-risk",
+              "version": "0.46.1",
+              "revision": "1550e4e41b243b8a978677bc5e9b46916c08cb0e"
+            }
+          ]
+        },
+        "result": {
+          "model": {
+            "id": "black_scholes_merton",
+            "version": "black_scholes_merton/1"
+          },
+          "base": {
+            "inputs": {
+              "option": {
+                "type": "call",
+                "exercise_style": "european",
+                "strike": 100.0,
+                "time_to_expiry_years": 1.0
+              },
+              "market": {
+                "spot": 100.0,
+                "risk_free_rate": 0.05,
+                "dividend_yield": 0.0
+              },
+              "volatility": 0.2,
+              "model": {
+                "id": "black_scholes_merton"
+              }
+            },
+            "result": {
+              "price": 10.450583572185577,
+              "model": {
+                "id": "black_scholes_merton",
+                "version": "black_scholes_merton/1"
+              }
+            }
+          },
+          "inputs": {
+            "option": {
+              "type": "call",
+              "exercise_style": "european",
+              "strike": 100.0,
+              "time_to_expiry_years": 1.0
+            },
+            "market": {
+              "spot": 100.0,
+              "risk_free_rate": 0.05,
+              "dividend_yield": 0.0
+            },
+            "volatility": 0.2,
+            "model": {
+              "id": "black_scholes_merton"
+            }
+          },
+          "target": {
+            "kind": "option_price",
+            "value": 10.0
+          },
+          "coordinate": "strike",
+          "coordinate_unit": "price",
+          "target_unit": "per_option_price",
+          "lower": 50.0,
+          "upper": 150.0,
+          "coordinate_tolerance": 1e-09,
+          "value_tolerance": 1e-06,
+          "profile": {
+            "id": "scenario_solve/1",
+            "scan_intervals": 32,
+            "max_refinements": 64,
+            "max_price_evaluations": 4774
+          },
+          "outcome": "solutions_found",
+          "boundaries": [
+            {
+              "kind": "point",
+              "coordinate": 100.8594506260124,
+              "value": 9.999999999938149,
+              "crossing": true,
+              "refinements": 32,
+              "bracket_width": 7.275957614183426e-10
+            }
+          ],
+          "regions": [
+            {
+              "lower": 50.0,
+              "upper": 100.8594506260124,
+              "sign": "above_target"
+            },
+            {
+              "lower": 100.8594506260124,
+              "upper": 150.0,
+              "sign": "below_target"
+            }
+          ],
+          "coverage": {
+            "status": "resolved",
+            "basis": "scan_resolution"
+          },
+          "price_evaluations": 66
+        }
+      }
+    },
+    {
+      "name": "option-solve-time_to_expiry",
+      "path": "/v1/options:solve-scenario",
+      "request_model": "OptionsSolveScenarioRequest",
+      "response_model": "OptionsSolveScenarioResponse",
+      "operation": "options.solve_scenario",
+      "request": {
+        "option": {
+          "type": "call",
+          "exercise_style": "european",
+          "strike": 100.0,
+          "time_to_expiry_years": 1.0
+        },
+        "market": {
+          "spot": 100.0,
+          "risk_free_rate": 0.05,
+          "dividend_yield": 0.0
+        },
+        "volatility": 0.2,
+        "model": {
+          "id": "black_scholes_merton"
+        },
+        "target": {
+          "kind": "option_price",
+          "value": 10.0
+        },
+        "coordinate": "time_to_expiry",
+        "lower": 0.1,
+        "upper": 2.0
+      },
+      "response": {
+        "metadata": {
+          "request_id": "fr-18eb557eac12fd34-00000000000000cc",
+          "service_version": "0.10.0",
+          "contract": {
+            "version": "0.1.0",
+            "sha256": "68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8"
+          },
+          "engines": [
+            {
+              "name": "morphiq-risk",
+              "version": "0.46.1",
+              "revision": "1550e4e41b243b8a978677bc5e9b46916c08cb0e"
+            }
+          ]
+        },
+        "result": {
+          "model": {
+            "id": "black_scholes_merton",
+            "version": "black_scholes_merton/1"
+          },
+          "base": {
+            "inputs": {
+              "option": {
+                "type": "call",
+                "exercise_style": "european",
+                "strike": 100.0,
+                "time_to_expiry_years": 1.0
+              },
+              "market": {
+                "spot": 100.0,
+                "risk_free_rate": 0.05,
+                "dividend_yield": 0.0
+              },
+              "volatility": 0.2,
+              "model": {
+                "id": "black_scholes_merton"
+              }
+            },
+            "result": {
+              "price": 10.450583572185577,
+              "model": {
+                "id": "black_scholes_merton",
+                "version": "black_scholes_merton/1"
+              }
+            }
+          },
+          "inputs": {
+            "option": {
+              "type": "call",
+              "exercise_style": "european",
+              "strike": 100.0,
+              "time_to_expiry_years": 1.0
+            },
+            "market": {
+              "spot": 100.0,
+              "risk_free_rate": 0.05,
+              "dividend_yield": 0.0
+            },
+            "volatility": 0.2,
+            "model": {
+              "id": "black_scholes_merton"
+            }
+          },
+          "target": {
+            "kind": "option_price",
+            "value": 10.0
+          },
+          "coordinate": "time_to_expiry",
+          "coordinate_unit": "years",
+          "target_unit": "per_option_price",
+          "lower": 0.1,
+          "upper": 2.0,
+          "coordinate_tolerance": 1e-09,
+          "value_tolerance": 1e-06,
+          "profile": {
+            "id": "scenario_solve/1",
+            "scan_intervals": 32,
+            "max_refinements": 64,
+            "max_price_evaluations": 4774
+          },
+          "outcome": "solutions_found",
+          "boundaries": [
+            {
+              "kind": "point",
+              "coordinate": 0.9305660133715719,
+              "value": 10.000000002250593,
+              "crossing": true,
+              "refinements": 26,
+              "bracket_width": 8.847564902936256e-10
+            }
+          ],
+          "regions": [
+            {
+              "lower": 0.1,
+              "upper": 0.9305660133715719,
+              "sign": "below_target"
+            },
+            {
+              "lower": 0.9305660133715719,
+              "upper": 2.0,
+              "sign": "above_target"
+            }
+          ],
+          "coverage": {
+            "status": "resolved",
+            "basis": "scan_resolution"
+          },
+          "price_evaluations": 60
+        }
+      }
+    },
+    {
+      "name": "option-solve-elapsed_time",
+      "path": "/v1/options:solve-scenario",
+      "request_model": "OptionsSolveScenarioRequest",
+      "response_model": "OptionsSolveScenarioResponse",
+      "operation": "options.solve_scenario",
+      "request": {
+        "option": {
+          "type": "call",
+          "exercise_style": "european",
+          "strike": 100.0,
+          "time_to_expiry_years": 1.0
+        },
+        "market": {
+          "spot": 100.0,
+          "risk_free_rate": 0.05,
+          "dividend_yield": 0.0
+        },
+        "volatility": 0.2,
+        "model": {
+          "id": "black_scholes_merton"
+        },
+        "target": {
+          "kind": "option_price",
+          "value": 10.0
+        },
+        "coordinate": "elapsed_time",
+        "lower": 0.0,
+        "upper": 0.9
+      },
+      "response": {
+        "metadata": {
+          "request_id": "fr-18eb557eac12fd34-00000000000000cd",
+          "service_version": "0.10.0",
+          "contract": {
+            "version": "0.1.0",
+            "sha256": "68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8"
+          },
+          "engines": [
+            {
+              "name": "morphiq-risk",
+              "version": "0.46.1",
+              "revision": "1550e4e41b243b8a978677bc5e9b46916c08cb0e"
+            }
+          ]
+        },
+        "result": {
+          "model": {
+            "id": "black_scholes_merton",
+            "version": "black_scholes_merton/1"
+          },
+          "base": {
+            "inputs": {
+              "option": {
+                "type": "call",
+                "exercise_style": "european",
+                "strike": 100.0,
+                "time_to_expiry_years": 1.0
+              },
+              "market": {
+                "spot": 100.0,
+                "risk_free_rate": 0.05,
+                "dividend_yield": 0.0
+              },
+              "volatility": 0.2,
+              "model": {
+                "id": "black_scholes_merton"
+              }
+            },
+            "result": {
+              "price": 10.450583572185577,
+              "model": {
+                "id": "black_scholes_merton",
+                "version": "black_scholes_merton/1"
+              }
+            }
+          },
+          "inputs": {
+            "option": {
+              "type": "call",
+              "exercise_style": "european",
+              "strike": 100.0,
+              "time_to_expiry_years": 1.0
+            },
+            "market": {
+              "spot": 100.0,
+              "risk_free_rate": 0.05,
+              "dividend_yield": 0.0
+            },
+            "volatility": 0.2,
+            "model": {
+              "id": "black_scholes_merton"
+            }
+          },
+          "target": {
+            "kind": "option_price",
+            "value": 10.0
+          },
+          "coordinate": "elapsed_time",
+          "coordinate_unit": "years",
+          "target_unit": "per_option_price",
+          "lower": 0.0,
+          "upper": 0.9,
+          "coordinate_tolerance": 1e-09,
+          "value_tolerance": 1e-06,
+          "profile": {
+            "id": "scenario_solve/1",
+            "scan_intervals": 32,
+            "max_refinements": 64,
+            "max_price_evaluations": 4774
+          },
+          "outcome": "solutions_found",
+          "boundaries": [
+            {
+              "kind": "point",
+              "coordinate": 0.06943398686125873,
+              "value": 10.000000000721503,
+              "crossing": true,
+              "refinements": 25,
+              "bracket_width": 8.381903227050458e-10
+            }
+          ],
+          "regions": [
+            {
+              "lower": 0.0,
+              "upper": 0.06943398686125873,
+              "sign": "above_target"
+            },
+            {
+              "lower": 0.06943398686125873,
+              "upper": 0.9,
+              "sign": "below_target"
+            }
+          ],
+          "coverage": {
+            "status": "resolved",
+            "basis": "scan_resolution"
+          },
+          "price_evaluations": 59
+        }
+      }
+    },
+    {
+      "name": "option-solve-rate",
+      "path": "/v1/options:solve-scenario",
+      "request_model": "OptionsSolveScenarioRequest",
+      "response_model": "OptionsSolveScenarioResponse",
+      "operation": "options.solve_scenario",
+      "request": {
+        "option": {
+          "type": "call",
+          "exercise_style": "european",
+          "strike": 100.0,
+          "time_to_expiry_years": 1.0
+        },
+        "market": {
+          "spot": 100.0,
+          "risk_free_rate": 0.05,
+          "dividend_yield": 0.0
+        },
+        "volatility": 0.2,
+        "model": {
+          "id": "black_scholes_merton"
+        },
+        "target": {
+          "kind": "option_price",
+          "value": 10.0
+        },
+        "coordinate": "rate",
+        "lower": -0.05,
+        "upper": 0.2
+      },
+      "response": {
+        "metadata": {
+          "request_id": "fr-18eb557eac12fd34-00000000000000ce",
+          "service_version": "0.10.0",
+          "contract": {
+            "version": "0.1.0",
+            "sha256": "68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8"
+          },
+          "engines": [
+            {
+              "name": "morphiq-risk",
+              "version": "0.46.1",
+              "revision": "1550e4e41b243b8a978677bc5e9b46916c08cb0e"
+            }
+          ]
+        },
+        "result": {
+          "model": {
+            "id": "black_scholes_merton",
+            "version": "black_scholes_merton/1"
+          },
+          "base": {
+            "inputs": {
+              "option": {
+                "type": "call",
+                "exercise_style": "european",
+                "strike": 100.0,
+                "time_to_expiry_years": 1.0
+              },
+              "market": {
+                "spot": 100.0,
+                "risk_free_rate": 0.05,
+                "dividend_yield": 0.0
+              },
+              "volatility": 0.2,
+              "model": {
+                "id": "black_scholes_merton"
+              }
+            },
+            "result": {
+              "price": 10.450583572185577,
+              "model": {
+                "id": "black_scholes_merton",
+                "version": "black_scholes_merton/1"
+              }
+            }
+          },
+          "inputs": {
+            "option": {
+              "type": "call",
+              "exercise_style": "european",
+              "strike": 100.0,
+              "time_to_expiry_years": 1.0
+            },
+            "market": {
+              "spot": 100.0,
+              "risk_free_rate": 0.05,
+              "dividend_yield": 0.0
+            },
+            "volatility": 0.2,
+            "model": {
+              "id": "black_scholes_merton"
+            }
+          },
+          "target": {
+            "kind": "option_price",
+            "value": 10.0
+          },
+          "coordinate": "rate",
+          "coordinate_unit": "annual_rate",
+          "target_unit": "per_option_price",
+          "lower": -0.05,
+          "upper": 0.2,
+          "coordinate_tolerance": 1e-09,
+          "value_tolerance": 1e-06,
+          "profile": {
+            "id": "scenario_solve/1",
+            "scan_intervals": 32,
+            "max_refinements": 64,
+            "max_price_evaluations": 4774
+          },
+          "outcome": "solutions_found",
+          "boundaries": [
+            {
+              "kind": "point",
+              "coordinate": 0.04144221618771554,
+              "value": 9.999999996647755,
+              "crossing": true,
+              "refinements": 23,
+              "bracket_width": 9.313225746154785e-10
+            }
+          ],
+          "regions": [
+            {
+              "lower": -0.05,
+              "upper": 0.04144221618771554,
+              "sign": "below_target"
+            },
+            {
+              "lower": 0.04144221618771554,
+              "upper": 0.2,
+              "sign": "above_target"
+            }
+          ],
+          "coverage": {
+            "status": "resolved",
+            "basis": "scan_resolution"
+          },
+          "price_evaluations": 57
+        }
+      }
+    },
+    {
+      "name": "option-solve-dividend_yield",
+      "path": "/v1/options:solve-scenario",
+      "request_model": "OptionsSolveScenarioRequest",
+      "response_model": "OptionsSolveScenarioResponse",
+      "operation": "options.solve_scenario",
+      "request": {
+        "option": {
+          "type": "call",
+          "exercise_style": "european",
+          "strike": 100.0,
+          "time_to_expiry_years": 1.0
+        },
+        "market": {
+          "spot": 100.0,
+          "risk_free_rate": 0.05,
+          "dividend_yield": 0.0
+        },
+        "volatility": 0.2,
+        "model": {
+          "id": "black_scholes_merton"
+        },
+        "target": {
+          "kind": "option_price",
+          "value": 10.0
+        },
+        "coordinate": "dividend_yield",
+        "lower": 0.0,
+        "upper": 0.1
+      },
+      "response": {
+        "metadata": {
+          "request_id": "fr-18eb557eac12fd34-00000000000000cf",
+          "service_version": "0.10.0",
+          "contract": {
+            "version": "0.1.0",
+            "sha256": "68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8"
+          },
+          "engines": [
+            {
+              "name": "morphiq-risk",
+              "version": "0.46.1",
+              "revision": "1550e4e41b243b8a978677bc5e9b46916c08cb0e"
+            }
+          ]
+        },
+        "result": {
+          "model": {
+            "id": "black_scholes_merton",
+            "version": "black_scholes_merton/1"
+          },
+          "base": {
+            "inputs": {
+              "option": {
+                "type": "call",
+                "exercise_style": "european",
+                "strike": 100.0,
+                "time_to_expiry_years": 1.0
+              },
+              "market": {
+                "spot": 100.0,
+                "risk_free_rate": 0.05,
+                "dividend_yield": 0.0
+              },
+              "volatility": 0.2,
+              "model": {
+                "id": "black_scholes_merton"
+              }
+            },
+            "result": {
+              "price": 10.450583572185577,
+              "model": {
+                "id": "black_scholes_merton",
+                "version": "black_scholes_merton/1"
+              }
+            }
+          },
+          "inputs": {
+            "option": {
+              "type": "call",
+              "exercise_style": "european",
+              "strike": 100.0,
+              "time_to_expiry_years": 1.0
+            },
+            "market": {
+              "spot": 100.0,
+              "risk_free_rate": 0.05,
+              "dividend_yield": 0.0
+            },
+            "volatility": 0.2,
+            "model": {
+              "id": "black_scholes_merton"
+            }
+          },
+          "target": {
+            "kind": "option_price",
+            "value": 10.0
+          },
+          "coordinate": "dividend_yield",
+          "coordinate_unit": "annual_rate",
+          "target_unit": "per_option_price",
+          "lower": 0.0,
+          "upper": 0.1,
+          "coordinate_tolerance": 1e-09,
+          "value_tolerance": 1e-06,
+          "profile": {
+            "id": "scenario_solve/1",
+            "scan_intervals": 32,
+            "max_refinements": 64,
+            "max_price_evaluations": 4774
+          },
+          "outcome": "solutions_found",
+          "boundaries": [
+            {
+              "kind": "point",
+              "coordinate": 0.0071769215166568754,
+              "value": 9.999999991908167,
+              "crossing": true,
+              "refinements": 22,
+              "bracket_width": 7.450580595189105e-10
+            }
+          ],
+          "regions": [
+            {
+              "lower": 0.0,
+              "upper": 0.0071769215166568754,
+              "sign": "above_target"
+            },
+            {
+              "lower": 0.0071769215166568754,
+              "upper": 0.1,
+              "sign": "below_target"
+            }
+          ],
+          "coverage": {
+            "status": "resolved",
+            "basis": "scan_resolution"
+          },
+          "price_evaluations": 56
+        }
+      }
+    },
+    {
+      "name": "option-solve-volatility",
+      "path": "/v1/options:solve-scenario",
+      "request_model": "OptionsSolveScenarioRequest",
+      "response_model": "OptionsSolveScenarioResponse",
+      "operation": "options.solve_scenario",
+      "request": {
+        "option": {
+          "type": "call",
+          "exercise_style": "european",
+          "strike": 100.0,
+          "time_to_expiry_years": 1.0
+        },
+        "market": {
+          "spot": 100.0,
+          "risk_free_rate": 0.05,
+          "dividend_yield": 0.0
+        },
+        "volatility": 0.2,
+        "model": {
+          "id": "black_scholes_merton"
+        },
+        "target": {
+          "kind": "greek",
+          "greek": "vega",
+          "value": 35.0
+        },
+        "coordinate": "volatility",
+        "lower": 0.05,
+        "upper": 0.5
+      },
+      "response": {
+        "metadata": {
+          "request_id": "fr-18eb557eac12fd34-00000000000000d0",
+          "service_version": "0.10.0",
+          "contract": {
+            "version": "0.1.0",
+            "sha256": "68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8"
+          },
+          "engines": [
+            {
+              "name": "morphiq-risk",
+              "version": "0.46.1",
+              "revision": "1550e4e41b243b8a978677bc5e9b46916c08cb0e"
+            }
+          ]
+        },
+        "result": {
+          "model": {
+            "id": "black_scholes_merton",
+            "version": "black_scholes_merton/1"
+          },
+          "base": {
+            "inputs": {
+              "option": {
+                "type": "call",
+                "exercise_style": "european",
+                "strike": 100.0,
+                "time_to_expiry_years": 1.0
+              },
+              "market": {
+                "spot": 100.0,
+                "risk_free_rate": 0.05,
+                "dividend_yield": 0.0
+              },
+              "volatility": 0.2,
+              "model": {
+                "id": "black_scholes_merton"
+              }
+            },
+            "result": {
+              "price": 10.450583572185577,
+              "model": {
+                "id": "black_scholes_merton",
+                "version": "black_scholes_merton/1"
+              }
+            }
+          },
+          "inputs": {
+            "option": {
+              "type": "call",
+              "exercise_style": "european",
+              "strike": 100.0,
+              "time_to_expiry_years": 1.0
+            },
+            "market": {
+              "spot": 100.0,
+              "risk_free_rate": 0.05,
+              "dividend_yield": 0.0
+            },
+            "volatility": 0.2,
+            "model": {
+              "id": "black_scholes_merton"
+            }
+          },
+          "target": {
+            "kind": "greek",
+            "greek": "vega",
+            "value": 35.0
+          },
+          "coordinate": "volatility",
+          "coordinate_unit": "annual_volatility",
+          "target_unit": "vega_per_unit_volatility",
+          "lower": 0.05,
+          "upper": 0.5,
+          "coordinate_tolerance": 1e-09,
+          "value_tolerance": 1e-06,
+          "profile": {
+            "id": "scenario_solve/1",
+            "scan_intervals": 32,
+            "max_refinements": 64,
+            "max_price_evaluations": 4774
+          },
+          "outcome": "solutions_found",
+          "boundaries": [
+            {
+              "kind": "point",
+              "coordinate": 0.10942897005006672,
+              "value": 35.00000002278089,
+              "crossing": true,
+              "refinements": 24,
+              "bracket_width": 8.38190308827258e-10
+            }
+          ],
+          "regions": [
+            {
+              "lower": 0.05,
+              "upper": 0.10942897005006672,
+              "sign": "below_target"
+            },
+            {
+              "lower": 0.10942897005006672,
+              "upper": 0.5,
+              "sign": "above_target"
+            }
+          ],
+          "coverage": {
+            "status": "resolved",
+            "basis": "scan_resolution"
+          },
+          "price_evaluations": 58
+        }
+      }
+    },
+    {
+      "name": "option-solve-position_pnl",
+      "path": "/v1/options:solve-scenario",
+      "request_model": "OptionsSolveScenarioRequest",
+      "response_model": "OptionsSolveScenarioResponse",
+      "operation": "options.solve_scenario",
+      "request": {
+        "option": {
+          "type": "call",
+          "exercise_style": "european",
+          "strike": 100.0,
+          "time_to_expiry_years": 1.0
+        },
+        "market": {
+          "spot": 100.0,
+          "risk_free_rate": 0.05,
+          "dividend_yield": 0.0
+        },
+        "volatility": 0.2,
+        "model": {
+          "id": "black_scholes_merton"
+        },
+        "target": {
+          "kind": "position_pnl",
+          "value": 100.0,
+          "position": {
+            "quantity": -2.0,
+            "multiplier": 100.0
+          }
+        },
+        "coordinate": "spot",
+        "lower": 50.0,
+        "upper": 150.0
+      },
+      "response": {
+        "metadata": {
+          "request_id": "fr-18eb557eac12fd34-00000000000000d1",
+          "service_version": "0.10.0",
+          "contract": {
+            "version": "0.1.0",
+            "sha256": "68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8"
+          },
+          "engines": [
+            {
+              "name": "morphiq-risk",
+              "version": "0.46.1",
+              "revision": "1550e4e41b243b8a978677bc5e9b46916c08cb0e"
+            }
+          ]
+        },
+        "result": {
+          "model": {
+            "id": "black_scholes_merton",
+            "version": "black_scholes_merton/1"
+          },
+          "base": {
+            "inputs": {
+              "option": {
+                "type": "call",
+                "exercise_style": "european",
+                "strike": 100.0,
+                "time_to_expiry_years": 1.0
+              },
+              "market": {
+                "spot": 100.0,
+                "risk_free_rate": 0.05,
+                "dividend_yield": 0.0
+              },
+              "volatility": 0.2,
+              "model": {
+                "id": "black_scholes_merton"
+              }
+            },
+            "result": {
+              "price": 10.450583572185577,
+              "model": {
+                "id": "black_scholes_merton",
+                "version": "black_scholes_merton/1"
+              }
+            }
+          },
+          "inputs": {
+            "option": {
+              "type": "call",
+              "exercise_style": "european",
+              "strike": 100.0,
+              "time_to_expiry_years": 1.0
+            },
+            "market": {
+              "spot": 100.0,
+              "risk_free_rate": 0.05,
+              "dividend_yield": 0.0
+            },
+            "volatility": 0.2,
+            "model": {
+              "id": "black_scholes_merton"
+            }
+          },
+          "target": {
+            "kind": "position_pnl",
+            "value": 100.0,
+            "position": {
+              "quantity": -2.0,
+              "multiplier": 100.0
+            }
+          },
+          "coordinate": "spot",
+          "coordinate_unit": "price",
+          "target_unit": "position_value",
+          "lower": 50.0,
+          "upper": 150.0,
+          "coordinate_tolerance": 1e-09,
+          "value_tolerance": 1e-06,
+          "profile": {
+            "id": "scenario_solve/1",
+            "scan_intervals": 32,
+            "max_refinements": 64,
+            "max_price_evaluations": 4774
+          },
+          "outcome": "solutions_found",
+          "pnl_basis": "base_model_value",
+          "reference_net_value": -2090.116714437115,
+          "boundaries": [
+            {
+              "kind": "point",
+              "coordinate": 99.20549633097835,
+              "value": 99.99999997066524,
+              "crossing": true,
+              "refinements": 32,
+              "bracket_width": 7.275957614183426e-10
+            }
+          ],
+          "regions": [
+            {
+              "lower": 50.0,
+              "upper": 99.20549633097835,
+              "sign": "above_target"
+            },
+            {
+              "lower": 99.20549633097835,
+              "upper": 150.0,
+              "sign": "below_target"
+            }
+          ],
+          "coverage": {
+            "status": "resolved",
+            "basis": "scan_resolution"
+          },
+          "price_evaluations": 66
+        }
+      }
+    },
+    {
+      "name": "option-solve-greek",
+      "path": "/v1/options:solve-scenario",
+      "request_model": "OptionsSolveScenarioRequest",
+      "response_model": "OptionsSolveScenarioResponse",
+      "operation": "options.solve_scenario",
+      "request": {
+        "option": {
+          "type": "call",
+          "exercise_style": "european",
+          "strike": 100.0,
+          "time_to_expiry_years": 1.0
+        },
+        "market": {
+          "spot": 100.0,
+          "risk_free_rate": 0.05,
+          "dividend_yield": 0.0
+        },
+        "volatility": 0.2,
+        "model": {
+          "id": "black_scholes_merton"
+        },
+        "target": {
+          "kind": "greek",
+          "greek": "delta",
+          "value": 0.5
+        },
+        "coordinate": "spot",
+        "lower": 50.0,
+        "upper": 150.0
+      },
+      "response": {
+        "metadata": {
+          "request_id": "fr-18eb557eac12fd34-00000000000000d2",
+          "service_version": "0.10.0",
+          "contract": {
+            "version": "0.1.0",
+            "sha256": "68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8"
+          },
+          "engines": [
+            {
+              "name": "morphiq-risk",
+              "version": "0.46.1",
+              "revision": "1550e4e41b243b8a978677bc5e9b46916c08cb0e"
+            }
+          ]
+        },
+        "result": {
+          "model": {
+            "id": "black_scholes_merton",
+            "version": "black_scholes_merton/1"
+          },
+          "base": {
+            "inputs": {
+              "option": {
+                "type": "call",
+                "exercise_style": "european",
+                "strike": 100.0,
+                "time_to_expiry_years": 1.0
+              },
+              "market": {
+                "spot": 100.0,
+                "risk_free_rate": 0.05,
+                "dividend_yield": 0.0
+              },
+              "volatility": 0.2,
+              "model": {
+                "id": "black_scholes_merton"
+              }
+            },
+            "result": {
+              "price": 10.450583572185577,
+              "model": {
+                "id": "black_scholes_merton",
+                "version": "black_scholes_merton/1"
+              }
+            }
+          },
+          "inputs": {
+            "option": {
+              "type": "call",
+              "exercise_style": "european",
+              "strike": 100.0,
+              "time_to_expiry_years": 1.0
+            },
+            "market": {
+              "spot": 100.0,
+              "risk_free_rate": 0.05,
+              "dividend_yield": 0.0
+            },
+            "volatility": 0.2,
+            "model": {
+              "id": "black_scholes_merton"
+            }
+          },
+          "target": {
+            "kind": "greek",
+            "greek": "delta",
+            "value": 0.5
+          },
+          "coordinate": "spot",
+          "coordinate_unit": "price",
+          "target_unit": "delta",
+          "lower": 50.0,
+          "upper": 150.0,
+          "coordinate_tolerance": 1e-09,
+          "value_tolerance": 1e-06,
+          "profile": {
+            "id": "scenario_solve/1",
+            "scan_intervals": 32,
+            "max_refinements": 64,
+            "max_price_evaluations": 4774
+          },
+          "outcome": "solutions_found",
+          "boundaries": [
+            {
+              "kind": "point",
+              "coordinate": 93.23938199086115,
+              "value": 0.5000000000056979,
+              "crossing": true,
+              "refinements": 32,
+              "bracket_width": 7.275957614183426e-10
+            }
+          ],
+          "regions": [
+            {
+              "lower": 50.0,
+              "upper": 93.23938199086115,
+              "sign": "below_target"
+            },
+            {
+              "lower": 93.23938199086115,
+              "upper": 150.0,
+              "sign": "above_target"
+            }
+          ],
+          "coverage": {
+            "status": "resolved",
+            "basis": "scan_resolution"
+          },
+          "price_evaluations": 66
+        }
+      }
+    },
+    {
+      "name": "books-all-shocks",
+      "path": "/v1/books:explain",
+      "request_model": "BooksExplainRequest",
+      "response_model": "BooksExplainResponse",
+      "operation": "books.explain",
+      "request": {
+        "currency": "USD",
+        "markets": {
+          "SPY": {
+            "spot": 100.0,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0.0
+          },
+          "QQQ": {
+            "spot": 105.0,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0.0
+          }
+        },
+        "books": [
+          {
+            "id": "spread",
+            "positions": [
+              {
+                "id": "long-call",
+                "underlying": "SPY",
+                "quantity": 1.0,
+                "multiplier": 100.0,
+                "option": {
+                  "type": "call",
+                  "exercise_style": "european",
+                  "strike": 100.0,
+                  "time_to_expiry_years": 1.0
+                },
+                "volatility": 0.2,
+                "model": {
+                  "id": "black_scholes_merton"
+                }
+              },
+              {
+                "id": "short-call",
+                "underlying": "SPY",
+                "quantity": -1.0,
+                "multiplier": 100.0,
+                "option": {
+                  "type": "call",
+                  "exercise_style": "european",
+                  "strike": 110.0,
+                  "time_to_expiry_years": 1.0
+                },
+                "volatility": 0.2,
+                "model": {
+                  "id": "black_scholes_merton"
+                }
+              }
+            ],
+            "strategies": [
+              {
+                "id": "vertical",
+                "position_ids": [
+                  "long-call",
+                  "short-call"
+                ]
+              },
+              {
+                "id": "long-leg",
+                "position_ids": [
+                  "long-call"
+                ]
+              }
+            ]
+          },
+          {
+            "id": "second",
+            "positions": [
+              {
+                "id": "long-call",
+                "underlying": "QQQ",
+                "quantity": 1.0,
+                "multiplier": 100.0,
+                "option": {
+                  "type": "call",
+                  "exercise_style": "european",
+                  "strike": 100.0,
+                  "time_to_expiry_years": 1.0
+                },
+                "volatility": 0.2,
+                "model": {
+                  "id": "black_scholes_merton"
+                }
+              },
+              {
+                "id": "short-call",
+                "underlying": "QQQ",
+                "quantity": -1.0,
+                "multiplier": 100.0,
+                "option": {
+                  "type": "call",
+                  "exercise_style": "european",
+                  "strike": 110.0,
+                  "time_to_expiry_years": 1.0
+                },
+                "volatility": 0.2,
+                "model": {
+                  "id": "black_scholes_merton"
+                }
+              }
+            ],
+            "strategies": [
+              {
+                "id": "vertical",
+                "position_ids": [
+                  "long-call",
+                  "short-call"
+                ]
+              },
+              {
+                "id": "long-leg",
+                "position_ids": [
+                  "long-call"
+                ]
+              }
+            ]
+          }
+        ],
+        "scenario": {
+          "name": "up-and-steeper",
+          "shocks": [
+            {
+              "kind": "spot_relative",
+              "relative": 0.02
+            },
+            {
+              "kind": "parallel_vol",
+              "shift": 0.01
+            },
+            {
+              "kind": "skew",
+              "slope": 0.01
+            },
+            {
+              "kind": "rate",
+              "shift": 0.002
+            },
+            {
+              "kind": "roll_down",
+              "years": 0.1
+            },
+            {
+              "kind": "vol_term",
+              "front_tenor": 0.1,
+              "front_shift": 0.01,
+              "back_tenor": 2.0,
+              "back_shift": 0.02
+            }
+          ]
+        }
+      },
+      "response": {
+        "metadata": {
+          "request_id": "fr-18eb557eac12fd34-00000000000000d3",
+          "service_version": "0.10.0",
+          "contract": {
+            "version": "0.1.0",
+            "sha256": "68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8"
+          },
+          "engines": [
+            {
+              "name": "morphiq-risk",
+              "version": "0.46.1",
+              "revision": "1550e4e41b243b8a978677bc5e9b46916c08cb0e"
+            }
+          ]
+        },
+        "result": {
+          "currency": "USD",
+          "pnl_basis": "base_model_value",
+          "scenario": {
+            "name": "up-and-steeper",
+            "shocks": [
+              {
+                "kind": "spot_relative",
+                "relative": 0.02
+              },
+              {
+                "kind": "parallel_vol",
+                "shift": 0.01
+              },
+              {
+                "kind": "skew",
+                "slope": 0.01
+              },
+              {
+                "kind": "rate",
+                "shift": 0.002
+              },
+              {
+                "kind": "roll_down",
+                "years": 0.1
+              },
+              {
+                "kind": "vol_term",
+                "front_tenor": 0.1,
+                "front_shift": 0.01,
+                "back_tenor": 2.0,
+                "back_shift": 0.02
+              }
+            ]
+          },
+          "books": [
+            {
+              "id": "spread",
+              "positions": [
+                {
+                  "id": "long-call",
+                  "underlying": "SPY",
+                  "quantity": 1.0,
+                  "multiplier": 100.0,
+                  "model": {
+                    "id": "black_scholes_merton",
+                    "version": "black_scholes_merton/1"
+                  },
+                  "contract": {
+                    "option": {
+                      "type": "call",
+                      "exercise_style": "european",
+                      "strike": 100.0,
+                      "time_to_expiry_years": 1.0
+                    },
+                    "market": {
+                      "spot": 100.0,
+                      "risk_free_rate": 0.05,
+                      "dividend_yield": 0.0
+                    },
+                    "volatility": 0.2,
+                    "model": {
+                      "id": "black_scholes_merton"
+                    }
+                  },
+                  "base_unit_price": 10.450583572185577,
+                  "shocked_unit_price": 12.027045894490255,
+                  "base_net_value": 1045.0583572185576,
+                  "shocked_net_value": 1202.7045894490254,
+                  "pnl": 157.64623223046783
+                },
+                {
+                  "id": "short-call",
+                  "underlying": "SPY",
+                  "quantity": -1.0,
+                  "multiplier": 100.0,
+                  "model": {
+                    "id": "black_scholes_merton",
+                    "version": "black_scholes_merton/1"
+                  },
+                  "contract": {
+                    "option": {
+                      "type": "call",
+                      "exercise_style": "european",
+                      "strike": 110.0,
+                      "time_to_expiry_years": 1.0
+                    },
+                    "market": {
+                      "spot": 100.0,
+                      "risk_free_rate": 0.05,
+                      "dividend_yield": 0.0
+                    },
+                    "volatility": 0.2,
+                    "model": {
+                      "id": "black_scholes_merton"
+                    }
+                  },
+                  "base_unit_price": 6.040088129724242,
+                  "shocked_unit_price": 7.368859276914456,
+                  "base_net_value": -604.0088129724242,
+                  "shocked_net_value": -736.8859276914457,
+                  "pnl": -132.8771147190215
+                }
+              ],
+              "strategies": [
+                {
+                  "id": "vertical",
+                  "position_ids": [
+                    "long-call",
+                    "short-call"
+                  ],
+                  "base_net_value": 441.04954424613345,
+                  "shocked_net_value": 465.8186617575798,
+                  "pnl": 24.769117511446325
+                },
+                {
+                  "id": "long-leg",
+                  "position_ids": [
+                    "long-call"
+                  ],
+                  "base_net_value": 1045.0583572185576,
+                  "shocked_net_value": 1202.7045894490254,
+                  "pnl": 157.64623223046783
+                }
+              ],
+              "base_net_value": 441.04954424613345,
+              "shocked_net_value": 465.8186617575798,
+              "pnl": 24.769117511446325,
+              "attribution": {
+                "expiry_buckets": [
+                  {
+                    "time_to_expiry_years": 1.0,
+                    "base_net_value": 441.04954424613345,
+                    "shocked_net_value": 465.8186617575798,
+                    "pnl": 24.769117511446325
+                  }
+                ],
+                "strike_buckets": [
+                  {
+                    "strike": 100.0,
+                    "base_net_value": 1045.0583572185576,
+                    "shocked_net_value": 1202.7045894490254,
+                    "pnl": 157.64623223046783
+                  },
+                  {
+                    "strike": 110.0,
+                    "base_net_value": -604.0088129724242,
+                    "shocked_net_value": -736.8859276914457,
+                    "pnl": -132.8771147190215
+                  }
+                ]
+              }
+            },
+            {
+              "id": "second",
+              "positions": [
+                {
+                  "id": "long-call",
+                  "underlying": "QQQ",
+                  "quantity": 1.0,
+                  "multiplier": 100.0,
+                  "model": {
+                    "id": "black_scholes_merton",
+                    "version": "black_scholes_merton/1"
+                  },
+                  "contract": {
+                    "option": {
+                      "type": "call",
+                      "exercise_style": "european",
+                      "strike": 100.0,
+                      "time_to_expiry_years": 1.0
+                    },
+                    "market": {
+                      "spot": 105.0,
+                      "risk_free_rate": 0.05,
+                      "dividend_yield": 0.0
+                    },
+                    "volatility": 0.2,
+                    "model": {
+                      "id": "black_scholes_merton"
+                    }
+                  },
+                  "base_unit_price": 13.857906267073119,
+                  "shocked_unit_price": 15.599654274908543,
+                  "base_net_value": 1385.790626707312,
+                  "shocked_net_value": 1559.9654274908544,
+                  "pnl": 174.17480078354242
+                },
+                {
+                  "id": "short-call",
+                  "underlying": "QQQ",
+                  "quantity": -1.0,
+                  "multiplier": 100.0,
+                  "model": {
+                    "id": "black_scholes_merton",
+                    "version": "black_scholes_merton/1"
+                  },
+                  "contract": {
+                    "option": {
+                      "type": "call",
+                      "exercise_style": "european",
+                      "strike": 110.0,
+                      "time_to_expiry_years": 1.0
+                    },
+                    "market": {
+                      "spot": 105.0,
+                      "risk_free_rate": 0.05,
+                      "dividend_yield": 0.0
+                    },
+                    "volatility": 0.2,
+                    "model": {
+                      "id": "black_scholes_merton"
+                    }
+                  },
+                  "base_unit_price": 8.532959414716506,
+                  "shocked_unit_price": 10.076192039197,
+                  "base_net_value": -853.2959414716506,
+                  "shocked_net_value": -1007.6192039197,
+                  "pnl": -154.32326244804938
+                }
+              ],
+              "strategies": [
+                {
+                  "id": "vertical",
+                  "position_ids": [
+                    "long-call",
+                    "short-call"
+                  ],
+                  "base_net_value": 532.4946852356613,
+                  "shocked_net_value": 552.3462235711544,
+                  "pnl": 19.851538335493046
+                },
+                {
+                  "id": "long-leg",
+                  "position_ids": [
+                    "long-call"
+                  ],
+                  "base_net_value": 1385.790626707312,
+                  "shocked_net_value": 1559.9654274908544,
+                  "pnl": 174.17480078354242
+                }
+              ],
+              "base_net_value": 532.4946852356613,
+              "shocked_net_value": 552.3462235711544,
+              "pnl": 19.851538335493046,
+              "attribution": {
+                "expiry_buckets": [
+                  {
+                    "time_to_expiry_years": 1.0,
+                    "base_net_value": 532.4946852356613,
+                    "shocked_net_value": 552.3462235711544,
+                    "pnl": 19.851538335493046
+                  }
+                ],
+                "strike_buckets": [
+                  {
+                    "strike": 100.0,
+                    "base_net_value": 1385.790626707312,
+                    "shocked_net_value": 1559.9654274908544,
+                    "pnl": 174.17480078354242
+                  },
+                  {
+                    "strike": 110.0,
+                    "base_net_value": -853.2959414716506,
+                    "shocked_net_value": -1007.6192039197,
+                    "pnl": -154.32326244804938
+                  }
+                ]
+              }
+            }
+          ],
+          "base_net_value": 973.5442294817948,
+          "shocked_net_value": 1018.1648853287342,
+          "pnl": 44.62065584693937,
+          "attribution": {
+            "expiry_buckets": [
+              {
+                "time_to_expiry_years": 1.0,
+                "base_net_value": 973.5442294817948,
+                "shocked_net_value": 1018.1648853287342,
+                "pnl": 44.62065584693937
+              }
+            ],
+            "strike_buckets": [
+              {
+                "strike": 100.0,
+                "base_net_value": 2430.8489839258696,
+                "shocked_net_value": 2762.67001693988,
+                "pnl": 331.8210330140105
+              },
+              {
+                "strike": 110.0,
+                "base_net_value": -1457.3047544440747,
+                "shocked_net_value": -1744.5051316111458,
+                "pnl": -287.2003771670711
+              }
+            ]
+          },
+          "price_evaluations": 8
+        }
+      }
+    },
+    {
+      "name": "book-strategy",
+      "path": "/v1/books:solve-scenario",
+      "request_model": "BooksSolveScenarioRequest",
+      "response_model": "BooksSolveScenarioResponse",
+      "operation": "books.solve_scenario",
+      "request": {
+        "currency": "USD",
+        "markets": {
+          "SPY": {
+            "spot": 100.0,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0.0
+          }
+        },
+        "book": {
+          "id": "spread",
+          "positions": [
+            {
+              "id": "long-call",
+              "underlying": "SPY",
+              "quantity": 1.0,
+              "multiplier": 100.0,
+              "option": {
+                "type": "call",
+                "exercise_style": "european",
+                "strike": 100.0,
+                "time_to_expiry_years": 1.0
+              },
+              "volatility": 0.2,
+              "model": {
+                "id": "black_scholes_merton"
+              }
+            },
+            {
+              "id": "short-call",
+              "underlying": "SPY",
+              "quantity": -1.0,
+              "multiplier": 100.0,
+              "option": {
+                "type": "call",
+                "exercise_style": "european",
+                "strike": 110.0,
+                "time_to_expiry_years": 1.0
+              },
+              "volatility": 0.2,
+              "model": {
+                "id": "black_scholes_merton"
+              }
+            }
+          ],
+          "strategies": [
+            {
+              "id": "vertical",
+              "position_ids": [
+                "long-call",
+                "short-call"
+              ]
+            },
+            {
+              "id": "long-leg",
+              "position_ids": [
+                "long-call"
+              ]
+            }
+          ]
+        },
+        "scenario": {
+          "name": "at-expiry",
+          "shocks": [
+            {
+              "kind": "roll_down",
+              "years": 1.0
+            }
+          ]
+        },
+        "signed_reference_net_value": 200.0,
+        "target_pnl": 0.0,
+        "lower": 50.0,
+        "upper": 150.0,
+        "strategy_id": "long-leg"
+      },
+      "response": {
+        "metadata": {
+          "request_id": "fr-18eb557eac12fd34-00000000000000d4",
+          "service_version": "0.10.0",
+          "contract": {
+            "version": "0.1.0",
+            "sha256": "68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8"
+          },
+          "engines": [
+            {
+              "name": "morphiq-risk",
+              "version": "0.46.1",
+              "revision": "1550e4e41b243b8a978677bc5e9b46916c08cb0e"
+            }
+          ]
+        },
+        "result": {
+          "currency": "USD",
+          "underlying": "SPY",
+          "scenario": {
+            "name": "at-expiry",
+            "shocks": [
+              {
+                "kind": "roll_down",
+                "years": 1.0
+              }
+            ]
+          },
+          "book_id": "spread",
+          "strategy_id": "long-leg",
+          "positions": [
+            {
+              "id": "long-call",
+              "underlying": "SPY",
+              "quantity": 1.0,
+              "multiplier": 100.0,
+              "model": {
+                "id": "black_scholes_merton",
+                "version": "black_scholes_merton/1"
+              },
+              "contract": {
+                "option": {
+                  "type": "call",
+                  "exercise_style": "european",
+                  "strike": 100.0,
+                  "time_to_expiry_years": 1.0
+                },
+                "market": {
+                  "spot": 100.0,
+                  "risk_free_rate": 0.05,
+                  "dividend_yield": 0.0
+                },
+                "volatility": 0.2,
+                "model": {
+                  "id": "black_scholes_merton"
+                }
+              },
+              "base_net_value": 1045.0583572185576
+            }
+          ],
+          "coordinate": "spot",
+          "coordinate_unit": "price",
+          "target_unit": "position_value",
+          "pnl_basis": "signed_reference_net_value",
+          "signed_reference_net_value": 200.0,
+          "target_pnl": 0.0,
+          "lower": 50.0,
+          "upper": 150.0,
+          "coordinate_tolerance": 1e-09,
+          "pnl_tolerance": 1e-06,
+          "profile": {
+            "id": "book_scenario_solve/1",
+            "scan_intervals": 32,
+            "max_refinements": 64,
+            "max_price_evaluations": 4774
+          },
+          "outcome": "solutions_found",
+          "boundaries": [
+            {
+              "kind": "point",
+              "coordinate": 101.99999999967986,
+              "value": -3.2014213502407074e-08,
+              "crossing": true,
+              "refinements": 32,
+              "bracket_width": 7.275957614183426e-10
+            }
+          ],
+          "regions": [
+            {
+              "lower": 50.0,
+              "upper": 101.99999999967986,
+              "sign": "below_target"
+            },
+            {
+              "lower": 101.99999999967986,
+              "upper": 150.0,
+              "sign": "above_target"
+            }
+          ],
+          "coverage": {
+            "status": "resolved",
+            "basis": "scan_resolution"
+          },
+          "evaluations": 65,
+          "price_evaluations": 66
+        }
+      }
+    },
+    {
+      "name": "book-interval",
+      "path": "/v1/books:solve-scenario",
+      "request_model": "BooksSolveScenarioRequest",
+      "response_model": "BooksSolveScenarioResponse",
+      "operation": "books.solve_scenario",
+      "request": {
+        "currency": "USD",
+        "markets": {
+          "SPY": {
+            "spot": 100.0,
+            "risk_free_rate": 0.05,
+            "dividend_yield": 0.0
+          }
+        },
+        "book": {
+          "id": "spread",
+          "positions": [
+            {
+              "id": "long-call",
+              "underlying": "SPY",
+              "quantity": 1.0,
+              "multiplier": 100.0,
+              "option": {
+                "type": "call",
+                "exercise_style": "european",
+                "strike": 100.0,
+                "time_to_expiry_years": 1.0
+              },
+              "volatility": 0.2,
+              "model": {
+                "id": "black_scholes_merton"
+              }
+            },
+            {
+              "id": "short-call",
+              "underlying": "SPY",
+              "quantity": -1.0,
+              "multiplier": 100.0,
+              "option": {
+                "type": "call",
+                "exercise_style": "european",
+                "strike": 110.0,
+                "time_to_expiry_years": 1.0
+              },
+              "volatility": 0.2,
+              "model": {
+                "id": "black_scholes_merton"
+              }
+            }
+          ],
+          "strategies": [
+            {
+              "id": "vertical",
+              "position_ids": [
+                "long-call",
+                "short-call"
+              ]
+            },
+            {
+              "id": "long-leg",
+              "position_ids": [
+                "long-call"
+              ]
+            }
+          ]
+        },
+        "scenario": {
+          "name": "at-expiry",
+          "shocks": [
+            {
+              "kind": "roll_down",
+              "years": 1.0
+            }
+          ]
+        },
+        "signed_reference_net_value": 0.0,
+        "target_pnl": 0.0,
+        "lower": 50.0,
+        "upper": 90.0
+      },
+      "response": {
+        "metadata": {
+          "request_id": "fr-18eb557eac12fd34-00000000000000d5",
+          "service_version": "0.10.0",
+          "contract": {
+            "version": "0.1.0",
+            "sha256": "68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8"
+          },
+          "engines": [
+            {
+              "name": "morphiq-risk",
+              "version": "0.46.1",
+              "revision": "1550e4e41b243b8a978677bc5e9b46916c08cb0e"
+            }
+          ]
+        },
+        "result": {
+          "currency": "USD",
+          "underlying": "SPY",
+          "scenario": {
+            "name": "at-expiry",
+            "shocks": [
+              {
+                "kind": "roll_down",
+                "years": 1.0
+              }
+            ]
+          },
+          "book_id": "spread",
+          "positions": [
+            {
+              "id": "long-call",
+              "underlying": "SPY",
+              "quantity": 1.0,
+              "multiplier": 100.0,
+              "model": {
+                "id": "black_scholes_merton",
+                "version": "black_scholes_merton/1"
+              },
+              "contract": {
+                "option": {
+                  "type": "call",
+                  "exercise_style": "european",
+                  "strike": 100.0,
+                  "time_to_expiry_years": 1.0
+                },
+                "market": {
+                  "spot": 100.0,
+                  "risk_free_rate": 0.05,
+                  "dividend_yield": 0.0
+                },
+                "volatility": 0.2,
+                "model": {
+                  "id": "black_scholes_merton"
+                }
+              },
+              "base_net_value": 1045.0583572185576
+            },
+            {
+              "id": "short-call",
+              "underlying": "SPY",
+              "quantity": -1.0,
+              "multiplier": 100.0,
+              "model": {
+                "id": "black_scholes_merton",
+                "version": "black_scholes_merton/1"
+              },
+              "contract": {
+                "option": {
+                  "type": "call",
+                  "exercise_style": "european",
+                  "strike": 110.0,
+                  "time_to_expiry_years": 1.0
+                },
+                "market": {
+                  "spot": 100.0,
+                  "risk_free_rate": 0.05,
+                  "dividend_yield": 0.0
+                },
+                "volatility": 0.2,
+                "model": {
+                  "id": "black_scholes_merton"
+                }
+              },
+              "base_net_value": -604.0088129724242
+            }
+          ],
+          "coordinate": "spot",
+          "coordinate_unit": "price",
+          "target_unit": "position_value",
+          "pnl_basis": "signed_reference_net_value",
+          "signed_reference_net_value": 0.0,
+          "target_pnl": 0.0,
+          "lower": 50.0,
+          "upper": 90.0,
+          "coordinate_tolerance": 1e-09,
+          "pnl_tolerance": 1e-06,
+          "profile": {
+            "id": "book_scenario_solve/1",
+            "scan_intervals": 32,
+            "max_refinements": 64,
+            "max_price_evaluations": 9548
+          },
+          "outcome": "solutions_found",
+          "boundaries": [
+            {
+              "kind": "interval",
+              "lower": 50.0,
+              "upper": 90.0,
+              "value": 0.0
+            }
+          ],
+          "regions": [
+            {
+              "lower": 50.0,
+              "upper": 90.0,
+              "sign": "at_target"
+            }
+          ],
+          "coverage": {
+            "status": "resolved",
+            "basis": "scan_resolution"
+          },
+          "evaluations": 66,
+          "price_evaluations": 134
+        }
+      }
+    },
+    {
+      "name": "option-no-solution",
+      "path": "/v1/options:solve-scenario",
+      "request_model": "OptionsSolveScenarioRequest",
+      "response_model": "OptionsSolveScenarioResponse",
+      "operation": "options.solve_scenario",
+      "request": {
+        "option": {
+          "type": "call",
+          "exercise_style": "european",
+          "strike": 100.0,
+          "time_to_expiry_years": 1.0
+        },
+        "market": {
+          "spot": 100.0,
+          "risk_free_rate": 0.05,
+          "dividend_yield": 0.0
+        },
+        "volatility": 0.2,
+        "model": {
+          "id": "black_scholes_merton"
+        },
+        "target": {
+          "kind": "option_price",
+          "value": 1000000.0
+        },
+        "coordinate": "spot",
+        "lower": 50.0,
+        "upper": 150.0
+      },
+      "response": {
+        "metadata": {
+          "request_id": "fr-18eb557eac12fd34-00000000000000d6",
+          "service_version": "0.10.0",
+          "contract": {
+            "version": "0.1.0",
+            "sha256": "68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8"
+          },
+          "engines": [
+            {
+              "name": "morphiq-risk",
+              "version": "0.46.1",
+              "revision": "1550e4e41b243b8a978677bc5e9b46916c08cb0e"
+            }
+          ]
+        },
+        "result": {
+          "model": {
+            "id": "black_scholes_merton",
+            "version": "black_scholes_merton/1"
+          },
+          "base": {
+            "inputs": {
+              "option": {
+                "type": "call",
+                "exercise_style": "european",
+                "strike": 100.0,
+                "time_to_expiry_years": 1.0
+              },
+              "market": {
+                "spot": 100.0,
+                "risk_free_rate": 0.05,
+                "dividend_yield": 0.0
+              },
+              "volatility": 0.2,
+              "model": {
+                "id": "black_scholes_merton"
+              }
+            },
+            "result": {
+              "price": 10.450583572185577,
+              "model": {
+                "id": "black_scholes_merton",
+                "version": "black_scholes_merton/1"
+              }
+            }
+          },
+          "inputs": {
+            "option": {
+              "type": "call",
+              "exercise_style": "european",
+              "strike": 100.0,
+              "time_to_expiry_years": 1.0
+            },
+            "market": {
+              "spot": 100.0,
+              "risk_free_rate": 0.05,
+              "dividend_yield": 0.0
+            },
+            "volatility": 0.2,
+            "model": {
+              "id": "black_scholes_merton"
+            }
+          },
+          "target": {
+            "kind": "option_price",
+            "value": 1000000.0
+          },
+          "coordinate": "spot",
+          "coordinate_unit": "price",
+          "target_unit": "per_option_price",
+          "lower": 50.0,
+          "upper": 150.0,
+          "coordinate_tolerance": 1e-09,
+          "value_tolerance": 1e-06,
+          "profile": {
+            "id": "scenario_solve/1",
+            "scan_intervals": 32,
+            "max_refinements": 64,
+            "max_price_evaluations": 4774
+          },
+          "outcome": "no_solution_detected",
+          "boundaries": [],
+          "regions": [
+            {
+              "lower": 50.0,
+              "upper": 150.0,
+              "sign": "below_target"
+            }
+          ],
+          "coverage": {
+            "status": "resolved",
+            "basis": "scan_resolution"
+          },
+          "price_evaluations": 34
+        }
+      }
+    }
+  ]
+}

@@ -156,6 +156,8 @@ def test_generated_notebook_executes_without_source_tree(
     iv_cases,
     implied_greeks_cases,
     batch_cases,
+    scenario_cases,
+    scenario_quotes,
     tmp_path,
     filename,
 ):
@@ -200,6 +202,8 @@ def test_generated_notebook_executes_without_source_tree(
         + iv_cases
         + implied_greeks_cases
         + batch_cases
+        + scenario_cases
+        + scenario_quotes
     }
     assert [item[2] for item in received] == [
         by_name[name]["request"] for name in NOTEBOOK_CASES[filename]

@@ -23,3 +23,16 @@ inspection. Committed notebooks contain no executed outputs or widget state.
 `python scripts/generate_notebook.py --check` verifies the start page and clean
 notebooks. Tests exercise widget actions against synthetic contract fixtures,
 including input conversion, scenario ordering, failure handling and stale-data clearing.
+
+## Scenarios and books
+
+- [options.revalue](scenarios/revalue.ipynb): editable JSON inputs, separate Quote and Execute actions,
+  full result and charge receipts.
+- [options.solve_scenario](scenarios/solve.ipynb): editable JSON inputs, separate Quote and Execute actions,
+  full result and charge receipts.
+- [books.revalue](books/revalue.ipynb): editable JSON inputs, separate Quote and Execute actions,
+  full result and charge receipts.
+- [books.explain](books/explain.ipynb): editable JSON inputs, separate Quote and Execute actions,
+  full result and charge receipts.
+- [books.solve_scenario](books/solve.ipynb): editable JSON inputs, separate Quote and Execute actions,
+  full result and charge receipts.

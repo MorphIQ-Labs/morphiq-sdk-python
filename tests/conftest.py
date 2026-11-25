@@ -44,6 +44,16 @@ def batch_cases():
 
 
 @pytest.fixture
+def scenario_cases():
+    return json.loads((ROOT / "tests/fixtures/scenarios.json").read_text())["cases"]
+
+
+@pytest.fixture
+def scenario_quotes():
+    return json.loads((ROOT / "tests/fixtures/scenario_quotes.json").read_text())["cases"]
+
+
+@pytest.fixture
 def contract_fields():
     """Declared model fields, for comparison with a schema's properties."""
 
@@ -68,6 +78,8 @@ def fixture_api(
     iv_cases,
     implied_greeks_cases,
     batch_cases,
+    scenario_cases,
+    scenario_quotes,
 ):
     """Loopback replay of contract fixtures; no numerical implementation or external calls."""
     received = []
@@ -79,6 +91,8 @@ def fixture_api(
         + iv_cases
         + implied_greeks_cases
         + batch_cases
+        + scenario_cases
+        + scenario_quotes
     )
 
     class Handler(BaseHTTPRequestHandler):

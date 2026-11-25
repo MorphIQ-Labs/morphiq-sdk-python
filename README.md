@@ -109,6 +109,17 @@ ID for support.
 See [the quickstart guide](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/docs/QUICKSTART.md)
 for input units, async usage, configuration and errors.
 
+## Scenarios and books
+
+The SDK supports `client.options.revalue` and `client.options.solve_scenario`,
+plus `client.books.revalue`, `client.books.explain` and `client.books.solve_scenario`.
+The async client exposes the same methods. All five support cost quotation and a
+per-request CU ceiling. Results preserve partial failures, solver uncertainty,
+signed positions, strategy membership and expiry/strike P&L attribution.
+
+See the [scenario and book guide](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/docs/SCENARIOS.md)
+and the standalone notebooks in `notebooks/scenarios/` and `notebooks/books/`.
+
 ## Repository examples and notebooks
 
 The executable examples and Docker notebooks live in the repository. Clone it

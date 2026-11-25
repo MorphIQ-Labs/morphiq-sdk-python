@@ -137,3 +137,21 @@ and prints each model's canonical operation ids and validity contracts.
 the exact request it would execute with `client.rate_card.quote()`; both are
 utility requests. `--execute` then sends one pricing request with the quoted
 total as its `max_cu` ceiling. See [the rate card guide](../docs/RATE_CARD.md).
+
+## Option scenarios and books
+
+Each script uses synthetic inputs and sends one calculation when run. All request
+construction and the complete returned result are visible; missing charges stay
+unreported. Set `MORPHIQ_API_KEY`, then run:
+
+```sh
+python examples/option_revalue.py
+python examples/option_solve.py
+python examples/book_revalue.py
+python examples/book_explain.py
+python examples/book_solve.py
+```
+
+[The guide](../docs/SCENARIOS.md) explains targets, units, coverage, signed values
+and quotation. The [local solver app](solver_app/README.md) separates Quote and
+Solve into explicit actions with a single-use quote and retained receipts.

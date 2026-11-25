@@ -33,15 +33,14 @@ in Compose. See [credentials and Docker configuration](NOTEBOOKS.md).
 ## Operations by collection
 
 Each client groups its operations by the contract's collections:
-`client.options`, `client.series`, `client.models` and `client.rate_card`. A
+`client.options`, `client.books`, `client.series`, `client.models` and `client.rate_card`. A
 method spells the operation's canonical id: `client.options.batch_price(...)` is
 `options.batch_price`, served at `POST /v1/options:batch-price`. The quote
 endpoint and the model catalog's `operations` list use the same ids;
 `operation_id(request)` returns the id a typed request executes.
 
 This grouping follows ADR 0011's one-id-per-operation scheme. It also keeps
-operations that share a method name in different collections distinct when the
-SDK adds them (`options.revalue` and `books.revalue`, `options.solve_scenario`
+operations that share a method name in different collections distinct (`options.revalue` and `books.revalue`, `options.solve_scenario`
 and `books.solve_scenario`). The SDK's other conventions are unchanged: typed
 request models, sync/async parity, explicit batches and workflows, and no
 automatic retries.
@@ -73,9 +72,20 @@ from the premium, then evaluates price and all ten Greeks at it. The SDK does no
 chain requests to reproduce it. Batch methods send one `items` envelope; they do
 not split requests or start parallel calls.
 
-The contract also serves `options.revalue`, `options.solve_scenario`,
-`books.revalue`, `books.explain` and `books.solve_scenario`. This SDK release
-does not cover them yet; [CONTRACT.md](CONTRACT.md) lists coverage.
+Scenario and book methods use the same transport, authentication, `max_cu` and
+error semantics. See [scenario and book inputs, results and examples](SCENARIOS.md).
+
+| Method | Request | Response |
+| --- | --- | --- |
+| `client.options.revalue` | `OptionsRevalueRequest` | `OptionsRevalueResponse` |
+| `client.options.solve_scenario` | `OptionsSolveScenarioRequest` | `OptionsSolveScenarioResponse` |
+| `client.books.revalue` | `BooksRevalueRequest` | `BooksRevalueResponse` |
+| `client.books.explain` | `BooksExplainRequest` | `BooksExplainResponse` |
+| `client.books.solve_scenario` | `BooksSolveScenarioRequest` | `BooksSolveScenarioResponse` |
+
+`BooksExplainRequest` uses the same wire body as `BooksRevalueRequest`, but its
+separate type makes `rate_card.quote(request)` select `books.explain` correctly.
+`BooksExplainResponse` shares the book revaluation shape with attribution.
 
 ## Workflow factories
 

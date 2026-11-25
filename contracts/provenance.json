@@ -19,13 +19,12 @@
     "POST /v1/series:identify-regime",
     "GET /v1/models",
     "GET /v1/rate-card",
-    "POST /v1/rate-card:quote"
-  ],
-  "uncovered_operations": [
+    "POST /v1/rate-card:quote",
     "POST /v1/options:revalue",
     "POST /v1/options:solve-scenario",
     "POST /v1/books:revalue",
     "POST /v1/books:explain",
     "POST /v1/books:solve-scenario"
-  ]
+  ],
+  "uncovered_operations": []
 }

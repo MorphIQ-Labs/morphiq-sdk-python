@@ -15,6 +15,11 @@ import nbformat
 from nbclient import NotebookClient
 
 NOTEBOOK_CASES = {
+    "scenarios/revalue.ipynb": ("option_revalue-quote", "option_revalue"),
+    "scenarios/solve.ipynb": ("option_solve-quote", "option_solve"),
+    "books/revalue.ipynb": ("book_revalue-quote", "book_revalue"),
+    "books/explain.ipynb": ("book_explain-quote", "book_explain"),
+    "books/solve.ipynb": ("book_solve-quote", "book_solve"),
     "start-here.ipynb": (),
     "pricing/models.ipynb": (),  # Explicit actions tested in test_api_v050.
     "pricing/standard-five.ipynb": (),
@@ -36,6 +41,17 @@ NOTEBOOK_CASES = {
 
 def workspace_exercise(filename: str, prices: list[float]) -> str:
     """Exercise real widget actions with explicit synthetic market data in offline checks."""
+    if filename.startswith(("scenarios/", "books/")):
+        return """
+assert receipts == [] and last_response is None and execute_button.disabled
+quote_button.click()
+assert len(receipts) == 1 and not execute_button.disabled
+execute_button.click()
+assert len(receipts) == 2 and last_response is not None
+assert quote_state is None and execute_button.disabled
+inputs.value += " "
+assert last_response is None and len(receipts) == 2
+"""
     if filename == "pricing/options.ipynb":
         return """
 assert price_history == []

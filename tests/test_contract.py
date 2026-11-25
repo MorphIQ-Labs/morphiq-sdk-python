@@ -15,11 +15,6 @@ ROOT = Path(__file__).resolve().parents[1]
 SCHEMA = json.loads((ROOT / "contracts/openapi.json").read_text())
 SCHEMAS = SCHEMA["components"]["schemas"]
 PROVENANCE = json.loads((ROOT / "contracts/provenance.json").read_text())
-# Schemas used only by operations this SDK release does not cover (scenarios and books).
-UNCOVERED = re.compile(
-    r"^(Book|Scenario|ExpiryPnl|StrikePnl|PnlBasis|OptionsRevalue|OptionsSolveScenario"
-    r"|BooksRevalue|BooksSolveScenario)"
-)
 
 
 def _properties(name):
@@ -58,10 +53,10 @@ def test_snapshot_digest_version_and_operations():
 def test_every_covered_object_schema_has_a_matching_model():
     checked = []
     for name, schema in SCHEMAS.items():
-        if UNCOVERED.match(name) or "enum" in schema or "oneOf" in schema:
+        if "enum" in schema or "oneOf" in schema:
             continue
         # Batch items are BatchSuccess/BatchFailure; the health body is not an SDK type.
-        if name == "StatusResponse" or re.fullmatch(r"OptionsBatch\w+Item", name):
+        if name in ("StatusResponse", "ScenarioItem") or re.fullmatch(r"OptionsBatch\w+Item", name):
             continue
         model = _model_named(name)
         assert model is not None, f"no SDK model for schema {name}"

@@ -20,6 +20,12 @@ from pydantic import ValidationError
 
 from .errors import APIError, RateLimitError, RequestTimeout, ResponseError, TransportError
 from .models import (
+    BooksExplainRequest,
+    BooksExplainResponse,
+    BooksRevalueRequest,
+    BooksRevalueResponse,
+    BooksSolveScenarioRequest,
+    BooksSolveScenarioResponse,
     ErrorResponse,
     ModelsListResponse,
     OptionsBatchGreeksRequest,
@@ -40,6 +46,10 @@ from .models import (
     OptionsImpliedVolatilityResponse,
     OptionsPriceRequest,
     OptionsPriceResponse,
+    OptionsRevalueRequest,
+    OptionsRevalueResponse,
+    OptionsSolveScenarioRequest,
+    OptionsSolveScenarioResponse,
     OptionsStandardGreeksRequest,
     OptionsStandardGreeksResponse,
     RateCardGetResponse,
@@ -54,6 +64,11 @@ from .workflows import AsyncBatchWorkflow, BatchWorkflow, _prepare_chunks
 
 _ResponseType = TypeVar(
     "_ResponseType",
+    OptionsRevalueResponse,
+    OptionsSolveScenarioResponse,
+    BooksRevalueResponse,
+    BooksExplainResponse,
+    BooksSolveScenarioResponse,
     OptionsPriceResponse,
     OptionsGreeksResponse,
     OptionsStandardGreeksResponse,
@@ -109,7 +124,12 @@ def _redact_body(body: bytes, key: str) -> bytes:
 
 
 QuoteInput = (
-    OptionsPriceRequest
+    OptionsRevalueRequest
+    | OptionsSolveScenarioRequest
+    | BooksRevalueRequest
+    | BooksExplainRequest
+    | BooksSolveScenarioRequest
+    | OptionsPriceRequest
     | OptionsBatchPriceRequest
     | OptionsImpliedVolatilityRequest
     | OptionsBatchImpliedVolatilityRequest
@@ -123,6 +143,11 @@ QuoteInput = (
 )
 # Canonical operation ids, as the quote endpoint and model catalog spell them.
 _OPERATION_IDS: dict[type[Any], str] = {
+    BooksSolveScenarioRequest: "books.solve_scenario",
+    BooksExplainRequest: "books.explain",
+    BooksRevalueRequest: "books.revalue",
+    OptionsSolveScenarioRequest: "options.solve_scenario",
+    OptionsRevalueRequest: "options.revalue",
     OptionsPriceRequest: "options.price",
     OptionsBatchPriceRequest: "options.batch_price",
     OptionsImpliedVolatilityRequest: "options.implied_volatility",
@@ -423,6 +448,66 @@ class OptionsMethods:
             self.batch_implied_greeks,
         )
 
+    def revalue(
+        self, request: OptionsRevalueRequest, *, max_cu: int | None = None
+    ) -> OptionsRevalueResponse:
+        """Execute options.revalue once, preserving results and billing evidence."""
+        response = self._post("revalue", request.to_wire(), OptionsRevalueResponse, max_cu)
+        if [item.index for item in response.result.scenarios] != list(
+            range(len(request.scenarios))
+        ):
+            raise ResponseError(
+                request_id=response.metadata.request_id,
+                body=response.raw_body,
+                headers=response.headers,
+                metadata=response.metadata,
+            )
+        return response
+
+    def solve_scenario(
+        self, request: OptionsSolveScenarioRequest, *, max_cu: int | None = None
+    ) -> OptionsSolveScenarioResponse:
+        """Execute options.solve_scenario once, preserving results and billing evidence."""
+        response = self._post(
+            "solve-scenario", request.to_wire(), OptionsSolveScenarioResponse, max_cu
+        )
+        return response
+
+
+class BooksMethods:
+    """Book revaluation, attribution and scenario solving."""
+
+    def __init__(self, client: _Sender) -> None:
+        self._client = client
+
+    def revalue(
+        self, request: BooksRevalueRequest, *, max_cu: int | None = None
+    ) -> BooksRevalueResponse:
+        """Execute books.revalue once, preserving results and billing evidence."""
+        return self._client._request(
+            "POST", "v1/books:revalue", request.to_wire(), BooksRevalueResponse, max_cu=max_cu
+        )
+
+    def explain(
+        self, request: BooksExplainRequest, *, max_cu: int | None = None
+    ) -> BooksExplainResponse:
+        """Execute books.explain once, preserving results and billing evidence."""
+        return self._client._request(
+            "POST", "v1/books:explain", request.to_wire(), BooksExplainResponse, max_cu=max_cu
+        )
+
+    def solve_scenario(
+        self, request: BooksSolveScenarioRequest, *, max_cu: int | None = None
+    ) -> BooksSolveScenarioResponse:
+        """Execute books.solve_scenario once, preserving results and billing evidence."""
+        return self._client._request(
+            "POST",
+            "v1/books:solve-scenario",
+            request.to_wire(),
+            BooksSolveScenarioResponse,
+            max_cu=max_cu,
+        )
+
 
 class SeriesMethods:
     """The ``series`` collection: price-series analysis."""
@@ -655,6 +740,66 @@ class AsyncOptionsMethods:
             max_concurrency=max_concurrency,
         )
 
+    async def revalue(
+        self, request: OptionsRevalueRequest, *, max_cu: int | None = None
+    ) -> OptionsRevalueResponse:
+        """Execute options.revalue once, preserving results and billing evidence."""
+        response = await self._post("revalue", request.to_wire(), OptionsRevalueResponse, max_cu)
+        if [item.index for item in response.result.scenarios] != list(
+            range(len(request.scenarios))
+        ):
+            raise ResponseError(
+                request_id=response.metadata.request_id,
+                body=response.raw_body,
+                headers=response.headers,
+                metadata=response.metadata,
+            )
+        return response
+
+    async def solve_scenario(
+        self, request: OptionsSolveScenarioRequest, *, max_cu: int | None = None
+    ) -> OptionsSolveScenarioResponse:
+        """Execute options.solve_scenario once, preserving results and billing evidence."""
+        response = await self._post(
+            "solve-scenario", request.to_wire(), OptionsSolveScenarioResponse, max_cu
+        )
+        return response
+
+
+class AsyncBooksMethods:
+    """Book revaluation, attribution and scenario solving."""
+
+    def __init__(self, client: _AsyncSender) -> None:
+        self._client = client
+
+    async def revalue(
+        self, request: BooksRevalueRequest, *, max_cu: int | None = None
+    ) -> BooksRevalueResponse:
+        """Execute books.revalue once, preserving results and billing evidence."""
+        return await self._client._request(
+            "POST", "v1/books:revalue", request.to_wire(), BooksRevalueResponse, max_cu=max_cu
+        )
+
+    async def explain(
+        self, request: BooksExplainRequest, *, max_cu: int | None = None
+    ) -> BooksExplainResponse:
+        """Execute books.explain once, preserving results and billing evidence."""
+        return await self._client._request(
+            "POST", "v1/books:explain", request.to_wire(), BooksExplainResponse, max_cu=max_cu
+        )
+
+    async def solve_scenario(
+        self, request: BooksSolveScenarioRequest, *, max_cu: int | None = None
+    ) -> BooksSolveScenarioResponse:
+        """Execute books.solve_scenario once, preserving results and billing evidence."""
+        return await self._client._request(
+            "POST",
+            "v1/books:solve-scenario",
+            request.to_wire(),
+            BooksSolveScenarioResponse,
+            max_cu=max_cu,
+        )
+
 
 class AsyncSeriesMethods:
     """Async ``series`` collection."""
@@ -721,7 +866,7 @@ class AsyncRateCardMethods:
 class MorphIQ:
     """Synchronous API client. No retries or redirects are performed.
 
-    Operations are grouped by collection: ``client.options``, ``client.series``,
+    Operations are grouped by collection: ``client.options``, ``client.books``, ``client.series``,
     ``client.models`` and ``client.rate_card``.
     The API URL defaults to https://api.morphiqlabs.com; override it with
     ``base_url`` or MORPHIQ_API_BASE_URL. ``api_key`` falls back to MORPHIQ_API_KEY.
@@ -750,6 +895,7 @@ class MorphIQ:
             trust_env=False,
         )
         self.options = OptionsMethods(self)
+        self.books = BooksMethods(self)
         self.series = SeriesMethods(self)
         self.models = ModelsMethods(self)
         self.rate_card = RateCardMethods(self)
@@ -824,6 +970,7 @@ class AsyncMorphIQ:
             trust_env=False,
         )
         self.options = AsyncOptionsMethods(self)
+        self.books = AsyncBooksMethods(self)
         self.series = AsyncSeriesMethods(self)
         self.models = AsyncModelsMethods(self)
         self.rate_card = AsyncRateCardMethods(self)
