@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.3.0](https://github.com/MorphIQ-Labs/morphiq-sdk-python/compare/v0.2.1...v0.3.0) (2026-11-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* **sdk:** adopt the MorphIQ API 0.10.0 contract ([#51](https://github.com/MorphIQ-Labs/morphiq-sdk-python/issues/51))
+
+### Features
+
+* **sdk:** add option scenarios and books for API 0.10.0 ([#46](https://github.com/MorphIQ-Labs/morphiq-sdk-python/issues/46)) ([e32ba62](https://github.com/MorphIQ-Labs/morphiq-sdk-python/commit/e32ba622a484ac91c9972a5a6402e5e71872f242))
+* **sdk:** adopt the MorphIQ API 0.10.0 contract ([#51](https://github.com/MorphIQ-Labs/morphiq-sdk-python/issues/51)) ([704d5d4](https://github.com/MorphIQ-Labs/morphiq-sdk-python/commit/704d5d4e0417087c8da3a736c3c011081032a9be))
+
 ## [0.2.1](https://github.com/MorphIQ-Labs/morphiq-sdk-python/compare/v0.2.0...v0.2.1) (2026-11-16)
 
 
