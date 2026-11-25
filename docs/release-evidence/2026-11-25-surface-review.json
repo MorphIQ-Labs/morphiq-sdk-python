@@ -1,0 +1,344 @@
+{
+  "date": "2026-11-25",
+  "sdk_version": "0.3.0",
+  "sdk_source": "Published PyPI distribution, isolated installation",
+  "api_version": "0.10.0",
+  "contract_sha256": "68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8",
+  "production_operations": [
+    {
+      "operation": "books.explain",
+      "sync": {
+        "statuses": [
+          200
+        ],
+        "schema_valid": true
+      },
+      "async": {
+        "statuses": [
+          200
+        ],
+        "schema_valid": true
+      }
+    },
+    {
+      "operation": "books.revalue",
+      "sync": {
+        "statuses": [
+          200
+        ],
+        "schema_valid": true
+      },
+      "async": {
+        "statuses": [
+          200
+        ],
+        "schema_valid": true
+      }
+    },
+    {
+      "operation": "books.solve_scenario",
+      "sync": {
+        "statuses": [
+          403
+        ],
+        "schema_valid": true
+      },
+      "async": {
+        "statuses": [
+          403
+        ],
+        "schema_valid": true
+      }
+    },
+    {
+      "operation": "models.list",
+      "sync": {
+        "statuses": [
+          200
+        ],
+        "schema_valid": true
+      },
+      "async": {
+        "statuses": [
+          200
+        ],
+        "schema_valid": true
+      }
+    },
+    {
+      "operation": "options.batch_greeks",
+      "sync": {
+        "statuses": [
+          200
+        ],
+        "schema_valid": true
+      },
+      "async": {
+        "statuses": [
+          200
+        ],
+        "schema_valid": true
+      }
+    },
+    {
+      "operation": "options.batch_implied_greeks",
+      "sync": {
+        "statuses": [
+          200
+        ],
+        "schema_valid": true
+      },
+      "async": {
+        "statuses": [
+          200
+        ],
+        "schema_valid": true
+      }
+    },
+    {
+      "operation": "options.batch_implied_volatility",
+      "sync": {
+        "statuses": [
+          200
+        ],
+        "schema_valid": true
+      },
+      "async": {
+        "statuses": [
+          200
+        ],
+        "schema_valid": true
+      }
+    },
+    {
+      "operation": "options.batch_price",
+      "sync": {
+        "statuses": [
+          200
+        ],
+        "schema_valid": true
+      },
+      "async": {
+        "statuses": [
+          200
+        ],
+        "schema_valid": true
+      }
+    },
+    {
+      "operation": "options.batch_standard_greeks",
+      "sync": {
+        "statuses": [
+          200
+        ],
+        "schema_valid": true
+      },
+      "async": {
+        "statuses": [
+          200
+        ],
+        "schema_valid": true
+      }
+    },
+    {
+      "operation": "options.greeks",
+      "sync": {
+        "statuses": [
+          200
+        ],
+        "schema_valid": true
+      },
+      "async": {
+        "statuses": [
+          200
+        ],
+        "schema_valid": true
+      }
+    },
+    {
+      "operation": "options.implied_greeks",
+      "sync": {
+        "statuses": [
+          200
+        ],
+        "schema_valid": true
+      },
+      "async": {
+        "statuses": [
+          200
+        ],
+        "schema_valid": true
+      }
+    },
+    {
+      "operation": "options.implied_volatility",
+      "sync": {
+        "statuses": [
+          200
+        ],
+        "schema_valid": true
+      },
+      "async": {
+        "statuses": [
+          200
+        ],
+        "schema_valid": true
+      }
+    },
+    {
+      "operation": "options.price",
+      "sync": {
+        "statuses": [
+          200
+        ],
+        "schema_valid": true
+      },
+      "async": {
+        "statuses": [
+          200
+        ],
+        "schema_valid": true
+      }
+    },
+    {
+      "operation": "options.revalue",
+      "sync": {
+        "statuses": [
+          200
+        ],
+        "schema_valid": true
+      },
+      "async": {
+        "statuses": [
+          200
+        ],
+        "schema_valid": true
+      }
+    },
+    {
+      "operation": "options.solve_scenario",
+      "sync": {
+        "statuses": [
+          403
+        ],
+        "schema_valid": true
+      },
+      "async": {
+        "statuses": [
+          403
+        ],
+        "schema_valid": true
+      }
+    },
+    {
+      "operation": "options.standard_greeks",
+      "sync": {
+        "statuses": [
+          200
+        ],
+        "schema_valid": true
+      },
+      "async": {
+        "statuses": [
+          200
+        ],
+        "schema_valid": true
+      }
+    },
+    {
+      "operation": "rate_card.get",
+      "sync": {
+        "statuses": [
+          200
+        ],
+        "schema_valid": true
+      },
+      "async": {
+        "statuses": [
+          200
+        ],
+        "schema_valid": true
+      }
+    },
+    {
+      "operation": "rate_card.quote",
+      "sync": {
+        "statuses": [
+          200,
+          403
+        ],
+        "schema_valid": true
+      },
+      "async": {
+        "statuses": [
+          200,
+          403
+        ],
+        "schema_valid": true
+      }
+    },
+    {
+      "operation": "series.identify_regime",
+      "sync": {
+        "statuses": [
+          200
+        ],
+        "schema_valid": true
+      },
+      "async": {
+        "statuses": [
+          200
+        ],
+        "schema_valid": true
+      }
+    }
+  ],
+  "rate_card": {
+    "record_version": 7,
+    "schedule_version": "2026-11-12-regime-rate"
+  },
+  "total_charged_cu": 288,
+  "execution_ceiling": "Every calculation capped at its own preceding quote; quote refusals exercised with max_cu=0",
+  "failures": [
+    {
+      "case": "ceiling_refusal",
+      "status": 409,
+      "code": "cost_limit_exceeded",
+      "charged_cu": 0,
+      "schema_valid": true
+    },
+    {
+      "case": "invalid_spot",
+      "status": 422,
+      "code": "invalid_field",
+      "charged_cu": 0,
+      "schema_valid": true
+    },
+    {
+      "case": "option_partial",
+      "status": 200,
+      "charged_cu": 4,
+      "outcomes": [
+        "success",
+        "error",
+        "success"
+      ],
+      "schema_errors": [
+        {
+          "path": [
+            "result",
+            "scenarios",
+            1,
+            "inputs",
+            "market",
+            "spot"
+          ],
+          "message": "-1.0 is less than or equal to the minimum of 0"
+        }
+      ]
+    }
+  ],
+  "schema_issue": "https://gitlab.com/prophetizo/morphiq-labs/sites/morphiq-api/-/work_items/168",
+  "documentation_pages_checked": 14,
+  "literal_web_examples_checked_against_native_api": 38
+}

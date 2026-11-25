@@ -70,7 +70,7 @@ def test_canonical_operation_ids_match_the_quote_contract():
         variant["properties"]["operation"]["enum"][0]
         for variant in SCHEMAS["RateCardQuoteRequest"]["oneOf"]
     }
-    assert set(client_module._OPERATION_IDS.values()) <= quotable
+    assert set(client_module._OPERATION_IDS.values()) == quotable
     for operation in client_module._OPERATION_IDS.values():
         collection, method = operation.split(".")
         path = f"/v1/{collection.replace('_', '-')}:{method.replace('_', '-')}"

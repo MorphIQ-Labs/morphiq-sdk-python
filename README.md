@@ -1,12 +1,13 @@
-# Option pricing, Greeks, volatility and market regimes in Python
+# Options, scenarios, books and market regimes in Python
 
 Price European and American options, calculate standard-five or all-ten Greeks, solve implied
-volatility, and identify market regimes from price histories.
+volatility, revalue scenarios and books, explain P&L, solve targets, and identify
+market regimes from price histories.
 
 `morphiq-sdk` is a typed Python client for the MorphIQ API, with synchronous and
 asynchronous calls. Pricing, Greeks, implied volatility and implied Greeks
 support ordered batches. Runnable examples and interactive notebooks cover option
-valuation, sensitivity analysis and market-regime identification.
+valuation, sensitivity analysis, scenarios, books and market-regime identification.
 
 See the [documentation index](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/docs/README.md) for all feature guides and the
 [Python API reference](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/docs/API.md) for methods, models and errors.
@@ -15,8 +16,8 @@ This client targets the MorphIQ API **0.10.0** contract (**API v1 · Beta**,
 contract label `0.1.0`): `collection:verb` routes, `option` / `market` / `model`
 requests, grouped response metadata and RFC 9457 problem errors. Methods are
 grouped by collection and spell each operation's canonical id, for example
-`client.options.price(...)` for `options.price`. SDK 0.2.1 on PyPI targets the
-earlier contract; this client is unreleased until the next SDK release. See the
+`client.options.price(...)` for `options.price`. SDK 0.3.0 is published on PyPI
+for this contract; SDK 0.2.1 uses the retired API routes. See the
 [0.10.0 migration guide](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/docs/API_0_10_ADOPTION.md)
 and [model capabilities](https://github.com/MorphIQ-Labs/morphiq-sdk-python/blob/main/docs/MODELS.md): BSM/BS1993 support batches
 up to 100; QdFp and cash-dividend finite difference support single price and IV.

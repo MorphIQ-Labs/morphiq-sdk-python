@@ -49,7 +49,7 @@ See [the quickstart](../docs/QUICKSTART.md) and [all feature guides](../docs/REA
 Start Here links to the interactive workspaces; the standalone scripts remain the
 SDK usage demonstrations.
 
-Every request is built from the same parts: an `Option` (type, exercise style,
+Single pricing, implied-volatility and Greek requests are built from the same parts: an `Option` (type, exercise style,
 strike, time to expiry), a `Market` (spot, rates, optional cash dividends), a
 `volatility` or a `market_price`, and a `ModelSelection`. Methods are grouped by
 the API's collections and spell its canonical operation ids: `client.options.price()`

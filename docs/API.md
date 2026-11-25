@@ -63,7 +63,7 @@ them. All request/response classes below are exported from `morphiq_sdk`.
 | `series.identify_regime(request)` | `SeriesIdentifyRegimeRequest` | `SeriesIdentifyRegimeResponse` | `POST /v1/series:identify-regime` |
 | `models.list()` | none | `ModelsListResponse` | `GET /v1/models` (public) |
 | `rate_card.get(*, rate_class=None, model=None)` | none | `RateCardGetResponse` | `GET /v1/rate-card` |
-| `rate_card.quote(request)` | any request above | `RateCardQuoteResponse` | `POST /v1/rate-card:quote` |
+| `rate_card.quote(request)` | any numerical request, including scenarios and books | `RateCardQuoteResponse` | `POST /v1/rate-card:quote` |
 
 Every numerical method accepts an optional keyword `max_cu`, sent as
 `X-MorphIQ-Max-CU`; see [the rate card guide](RATE_CARD.md).
@@ -107,8 +107,10 @@ stopping behavior](WORKFLOWS.md).
 
 ## Option requests
 
-Every option request has `option`, `market` and `model`, plus either
-`volatility` (forward operations) or `market_price` (inverse operations).
+Single pricing, implied-volatility and Greek requests have `option`, `market` and `model`, plus either
+`volatility` (forward operations) or `market_price` (inverse operations). Batches
+wrap these requests in `items`. Scenario and book requests have their own
+[documented envelopes](SCENARIOS.md).
 
 | Model | Field | Type/default | Meaning |
 | --- | --- | --- | --- |
