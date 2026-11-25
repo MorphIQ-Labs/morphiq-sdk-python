@@ -62,8 +62,7 @@ run full CI and exercise prose, mixed, renamed and unknown-path cases.
 - Follow RELEASE.md: no manual release version bumps or package publication.
   Release Please owns pyproject.toml version, manifest and changelog updates.
 
-The published SDK 0.2.1 implements the earlier API contract. The main branch
-targets the API 0.10.0 contract: sync/async `options.price`, `options.greeks`,
+The published SDK 0.3.0 targets the API 0.10.0 contract: sync/async `options.price`, `options.greeks`,
 `options.standard_greeks`, `options.implied_volatility` and
 `options.implied_greeks` with their batches and optional bounded-concurrency
 workflows, `series.identify_regime`, `models.list` and the `rate_card` utilities.

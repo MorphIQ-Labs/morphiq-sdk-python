@@ -5,6 +5,12 @@ These methods target the pinned API 0.10.0 contract. Both `MorphIQ` and
 Execution, numerical validation, plan permissions and billing remain server-owned.
 Use explicit BSM or BS1993 model selections for these operations.
 
+SDK support and account availability are separate. Quote the intended request
+first. Both solve methods require a solve-enabled account policy; a
+`403 not_entitled` response is an account-policy refusal, not an SDK failure or
+an invitation to retry. A catalog entry or a published rate does not grant
+entitlement. See the [live solve availability and rate guide](https://developers.morphiqlabs.com/docs/scenarios#solve-rate-card).
+
 | Operation | Request model | Result |
 | --- | --- | --- |
 | `client.options.revalue` | `OptionsRevalueRequest` | Base valuation and ordered scenario outcomes |

@@ -213,6 +213,16 @@ def test_native_scenario_and_book_operations(case):
     assert response.result.model_dump(exclude_unset=True) == case["response"]["result"]
     assert response.metadata.contract.sha256 == SCHEMA_DIGEST
 
+    async def asynchronous():
+        async with sdk.AsyncMorphIQ(base_url=endpoint, allow_unauthenticated=True) as client:
+            return await invoke(client, case, request)
+
+    async_response = asyncio.run(asynchronous())
+    assert async_response.result.model_dump(exclude_unset=True) == response.result.model_dump(
+        exclude_unset=True
+    )
+    assert async_response.metadata.contract.sha256 == SCHEMA_DIGEST
+
 
 SCHEMA_DIGEST = json.loads((ROOT / "contracts/provenance.json").read_text())["sha256"]
 
