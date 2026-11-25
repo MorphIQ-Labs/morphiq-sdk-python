@@ -12,13 +12,13 @@ contracts/openapi.json contains the reviewed snapshot byte-for-byte.
 contracts/provenance.json records its digest, API source commit, contract
 version and covered operations. This snapshot is the API **0.10.0** contract
 (ADR 0011 naming, [API #161](https://gitlab.com/prophetizo/morphiq-labs/sites/morphiq-api/-/work_items/161)),
-commit `cf2718f3b8ebfe0046556f4fce05e4b0192053f0`, SHA-256
-`23ee6e9f9ad5841def5b34c0d45b43b1c6a8b628179493f9640da58baafe598a`. It was copied
-from immutable reviewed main source; a native release build of that commit serves
-the same digest. It is not yet deployed. The beta wire contract version remains
+tag `v0.10.0` (commit `4809233ade17132517a74dfc0ea4aebb087386d9`), SHA-256
+`68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8`. It was copied
+from the immutable v0.10.0 source and is byte-identical to the deployed production
+document. The beta wire contract version remains
 `0.1.0` (**API v1 · Beta**); API and SDK release versions are separate. The SDK
-treats `metadata.contract.version` as an opaque label (the pinned service reports
-`v1`) and identifies the exact revision by `metadata.contract.sha256`. SDK tests and builds use the offline snapshot without private
+treats `metadata.contract.version` as an opaque label (production reports
+`0.1.0`; fixtures recorded from an earlier native build report `v1`) and identifies the exact revision by `metadata.contract.sha256`. SDK tests and builds use the offline snapshot without private
 repository or numerical engine access.
 
 ## Coverage

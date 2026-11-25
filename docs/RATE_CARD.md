@@ -118,7 +118,7 @@ A filtered rate card, accessed as `response.schedule`:
   "metadata": {
     "request_id": "example-schedule",
     "service_version": "0.9.1",
-    "contract": {"version": "v1", "sha256": "<sha-256 of GET /openapi.json>"},
+    "contract": {"version": "0.1.0", "sha256": "<sha-256 of GET /openapi.json>"},
     "billing": {
       "charged_cu": 0,
       "rate_card": {"id": "fcu-qdfp-v1", "version": "2026-11-12-regime-rate"}
@@ -151,7 +151,7 @@ A single-contract quote, accessed as `response.quote` and `response.resolved_mod
   "metadata": {
     "request_id": "example-quote",
     "service_version": "0.9.1",
-    "contract": {"version": "v1", "sha256": "<sha-256 of GET /openapi.json>"},
+    "contract": {"version": "0.1.0", "sha256": "<sha-256 of GET /openapi.json>"},
     "billing": {
       "charged_cu": 0,
       "rate_card": {"id": "fcu-qdfp-v1", "version": "2026-11-12-regime-rate"}
@@ -235,7 +235,7 @@ evidence is in `error.problem` and `error.metadata`:
   "metadata": {
     "request_id": "example-ceiling_error",
     "service_version": "0.9.1",
-    "contract": {"version": "v1", "sha256": "<sha-256 of GET /openapi.json>"},
+    "contract": {"version": "0.1.0", "sha256": "<sha-256 of GET /openapi.json>"},
     "engines": [
       {
         "name": "morphiq-risk",

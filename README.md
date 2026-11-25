@@ -77,11 +77,11 @@ response from the recorded synthetic fixture:
 ```json
 {
   "metadata": {
-    "request_id": "fr-18eb0de772f9d5a8-0000000000000014",
-    "service_version": "0.9.2",
+    "request_id": "fr-18eb4d3a08c36fa2-0000000000000002",
+    "service_version": "0.10.0",
     "contract": {
-      "version": "v1",
-      "sha256": "23ee6e9f9ad5841def5b34c0d45b43b1c6a8b628179493f9640da58baafe598a"
+      "version": "0.1.0",
+      "sha256": "68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8"
     },
     "engines": [
       {

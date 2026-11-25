@@ -109,7 +109,7 @@ They also run directly as `python examples/price_european.py` and
 
 The [native reference fixtures](../tests/fixtures/pricing.json) record about
 **10.450583572185577** for the European call (`black_scholes_merton/1`) and
-**7.529845434912404** for the American put (`bjerksund_stensland_1993/1`). These
+**7.5298454349124135** for the American put (`bjerksund_stensland_1993/1`). These
 results belong to the recorded service/engine identity; they are not universal
 expectations for future models selected by `auto`. Request IDs vary. The fixture
 service ran in open mode and omitted commercial charges.

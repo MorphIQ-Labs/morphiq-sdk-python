@@ -1086,7 +1086,7 @@
           },
           "implied_volatility": {
             "$ref": "#/components/schemas/ImpliedVolatilityResult",
-            "description": "Present only when the request supplied `market_price`."
+            "description": "The volatility solved from the request's `market_price`, with its\ndiagnostics; the price and Greeks are evaluated at it."
           },
           "model": {
             "$ref": "#/components/schemas/ModelIdentity",

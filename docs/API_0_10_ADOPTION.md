@@ -1,8 +1,8 @@
 # API 0.10.0 SDK adoption
 
 This SDK targets the API 0.10.0 contract, pinned at API commit
-`cf2718f3b8ebfe0046556f4fce05e4b0192053f0` (SHA-256
-`23ee6e9f9ad5841def5b34c0d45b43b1c6a8b628179493f9640da58baafe598a`, contract
+`4809233ade17132517a74dfc0ea4aebb087386d9` (SHA-256
+`68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8`, contract
 label `0.1.0`, **API v1 · Beta**). The contract gives every operation one
 canonical `collection.method` id, splits option requests into `option`, `market`
 and `model`, groups response metadata, and reports errors as RFC 9457 problems.

@@ -1,8 +1,8 @@
 {
-  "source_commit": "cf2718f3b8ebfe0046556f4fce05e4b0192053f0",
-  "contract_sha256": "23ee6e9f9ad5841def5b34c0d45b43b1c6a8b628179493f9640da58baafe598a",
+  "source_commit": "4809233ade17132517a74dfc0ea4aebb087386d9",
+  "contract_sha256": "68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8",
   "admission": "open (isolated loopback service; no commercial charge)",
-  "note": "Synthetic requests evaluated by a native release build of the API 0.10.0 contract (integration/v0.10.0-deploy-readiness). American Greeks and batches explicitly use BS1993; Auto American without cash events resolves to BS1993.",
+  "note": "Synthetic requests evaluated by a native release build of the API 0.10.0 contract (tag v0.10.0). American Greeks and batches explicitly use BS1993; Auto American without cash events resolves to BS1993.",
   "cases": [
     {
       "name": "batch-price",
@@ -64,11 +64,11 @@
       },
       "response": {
         "metadata": {
-          "request_id": "fr-18eb0de772f9d5a8-000000000000001e",
-          "service_version": "0.9.2",
+          "request_id": "fr-18eb4d3a08c36fa2-0000000000000004",
+          "service_version": "0.10.0",
           "contract": {
-            "version": "v1",
-            "sha256": "23ee6e9f9ad5841def5b34c0d45b43b1c6a8b628179493f9640da58baafe598a"
+            "version": "0.1.0",
+            "sha256": "68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8"
           },
           "engines": [
             {
@@ -106,7 +106,7 @@
             "index": 2,
             "status": "success",
             "result": {
-              "price": 7.529845434912404,
+              "price": 7.5298454349124135,
               "model": {
                 "id": "bjerksund_stensland_1993",
                 "version": "bjerksund_stensland_1993/1"
@@ -176,11 +176,11 @@
       },
       "response": {
         "metadata": {
-          "request_id": "fr-18eb0de772f9d5a8-000000000000001f",
-          "service_version": "0.9.2",
+          "request_id": "fr-18eb4d3a08c36fa2-0000000000000005",
+          "service_version": "0.10.0",
           "contract": {
-            "version": "v1",
-            "sha256": "23ee6e9f9ad5841def5b34c0d45b43b1c6a8b628179493f9640da58baafe598a"
+            "version": "0.1.0",
+            "sha256": "68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8"
           },
           "engines": [
             {
@@ -229,18 +229,18 @@
             "index": 2,
             "status": "success",
             "result": {
-              "price": 7.529845434912404,
+              "price": 7.5298454349124135,
               "greeks": {
                 "delta": -0.5892018845247824,
-                "gamma": 0.032833158923294165,
-                "theta": -3.5549420552482163,
-                "vega": 26.586081744012805,
-                "rho": -21.612071680237094,
-                "vanna": 0.8950133905908636,
-                "volga": 24.916694215773536,
-                "charm": -0.18410996878530694,
+                "gamma": 0.03283315892329423,
+                "theta": -3.55494205524821,
+                "vega": 26.586081744012873,
+                "rho": -21.61207168023723,
+                "vanna": 0.8950133905908548,
+                "volga": 24.916694215773163,
+                "charm": -0.18410996878530597,
                 "veta": -28.20742602649876,
-                "color": 0.025532151457727515
+                "color": 0.025532151457727196
               },
               "model": {
                 "id": "bjerksund_stensland_1993",
@@ -311,11 +311,11 @@
       },
       "response": {
         "metadata": {
-          "request_id": "fr-18eb0de772f9d5a8-0000000000000020",
-          "service_version": "0.9.2",
+          "request_id": "fr-18eb4d3a08c36fa2-0000000000000006",
+          "service_version": "0.10.0",
           "contract": {
-            "version": "v1",
-            "sha256": "23ee6e9f9ad5841def5b34c0d45b43b1c6a8b628179493f9640da58baafe598a"
+            "version": "0.1.0",
+            "sha256": "68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8"
           },
           "engines": [
             {
@@ -345,8 +345,8 @@
             "index": 1,
             "status": "success",
             "result": {
-              "implied_volatility": 0.20000000000000084,
-              "iterations": 6,
+              "implied_volatility": 0.2000000000000002,
+              "iterations": 12,
               "used_fallback": true,
               "residual": 0.0,
               "residual_basis": "option_price",
@@ -360,8 +360,8 @@
             "index": 2,
             "status": "success",
             "result": {
-              "implied_volatility": 0.20000000000000084,
-              "iterations": 6,
+              "implied_volatility": 0.2000000000000002,
+              "iterations": 12,
               "used_fallback": true,
               "residual": 0.0,
               "residual_basis": "option_price",
@@ -434,11 +434,11 @@
       },
       "response": {
         "metadata": {
-          "request_id": "fr-18eb0de772f9d5a8-0000000000000021",
-          "service_version": "0.9.2",
+          "request_id": "fr-18eb4d3a08c36fa2-0000000000000007",
+          "service_version": "0.10.0",
           "contract": {
-            "version": "v1",
-            "sha256": "23ee6e9f9ad5841def5b34c0d45b43b1c6a8b628179493f9640da58baafe598a"
+            "version": "0.1.0",
+            "sha256": "68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8"
           },
           "engines": [
             {
@@ -489,20 +489,20 @@
             "result": {
               "price": 7.5298454349124135,
               "greeks": {
-                "delta": -0.5892018845247808,
-                "gamma": 0.03283315892329387,
-                "theta": -3.5549420552482447,
-                "vega": 26.586081744012944,
-                "rho": -21.612071680237353,
-                "vanna": 0.8950133905908367,
-                "volga": 24.9166942157721,
-                "charm": -0.18410996878530303,
-                "veta": -28.20742602649873,
-                "color": 0.025532151457727335
+                "delta": -0.589201884524783,
+                "gamma": 0.03283315892329411,
+                "theta": -3.5549420552482287,
+                "vega": 26.586081744012898,
+                "rho": -21.612071680237182,
+                "vanna": 0.895013390590854,
+                "volga": 24.916694215773525,
+                "charm": -0.18410996878530728,
+                "veta": -28.207426026498784,
+                "color": 0.025532151457727293
               },
               "implied_volatility": {
-                "implied_volatility": 0.20000000000000084,
-                "iterations": 6,
+                "implied_volatility": 0.2000000000000002,
+                "iterations": 12,
                 "used_fallback": true,
                 "residual": 0.0,
                 "residual_basis": "option_price",
@@ -523,20 +523,20 @@
             "result": {
               "price": 7.5298454349124135,
               "greeks": {
-                "delta": -0.5892018845247808,
-                "gamma": 0.03283315892329387,
-                "theta": -3.5549420552482447,
-                "vega": 26.586081744012944,
-                "rho": -21.612071680237353,
-                "vanna": 0.8950133905908367,
-                "volga": 24.9166942157721,
-                "charm": -0.18410996878530303,
-                "veta": -28.20742602649873,
-                "color": 0.025532151457727335
+                "delta": -0.589201884524783,
+                "gamma": 0.03283315892329411,
+                "theta": -3.5549420552482287,
+                "vega": 26.586081744012898,
+                "rho": -21.612071680237182,
+                "vanna": 0.895013390590854,
+                "volga": 24.916694215773525,
+                "charm": -0.18410996878530728,
+                "veta": -28.207426026498784,
+                "color": 0.025532151457727293
               },
               "implied_volatility": {
-                "implied_volatility": 0.20000000000000084,
-                "iterations": 6,
+                "implied_volatility": 0.2000000000000002,
+                "iterations": 12,
                 "used_fallback": true,
                 "residual": 0.0,
                 "residual_basis": "option_price",
@@ -716,11 +716,11 @@
       },
       "response": {
         "metadata": {
-          "request_id": "fr-18eb0de772f9d5a8-0000000000000022",
-          "service_version": "0.9.2",
+          "request_id": "fr-18eb4d3a08c36fa2-0000000000000008",
+          "service_version": "0.10.0",
           "contract": {
-            "version": "v1",
-            "sha256": "23ee6e9f9ad5841def5b34c0d45b43b1c6a8b628179493f9640da58baafe598a"
+            "version": "0.1.0",
+            "sha256": "68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8"
           },
           "engines": [
             {
@@ -876,11 +876,11 @@
       },
       "response": {
         "metadata": {
-          "request_id": "fr-18eb0de772f9d5a8-0000000000000023",
-          "service_version": "0.9.2",
+          "request_id": "fr-18eb4d3a08c36fa2-0000000000000009",
+          "service_version": "0.10.0",
           "contract": {
-            "version": "v1",
-            "sha256": "23ee6e9f9ad5841def5b34c0d45b43b1c6a8b628179493f9640da58baafe598a"
+            "version": "0.1.0",
+            "sha256": "68985d43f276fe525f46fbc9dc650a172f1303298bcc831da59f8cfee2dbb4c8"
           },
           "engines": [
             {
@@ -906,7 +906,7 @@
             "index": 1,
             "status": "success",
             "result": {
-              "price": 7.529845434912404,
+              "price": 7.5298454349124135,
               "model": {
                 "id": "bjerksund_stensland_1993",
                 "version": "bjerksund_stensland_1993/1"
