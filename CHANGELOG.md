@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.1](https://github.com/MorphIQ-Labs/morphiq-sdk-python/compare/v0.3.0...v0.3.1) (2026-11-25)
+
+
+### Bug Fixes
+
+* **contract:** validate complete partial scenario responses ([#54](https://github.com/MorphIQ-Labs/morphiq-sdk-python/issues/54)) ([a8c16c9](https://github.com/MorphIQ-Labs/morphiq-sdk-python/commit/a8c16c9408df1f2adc6a889a7d2863904fa43e0c))
+* **docs:** align released SDK guidance with production API ([#53](https://github.com/MorphIQ-Labs/morphiq-sdk-python/issues/53)) ([8e40222](https://github.com/MorphIQ-Labs/morphiq-sdk-python/commit/8e40222445b3ad97dbd99f5fa844962505ad47cc))
+
 ## [0.3.0](https://github.com/MorphIQ-Labs/morphiq-sdk-python/compare/v0.2.1...v0.3.0) (2026-11-25)
 
 
